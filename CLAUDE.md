@@ -9,7 +9,7 @@ Read these documents in this order depending on what you're working on:
 | Document | Purpose | When to read |
 |----------|---------|-------------|
 | `docs/design.md` | Complete design specification — flaw framework, pipeline architecture, app design, schemas | Always. This is the source of truth for what the system does and why. |
-| `docs/implementation-pipeline.md` | Pipeline build plan — 7 phases + 3 reviews, each scoped to one Claude Code session | When implementing the pipeline (schemas, subagent prompts, commands, scripts). |
+| `docs/implementation-pipeline.md` | Pipeline build plan — 7 phases + 2 reviews, each scoped to one Claude Code session | When implementing the pipeline (schemas, subagent prompts, commands, scripts). |
 | `docs/implementation-app.md` | App build plan — tech stack, data flow, phase sketches with uiux-app.md cross-references | When implementing the Perspectives app. Only after the pipeline is complete. |
 | `docs/uiux-app.md` | App UI/UX reference — screen specs, component specs, interaction patterns, tablet model | When building app screens/components. Look up specific sections by reference key (see Section Index at top of file). Do not read linearly. |
 
