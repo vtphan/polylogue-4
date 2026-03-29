@@ -328,7 +328,6 @@ turn_outline:
   - turn: integer
     speaker: string
     accomplishes: string  # what this turn does for the discussion
-    flaw_role: string     # null, "sets up", "surfaces", "responds to" — orchestration only, NOT passed to dialog writer
 ```
 
 ### create_script
@@ -343,10 +342,10 @@ The `create_script` command orchestrates three steps:
 
    The dialog writer sees:
    - All persona definitions (name, role, perspective, strengths, weaknesses)
-   - The turn outline with `speaker` and `accomplishes` fields only — the `flaw_role` field is stripped by the orchestrator before passing to the dialog writer
+   - The full turn outline (`speaker` and `accomplishes` fields)
    - The `discussion_arc` field
    - Style guidance: natural 6th-grade language, distinct persona voices
-   - **NOT included:** `target_flaws`, `flaw_role`, flaw pattern names, thinking behavior names, or detection act labels. The `accomplishes` fields steer toward flaws without naming them. The `flaw_role` field exists for orchestration tracking only.
+   - **NOT included:** `target_flaws`, flaw pattern names, thinking behavior names, or detection act labels. The `accomplishes` fields steer toward flaws without naming them.
 
 2. **Review.** A **review script** (`review_transcript.py`) performs automated structural checks on the raw transcript — no LLM call:
    - Does the turn count fall within 12-16 turns?
@@ -474,8 +473,7 @@ facilitation_guide:
     - flaw: string                   # which flaw this relates to
       narrowed_options: [string]     # 2-3 behaviors to choose from (subset of library)
       perspective_prompt: string     # empathy-based prompt, e.g., "Imagine you're Mia..."
-  phase_3:                           # generic templates (same for every scenario; scenario-specific is post-MVP)
-    - prompt: string                 # e.g., "Did you all mark the same turns? Look at where you differ."
+  # Phase 3 scaffolds are generic (same for every scenario) — hardcoded in the app UI and cheat sheet template, not generated per scenario.
   phase_4:                           # scaffolds for class discussion
     - type: string                   # "challenge", "student_victory", "missed_flaw"
       prompt: string                 # ready-to-use teacher prompt
@@ -501,10 +499,9 @@ Every handoff in the system — between commands, between a command and its suba
 | **Learning scientist validation** | Learning scientist subagent | `create_scenario` (revision step) | `configs/scenario/schemas/` |
 | **Discussion transcript (pre-enumeration)** | Dialog writer, instructional designer | `enumerate_turns.py` | `configs/script/schemas/` |
 | **Discussion transcript** | `enumerate_turns.py` | `evaluate_script`, Perspectives app | `configs/script/schemas/` |
-| **Dialog writer input** | `create_script` (orchestrator, by stripping scenario plan) | Dialog writer subagent | `configs/script/schemas/` |
-| **Evaluation (full)** | `evaluate_script` (evaluator subagent) | `export_for_app.py`, operator | `configs/evaluation/schemas/` |
+| **Dialog writer input** | `create_script` (orchestrator, scenario plan minus `target_flaws`) | Dialog writer subagent | `configs/script/schemas/` |
+| **Evaluation (full)** | `evaluate_script` (evaluator subagent) | `export_for_app.py`, operator, teacher dashboard, cheat sheet | `configs/evaluation/schemas/` |
 | **Evaluation (student-facing)** | `export_for_app.py` | Perspectives app (Phase 4) | `configs/evaluation/schemas/` |
-| **Evaluation (teacher-facing)** | `export_for_app.py` | Teacher dashboard, cheat sheet | `configs/evaluation/schemas/` |
 | **Session configuration** | Teacher (via Perspectives app) | Perspectives app | `configs/app/schemas/` |
 | **Student annotations** | Student (via Perspectives app) | Perspectives app, teacher dashboard | `configs/app/schemas/` |
 
@@ -532,7 +529,7 @@ configs/
 │   ├── commands/
 │   └── agents/             # dialog_writer, instructional_designer
 ├── evaluation/
-│   ├── schemas/            # evaluation_full.yaml, evaluation_student.yaml, evaluation_teacher.yaml
+│   ├── schemas/            # evaluation_full.yaml, evaluation_student.yaml
 │   ├── commands/
 │   └── agents/             # evaluator
 └── app/
@@ -550,11 +547,10 @@ Deterministic tasks are performed by Python scripts, not LLM agents. Scripts are
 | Script | Invoked by | What it does | Why it's a script |
 |--------|-----------|-------------|-------------------|
 | `validate_schema.py` | All commands and subagents | Validates a YAML artifact against its schema; halts with clear error on violation | Deterministic: conforms or doesn't |
-| `setup_registry.py` | `create_scenario` | Creates `registry/{scenario_id}/` directory and initializes it | Deterministic: file operations |
 | `review_transcript.py` | `create_script` | Structural checks on raw transcript: turn count within 12-16, speaker names match plan, turn order follows plan | Deterministic: structural validation |
 | `enumerate_turns.py` | `create_script` | Assigns sequential IDs to turns and sentences (turn_01.s01, etc.) after the instructional designer polish pass | Deterministic: sequential numbering |
 | `sync_configs.py` | `initialize_polylogue` | Copies commands and subagents from `configs/` to `.claude/`; verifies reference libraries | Deterministic: file copy and verification |
-| `export_for_app.py` | `evaluate_script` | Splits full evaluation into `evaluation_student.yaml` (annotations only) and `evaluation_teacher.yaml` (annotations + facilitation guide + quality assessment); also renders cheat sheet as printable markdown | Deterministic: split + format |
+| `export_for_app.py` | `evaluate_script` | Extracts student-facing annotations into `evaluation_student.yaml` (stripped of `planned`, `plausible_alternatives`, `quality_assessment`, `facilitation_guide`); also renders cheat sheet as printable markdown | Deterministic: extract + format |
 
 ### Script Design Rules
 
@@ -570,7 +566,7 @@ configs/
 ├── system/
 │   └── scripts/            # sync_configs.py
 ├── scenario/
-│   └── scripts/            # setup_registry.py
+│   └── scripts/            # (none currently — registry directory creation is handled inline by create_scenario)
 ├── script/
 │   └── scripts/            # review_transcript.py, enumerate_turns.py
 ├── evaluation/
@@ -626,12 +622,12 @@ personas:
 
 ### Evaluation Split
 
-`evaluate_script` produces a single full evaluation artifact. `export_for_app.py` splits it into two files — **prevention of data leakage by design**, not by app-side filtering.
+`evaluate_script` produces a single full evaluation artifact (`evaluation.yaml`). `export_for_app.py` extracts the student-facing subset into a separate file — **prevention of data leakage by design**, not by app-side filtering.
 
-| Output file | Contains | Consumed by |
+| File | Contains | Consumed by |
 |---|---|---|
+| `evaluation.yaml` | Everything: all annotations (including `planned`, `plausible_alternatives`), `quality_assessment`, `facilitation_guide` (timing, what_to_expect, all phase scaffolds). | Operator, teacher dashboard, cheat sheet rendering |
 | `evaluation_student.yaml` | Annotations only: location, argument_flaw (pattern, detection_act, explanation), thinking_behavior (pattern, explanation). No `planned`, no `plausible_alternatives`, no `quality_assessment`, no `facilitation_guide`. | Perspectives app (Phase 4 student view) |
-| `evaluation_teacher.yaml` | Everything: all annotations (including `planned`, `plausible_alternatives`), `quality_assessment`, `facilitation_guide` (timing, what_to_expect, all phase scaffolds). | Teacher dashboard, cheat sheet rendering |
 
 **Phase 4 student-visible fields:**
 
@@ -668,14 +664,8 @@ behavior_explanation: string          # how the student connects the behavior to
 submitted: boolean                    # true after Phase 2 submission; triggers Phase 3 visibility
 revision_history:
   - revised_at: timestamp
-    phase: integer                    # which phase the revision occurred in (2 or 3)
+    phase: integer                    # which phase the revision occurred in (2, 3, or 4)
     change_type: string              # "revision" or "new" — editing an existing annotation or creating a new one
-    prior_values:                     # snapshot of changed fields before revision (null if change_type is "new")
-      detection_act: string
-      description: string
-      thinking_behavior: string
-      behavior_own_words: string
-      behavior_explanation: string
 ```
 
 ### Session Configuration Schema
@@ -892,7 +882,7 @@ PHASE 2: Student found flaw but stuck on thinking behavior
 → "Imagine you're Mia. You read one article and you're excited.
    Why would you say it 'proves' the garden works?"
 
-PHASE 3: Group discussion is stalled [generic — same for every scenario]
+PHASE 3: Group discussion is stalled [hardcoded — same for every scenario]
 → "Did you all mark the same turns? Look at where you differ."
 → "Someone in your group found something you missed. Take another look."
 
@@ -905,7 +895,7 @@ PHASE 4: Class isn't engaging with AI perspective
    Both sides — make your case."
 ```
 
-**MVP scope:** Pre-generated scaffolds (Phases 1, 2, and 4 prompts, plus timing and what-to-expect) are produced by evaluate_script as part of its single analysis pass — no additional LLM call, just additional text in the evaluator's output. Phase 3 scaffolds on the cheat sheet are **generic templates** (same for every scenario), not scenario-specific prompts — scenario-specific Phase 3 scaffolds require the app to compare student annotations across groups, which is post-MVP. Computed scaffolds (Phase 3 disagreement surfacing, Phase 4 student-vs-AI comparison) require app features and are deferred.
+**MVP scope:** Pre-generated scaffolds (Phases 1, 2, and 4 prompts, plus timing and what-to-expect) are produced by evaluate_script as part of its single analysis pass — no additional LLM call, just additional text in the evaluator's output. Phase 3 scaffolds are generic (same for every scenario) and hardcoded in the cheat sheet template and the app's Phase 3 UI — they are not generated by the evaluator or stored in the evaluation schema. Scenario-specific Phase 3 scaffolds require the app to compare student annotations across groups, which is post-MVP. Computed scaffolds (Phase 3 disagreement surfacing, Phase 4 student-vs-AI comparison) require app features and are deferred.
 
 ### Role-Based Abilities
 
@@ -974,9 +964,8 @@ polylogue-4/
     └── {scenario_id}/
         ├── scenario.yaml              # Plan from create_scenario
         ├── script.yaml                # Transcript from create_script
-        ├── evaluation.yaml            # Full evaluation from evaluate_script (operator use)
-        ├── evaluation_student.yaml    # Student-facing split (from export_for_app.py)
-        ├── evaluation_teacher.yaml    # Teacher-facing split (from export_for_app.py)
+        ├── evaluation.yaml            # Full evaluation from evaluate_script (operator + teacher)
+        ├── evaluation_student.yaml    # Student-facing extract (from export_for_app.py)
         └── cheat_sheet.md             # Printable facilitation cheat sheet (from export_for_app.py)
 ```
 
@@ -990,35 +979,16 @@ polylogue-4/
 
 2. **Combination library.** Which flaw-behavior combinations are most productive for 6th graders? This needs testing with actual scenarios.
 
-3. **Perspectives app architecture.** What tech stack? How does it consume the YAML outputs? Real-time collaboration features for Phase 3? How does the teacher dashboard integrate?
+**Resolved questions (kept for reference):**
 
-4. **Scope of MVP.** What is the minimum set of scenarios, flaw-behavior combinations, and app features needed to test with UMS students?
+3. ~~**Perspectives app architecture.**~~ Resolved — see `implementation-app.md`. Next.js + SQLite + Tailwind, polling for real-time, deployed on university server.
 
-5. **Build order.** Schemas are built first, derived from v3 artifacts — we have real data to work from. Scripts are adapted from v3 alongside or shortly after the first scenario. The first scenario should not be blocked on scripts being production-ready — manual enumeration and file operations are acceptable for the first 1-2 runs. The sequence: schemas → subagent prompts → first scenario (may use manual scripts) → formalize scripts → iterate.
+4. ~~**Scope of MVP.**~~ Resolved — implicitly defined by the implementation plans (`implementation-pipeline.md` and `implementation-app.md`). MVP scope decisions are marked throughout this document.
+
+5. ~~**Build order.**~~ Resolved — see `implementation-pipeline.md`. Schemas → subagent prompts → commands → first scenario (manual scripts acceptable) → formalize scripts → iterate.
 
 ---
 
 ## Next Steps
 
-The design is ready to build. The remaining open questions require building and testing, not more document work.
-
-**Priority 1: Build the first scenario end-to-end.**
-- Derive v4 schemas from v3 artifacts
-- Write the subagent prompts (dialog writer, instructional designer, learning scientist, evaluator)
-- Run `create_scenario` → `create_script` → `evaluate_script` for one PBL topic
-- Validate: did the `accomplishes` field approach produce a usable transcript? Did the flaws surface? Are the signal moments detectable?
-- This is the single highest-value step — it tests every architectural decision at once
-
-**Priority 2: Decide the Perspectives app MVP feature set.**
-- Transcript display with sentence-level selection
-- Annotation UI (detection act selection + free-text explanation)
-- Phase 2 thinking behavior selection
-- Phase 3 peer annotation comparison (group view)
-- Phase 4 AI annotation reveal
-- Teacher dashboard: student progress + facilitation cheat sheet display
-- Tech stack decision
-
-**Priority 3: Hand-craft the warm-up micro-scenario.**
-- 5-6 turns, 2 personas, 1 obvious flaw
-- Used to teach the four-phase workflow before students encounter a real scenario
-- Written once by hand, stored in `configs/reference/`
+The design is ready to build. Implementation plans exist for both the pipeline (`implementation-pipeline.md`) and the app (`implementation-app.md`). The remaining open questions (taxonomy completeness, combination library) require building scenarios and testing with students, not more document work.

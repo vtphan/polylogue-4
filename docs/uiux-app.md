@@ -175,7 +175,7 @@ Every UI component consumes data produced by the pipeline. This section maps UI 
 | Thinking behavior library | `configs/reference/schemas/thinking_behavior_library.yaml` | ThinkingBehaviorBrowser, Phase 2 assignment | One-time seed at setup |
 | Discussion transcript | `configs/script/schemas/discussion_transcript.yaml` | TranscriptView | Per-scenario import |
 | Evaluation (student-facing) | `configs/evaluation/schemas/evaluation_student.yaml` | Phase 4 AI Perspective tab | Per-scenario import |
-| Evaluation (teacher-facing) | `configs/evaluation/schemas/evaluation_teacher.yaml` | Teacher dashboard, cheat sheet, detail panel | Per-scenario import |
+| Evaluation (full) | `configs/evaluation/schemas/evaluation_full.yaml` | Teacher dashboard, cheat sheet, detail panel | Per-scenario import |
 | Scenario plan | `configs/scenario/schemas/scenario_plan.yaml` | Teacher dashboard context (not student-visible) | Per-scenario import |
 
 ### App-Produced Data
@@ -195,9 +195,9 @@ These IDs are the universal reference system for locations throughout the app. S
 
 ### Evaluation Split
 
-The pipeline's `export_for_app.py` (implementation-pipeline.md Phase 6) splits the full evaluation into two files. The app imports both but routes them to different views:
+The pipeline's `export_for_app.py` (implementation-pipeline.md Phase 6) extracts the student-facing subset from the full evaluation into a separate file. The app imports both `evaluation.yaml` (for the teacher) and `evaluation_student.yaml` (for students), routing them to different views:
 
-| Field | `evaluation_student.yaml` | `evaluation_teacher.yaml` | Student sees? | Teacher sees? |
+| Field | `evaluation_student.yaml` | `evaluation.yaml` | Student sees? | Teacher sees? |
 |-------|--------------------------|---------------------------|---------------|---------------|
 | `annotation.location` | Yes | Yes | Yes | Yes |
 | `annotation.argument_flaw.pattern` | Yes | Yes | Yes | Yes |
@@ -212,7 +212,7 @@ The pipeline's `export_for_app.py` (implementation-pipeline.md Phase 6) splits t
 
 ### Quality Assessment Awareness
 
-The pipeline's `evaluate_script` produces `quality_assessment.issues` flagging flaws as `"too_subtle"`, `"too_obvious"`, or `"missing_flaw"`. These flags are visible only to the teacher (via `evaluation_teacher.yaml`). The student UI renders the transcript as-is — it does not adapt based on quality flags. The teacher uses quality flags to decide which scaffolds to deploy and whether to draw attention to specific turns during facilitation.
+The pipeline's `evaluate_script` produces `quality_assessment.issues` flagging flaws as `"too_subtle"`, `"too_obvious"`, or `"missing_flaw"`. These flags are visible only to the teacher (via `evaluation.yaml`). The student UI renders the transcript as-is — it does not adapt based on quality flags. The teacher uses quality flags to decide which scaffolds to deploy and whether to draw attention to specific turns during facilitation.
 
 ---
 
@@ -744,9 +744,9 @@ Shows the student's own annotations, now editable again:
 └─────────────────────────────────┘
 ```
 
-**Revision.** Students can edit existing annotations or create new ones. When they edit, the app appends to the annotation's `revision_history` array: `{ revised_at: timestamp, phase: 3, change_type: "revision", prior_values: { detection_act, description, thinking_behavior, behavior_explanation } }` — a snapshot of the changed fields before the edit. The edit form is the same as the Phase 1/2 creation form, pre-filled with current values. A small note appears: "Changed in Phase 3" on revised annotations (derived from the presence of a `revision_history` entry with `phase: 3`).
+**Revision.** Students can edit existing annotations or create new ones. When they edit, the app appends to the annotation's `revision_history` array: `{ revised_at: timestamp, phase: 3, change_type: "revision" }`. No field-level snapshot — the current state is overwritten and the history records only that a revision happened and when. The edit form is the same as the Phase 1/2 creation form, pre-filled with current values. A small note appears: "Changed in Phase 3" on revised annotations (derived from the presence of a `revision_history` entry with `phase: 3`).
 
-**New annotations.** Students can create entirely new annotations during Phase 3 (triggered by peer discussion). These are recorded with `phase_created: 3`. A `revision_history` entry is added with `change_type: "new"` and `prior_values: null`.
+**New annotations.** Students can create entirely new annotations during Phase 3 (triggered by peer discussion). These are recorded with `phase_created: 3`. A `revision_history` entry is added with `change_type: "new"`.
 
 #### Status Bar
 
@@ -894,7 +894,7 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 
 **Available scenarios** lists scenarios that have been imported from the pipeline registry into the database. Each shows the scenario ID, flaw count, and persona count.
 
-**Import New Scenario** opens a file upload or path input for importing a scenario's YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation_student.yaml`, `evaluation_teacher.yaml`).
+**Import New Scenario** opens a file upload or path input for importing a scenario's YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`).
 
 ---
 
@@ -1041,7 +1041,7 @@ A "View Full Cheat Sheet" link opens `/teacher/session/[id]/cheatsheet` — the 
 
 ### Cheat Sheet Page
 
-A single-page view rendering the `facilitation_guide` from `evaluation_teacher.yaml`. The facilitation_guide has a specific nested structure; each field maps to a rendered section:
+A single-page view rendering the `facilitation_guide` from `evaluation.yaml`. The facilitation_guide has a specific nested structure; each field maps to a rendered section:
 
 | Section on page | Source field | What it renders |
 |----------------|-------------|-----------------|
@@ -1049,7 +1049,7 @@ A single-page view rendering the `facilitation_guide` from `evaluation_teacher.y
 | WHAT TO EXPECT | `facilitation_guide.what_to_expect[]` | Each entry: `flaw` (pattern name), `turns` (where to look), `signal` (what students should notice), `difficulty` ("most will catch it" / "harder to spot" / "easy to miss") |
 | PHASE 1 scaffolds | `facilitation_guide.phase_1[]` | Each entry: `prompt` (ready-to-use teacher prompt) + `targets` (which flaw this helps surface) |
 | PHASE 2 scaffolds | `facilitation_guide.phase_2[]` | Each entry: `flaw` (which flaw), `narrowed_options[]` (2-3 behaviors from `plausible_alternatives` — a subset of the library for the teacher to offer), `perspective_prompt` (empathy-based prompt) |
-| PHASE 3 scaffolds | `facilitation_guide.phase_3[]` | Each entry: `prompt` — generic templates, same for every scenario |
+| PHASE 3 scaffolds | Hardcoded in cheat sheet template | Generic prompts, same for every scenario: "Did you all mark the same turns? Look at where you differ." / "Someone in your group found something you missed. Take another look." |
 | PHASE 4 scaffolds | `facilitation_guide.phase_4[]` | Each entry: `type` ("challenge" / "student_victory" / "missed_flaw") + `prompt` (ready-to-use or fill-in-the-blank template) |
 
 Styled for readability and printability:
@@ -1067,7 +1067,7 @@ Content follows the exact format from design doc lines 867-902.
 
 ### Warm-Up Session
 
-The teacher creates a session with the warm-up micro-scenario (`is_warmup: true`). The warm-up artifacts are hand-crafted to the same schemas as pipeline-produced scenarios (implementation-pipeline.md Phase 7) and stored at `configs/reference/warmup/` (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, `evaluation_teacher.yaml`, `cheat_sheet.md`). They are imported into the database the same way as any other scenario. The app behavior is identical to a regular session, with these additions:
+The teacher creates a session with the warm-up micro-scenario (`is_warmup: true`). The warm-up artifacts are hand-crafted to the same schemas as pipeline-produced scenarios (implementation-pipeline.md Phase 7) and stored at `configs/reference/warmup/` (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, `cheat_sheet.md`). They are imported into the database the same way as any other scenario. The app behavior is identical to a regular session, with these additions:
 
 **Phase indicator** shows a "Tutorial" badge next to the phase numbers.
 

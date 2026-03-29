@@ -174,7 +174,7 @@ Pipeline artifacts (YAML) are imported into the app in two distinct ways:
 |------|-----------------|-------------------------|
 | `script.yaml` | Discussion transcript (turns, sentences, persona names) | Transcript display (all phases) |
 | `evaluation_student.yaml` | AI annotations — student-visible fields only | Phase 4 AI reveal |
-| `evaluation_teacher.yaml` | Full annotations + quality assessment + facilitation guide | Teacher dashboard + cheat sheet display |
+| `evaluation.yaml` | Full evaluation: all annotations (including `planned`, `plausible_alternatives`), quality assessment, facilitation guide | Teacher dashboard + cheat sheet display |
 | `scenario.yaml` | Scenario plan (not student-visible, used for teacher context) | Teacher dashboard |
 
 ```

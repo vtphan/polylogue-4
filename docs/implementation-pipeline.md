@@ -6,7 +6,7 @@ This plan covers implementation of the Polylogue 4 pipeline: the system that gen
 
 **Build order:** Schemas first, then subagent prompts and commands, then the first end-to-end scenario run, then formalized scripts. This follows the design document's stated sequence and ensures the most important architectural decisions are validated early.
 
-**Structure:** 7 implementation phases and 3 review phases. Each implementation phase is scoped to one Claude Code working session. Review phases are inserted at high-risk handoff points where catching problems early prevents significant rework downstream.
+**Structure:** 7 implementation phases and 2 review phases. Each implementation phase is scoped to one Claude Code working session. Review A catches schema issues before anything is built on them. Review B checks the full pipeline — technical integration, prompt quality, and pedagogical quality — against actual generated output.
 
 **How reviews work:** Each review phase includes a review prompt. The operator runs this prompt with a separate agent, analyzes the feedback, and forwards relevant findings to the developing agent. The operator controls the gate — not every piece of feedback needs to become a revision.
 
@@ -15,8 +15,8 @@ This plan covers implementation of the Polylogue 4 pipeline: the system that gen
 ## Phase Map
 
 ```
-Phase 1 → Phase 2 → REVIEW A → Phase 3 → Phase 4 → REVIEW B → Phase 5 ─┬─→ Phase 6 → REVIEW C
-                                                                         └─→ Phase 7 (parallel)
+Phase 1 → Phase 2 → REVIEW A → Phase 3 → Phase 4 → Phase 5 ─┬─→ Phase 6 → REVIEW B
+                                                              └─→ Phase 7 (parallel)
 ```
 
 All phases are sequential except Phases 6 and 7, which can run in parallel after Phase 5.
@@ -84,7 +84,7 @@ All phases are sequential except Phases 6 and 7, which can run in parallel after
 
 ## Phase 2: Schemas
 
-**Objective:** Author all 12 YAML schema definitions governing every pipeline handoff.
+**Objective:** Author all 11 YAML schema definitions governing every pipeline handoff.
 
 **Inputs:**
 - Design doc: "Schema Inventory" (line 496), output format blocks for scenario plan (line 308), transcript (line 401), evaluation (line 430), student annotations (line 653), session configuration (line 680)
@@ -92,7 +92,7 @@ All phases are sequential except Phases 6 and 7, which can run in parallel after
 
 **Tasks:**
 
-Write 12 schema files:
+Write 11 schema files:
 
 | # | Schema | Location | Source in design doc |
 |---|--------|----------|---------------------|
@@ -104,19 +104,17 @@ Write 12 schema files:
 | 6 | Discussion transcript (pre-enumeration) | `configs/script/schemas/discussion_transcript_pre.yaml` | Line 391 |
 | 7 | Evaluation (full) | `configs/evaluation/schemas/evaluation_full.yaml` | Lines 430-482 |
 | 8 | Evaluation (student-facing) | `configs/evaluation/schemas/evaluation_student.yaml` | Lines 631, 634-646 |
-| 9 | Evaluation (teacher-facing) | `configs/evaluation/schemas/evaluation_teacher.yaml` | Line 632 |
-| 10 | Session configuration | `configs/app/schemas/session_configuration.yaml` | Lines 681-699 (includes `student_activity` block for teacher monitoring) |
-| 11 | Student annotations | `configs/app/schemas/student_annotations.yaml` | Lines 653-675 |
-| 12 | Dialog writer input | `configs/script/schemas/dialog_writer_input.yaml` | Lines 344-349 |
+| 9 | Session configuration | `configs/app/schemas/session_configuration.yaml` | Lines 681-699 (includes `student_activity` block for teacher monitoring) |
+| 10 | Student annotations | `configs/app/schemas/student_annotations.yaml` | Lines 653-675 |
+| 11 | Dialog writer input | `configs/script/schemas/dialog_writer_input.yaml` | Lines 344-349 |
 
 **Outputs:**
-- 12 schema files in their respective `configs/*/schemas/` directories
+- 11 schema files in their respective `configs/*/schemas/` directories
 
 **Notes:**
 - Schema #6 (pre-enumeration transcript) is implicit in the design doc: "same structure as the final transcript schema but without `id` fields on sentences; turns are ordered but unnumbered" (line 391). Must be made explicit.
-- Schema #12 (dialog writer input) captures the stripped scenario plan that the dialog writer actually sees — persona definitions, turn outline (speaker + accomplishes only), discussion_arc. No target_flaws, no flaw_role. Making this a schema prevents accidental information leakage.
+- Schema #11 (dialog writer input) captures the scenario plan minus `target_flaws` — the plan the dialog writer actually sees. Persona definitions, turn outline (speaker + accomplishes), discussion_arc. No target_flaws, no flaw pattern names, no thinking behavior names. Making this a schema prevents accidental information leakage.
 - Schemas are descriptive YAML (field name, type, required/optional, description, constraints) — human-readable contracts first, machine-validatable second.
-- The `flaw_role` field in scenario_plan.yaml should be annotated as orchestration-only, stripped before passing to the dialog writer.
 
 ---
 
@@ -149,7 +147,7 @@ CRITERIA:
    between the reference libraries and every schema that references them. Check:
    - scenario_plan.yaml (flaw_pattern, thinking_behavior fields)
    - evaluation_full.yaml (pattern fields in annotations)
-   - evaluation_student.yaml, evaluation_teacher.yaml
+   - evaluation_student.yaml
    - student_annotations.yaml (detection_act, thinking_behavior fields)
    List any mismatches.
 
@@ -176,8 +174,6 @@ CRITERIA:
      thinking_behavior (pattern, explanation), location
    - MUST NOT include: planned, plausible_alternatives, quality_assessment,
      facilitation_guide
-   evaluation_teacher.yaml must contain everything from evaluation_full.yaml.
-
 5. PRE-ENUMERATION VS POST-ENUMERATION
    discussion_transcript_pre.yaml must match discussion_transcript.yaml except:
    - No id fields on sentences
@@ -187,7 +183,7 @@ CRITERIA:
 6. DIALOG WRITER INPUT SCHEMA
    dialog_writer_input.yaml must include ONLY: persona definitions (all fields),
    turn outline (speaker + accomplishes only), discussion_arc, style guidance.
-   Must NOT include: target_flaws, flaw_role, flaw pattern names, thinking behavior
+   Must NOT include: target_flaws, flaw pattern names, thinking behavior
    names, detection act labels. This is the information barrier.
 
 7. REFERENCE LIBRARY COMPLETENESS
@@ -240,7 +236,7 @@ NEEDS REVISION (with prioritized list of what to fix).
   - No reference to flaws, biases, or pedagogical goals
 - **Weaknesses field and the information barrier.** The dialog writer sees persona weaknesses ("what they'll get wrong and why"), which is part of the scenario plan schema. Weaknesses inherently reference what goes wrong — this is intentional (the writer needs to know the persona's limitations to write authentically). But weaknesses must be phrased as knowledge gaps or perspectives in natural terms (e.g., "only researched one source, tends to generalize from limited data"), NOT as flaw labels (e.g., "will produce a big-claim-little-evidence flaw"). The information barrier applies to flaw taxonomy names and pedagogical intent, not to the persona's character. The `create_scenario` command is responsible for writing weaknesses in natural language; the dialog writer prompt should treat them as character traits, not flaw instructions.
 - Each subagent prompt includes its output schema inline or by reference.
-- The evaluator produces everything in one pass: annotations with plausible_alternatives, quality_assessment, and the full facilitation_guide (timing, what_to_expect, and scaffolds for all phases).
+- The evaluator produces everything in one pass: annotations with plausible_alternatives, quality_assessment, and the facilitation_guide (timing, what_to_expect, and scaffolds for phases 1, 2, and 4 — Phase 3 scaffolds are generic and hardcoded in the app/cheat sheet template).
 
 ---
 
@@ -268,125 +264,13 @@ NEEDS REVISION (with prioritized list of what to fix).
 
 **Notes:**
 - `create_script` is the most complex command. It must:
-  - Strip `flaw_role` and `target_flaws` from the scenario plan before passing to the dialog writer
+  - Strip `target_flaws` from the scenario plan before passing to the dialog writer
   - Run structural checks (review_transcript.py or manual) after dialog writer output
   - Implement discard-and-regenerate (max 3 attempts)
   - Pass the raw transcript + full plan to the instructional designer
   - Apply enumeration (enumerate_turns.py or manual) after polish
 - Commands should include manual fallback instructions for when scripts are not yet available: "If `review_transcript.py` is not available, verify manually: turn count within 12-16, speaker names match plan, turn order follows plan."
-- `create_scenario` should invoke `setup_registry.py` (or create the directory manually) to initialize the registry entry.
-
----
-
-## REVIEW B: Subagent + Command Review
-
-**Why here:** The dialog writer prompt and the `create_script` orchestration are the highest-risk prompt engineering in the system. If the information barrier leaks or the `accomplishes` field guidance doesn't steer effectively, the first scenario run will produce unusable transcripts.
-
-**Files to review:**
-- `configs/scenario/agents/learning_scientist.md`
-- `configs/script/agents/dialog_writer.md`
-- `configs/script/agents/instructional_designer.md`
-- `configs/evaluation/agents/evaluator.md`
-- `configs/system/commands/initialize_polylogue.md`
-- `configs/scenario/commands/create_scenario.md`
-- `configs/script/commands/create_script.md`
-- `configs/evaluation/commands/evaluate_script.md`
-
-**Review prompt:**
-
-```
-You are reviewing the subagent prompts and slash commands for Polylogue 4. The design
-specification is at docs/design.md. The schemas are in configs/*/schemas/. Check the
-following criteria and report findings as PASS, ISSUE, or SUGGESTION.
-
-FILES TO REVIEW:
-- configs/scenario/agents/learning_scientist.md
-- configs/script/agents/dialog_writer.md
-- configs/script/agents/instructional_designer.md
-- configs/evaluation/agents/evaluator.md
-- configs/system/commands/initialize_polylogue.md
-- configs/scenario/commands/create_scenario.md
-- configs/script/commands/create_script.md
-- configs/evaluation/commands/evaluate_script.md
-
-CRITERIA:
-
-1. INFORMATION BARRIER (Critical)
-   The dialog writer must receive ONLY: persona definitions (name, role, perspective,
-   strengths, weaknesses), turn outline (speaker + accomplishes fields only),
-   discussion_arc, and style guidance.
-   It must NOT receive: target_flaws, flaw_role, flaw pattern names, thinking behavior
-   names, detection act labels, or any language revealing pedagogical intent.
-   Check both the dialog writer prompt AND create_script.md to confirm:
-   (a) The prompt does not reference flaws or biases
-   (b) create_script.md explicitly strips flaw_role and target_flaws before invocation
-   (c) The dialog_writer_input.yaml schema is referenced
-
-2. ACCOMPLISHES FIELD GUIDANCE
-   The dialog writer prompt must guide the model on interpreting accomplishes fields.
-   Compare against the good/bad examples in the design doc (lines 371-389):
-   - BAD: "Make a sweeping claim supported by insufficient evidence"
-   - GOOD: "Share what you found from your one article and explain why you think it
-     settles the question"
-   Does the prompt teach this distinction? Does it provide enough examples?
-
-3. SIGNAL MOMENT INTEGRATION
-   Do the dialog writer and instructional designer prompts incorporate signal moment
-   principles from the design doc (lines 200-227)?
-   - Overconfident language as primary signal
-   - Concrete absence over abstract absence
-   - Proximity for contradictions
-   - Explicit capitulation for abandonment
-   Check that these principles appear as actionable guidance, not just abstract goals.
-
-4. INSTRUCTIONAL DESIGNER BOUNDARIES
-   The instructional designer prompt must clearly state:
-   - CAN: adjust phrasing, simplify language, tighten turns, sharpen signal moments
-   - CANNOT: add new flaws, remove existing flaws, change which turns contain flaws,
-     change speaker order
-   Is this boundary explicit and unambiguous?
-
-5. EVALUATOR COMPLETENESS
-   The evaluator prompt must produce ALL of the following in a single pass:
-   - Annotations (with location, argument_flaw, thinking_behavior including
-     plausible_alternatives, planned boolean)
-   - Summary (total_annotations, target_flaws_surfaced, target_flaws_planned)
-   - Quality assessment (all_targets_surfaced, issues with type/description/
-     target_flaw/recommendation)
-   - Facilitation guide (timing, what_to_expect, phase 1-4 scaffolds)
-   Check that the evaluator prompt references evaluation_full.yaml and covers
-   every field.
-
-6. SCHEMA REFERENCES
-   Does each subagent prompt reference the correct output schema? Does each command
-   validate inputs/outputs against the correct schemas? List any missing or
-   incorrect references.
-
-7. DISCARD-AND-REGENERATE LOGIC
-   create_script.md must implement:
-   - Structural checks after dialog writer output (turn count 12-16, speaker names
-     match, turn order follows plan)
-   - Discard and retry on failure (max 3 attempts)
-   - Halt and flag scenario plan as problematic after 3 failures
-   Is this logic complete and correctly sequenced?
-
-8. ENUMERATION SEQUENCING
-   create_script.md must apply enumeration AFTER the instructional designer polish,
-   not before. The dialog writer and instructional designer work with the
-   pre-enumeration format. Confirm the sequence is:
-   dialog writer → structural review → instructional designer → enumeration
-
-9. LEARNING SCIENTIST VALIDATION CRITERIA
-   The learning scientist prompt must check:
-   - Flaw detectability by 6th graders given this specific topic and personas
-   - Turn outline conditions for natural flaw surfacing
-   - Language/content complexity for 6th grade
-   - Instructional goal achievability
-   Are these criteria concrete enough to produce actionable feedback?
-
-Report each criterion as PASS or ISSUE. For ISSUEs, quote the specific file and
-passage causing the problem. End with READY TO PROCEED or NEEDS REVISION.
-```
+- `create_scenario` should create the registry directory inline (`mkdir -p registry/{scenario_id}`).
 
 ---
 
@@ -417,7 +301,6 @@ passage causing the problem. End with READY TO PROCEED or NEEDS REVISION.
 - `registry/{scenario_id}/script.yaml`
 - `registry/{scenario_id}/evaluation.yaml`
 - `registry/{scenario_id}/evaluation_student.yaml`
-- `registry/{scenario_id}/evaluation_teacher.yaml`
 - `registry/{scenario_id}/cheat_sheet.md`
 - Issue log documenting all manual interventions and problems
 
@@ -430,7 +313,7 @@ passage causing the problem. End with READY TO PROCEED or NEEDS REVISION.
 
 ## Phase 6: Python Scripts
 
-**Objective:** Formalize all 6 deterministic scripts, informed by the manual operations in Phase 5.
+**Objective:** Formalize all 5 deterministic scripts, informed by the manual operations in Phase 5.
 
 **Inputs:**
 - Design doc: script inventory (line 548), script design rules (line 557)
@@ -442,14 +325,13 @@ passage causing the problem. End with READY TO PROCEED or NEEDS REVISION.
 | # | Script | Location | What it does |
 |---|--------|----------|-------------|
 | 1 | `validate_schema.py` | `configs/shared/scripts/` | Validates any YAML artifact against its schema. Two modes: strict (halt) and warn (log, continue) |
-| 2 | `setup_registry.py` | `configs/scenario/scripts/` | Creates `registry/{scenario_id}/` directory |
-| 3 | `review_transcript.py` | `configs/script/scripts/` | Structural checks: turn count 12-16, speaker names match plan, turn order follows plan, all turns present |
-| 4 | `enumerate_turns.py` | `configs/script/scripts/` | Assigns sequential IDs (turn_01, turn_01.s01, ...) to pre-enumeration transcript |
-| 5 | `sync_configs.py` | `configs/system/scripts/` | Copies commands/agents from configs/ to .claude/, verifies reference libraries |
-| 6 | `export_for_app.py` | `configs/evaluation/scripts/` | Splits full evaluation into student/teacher YAML + renders cheat sheet markdown |
+| 2 | `review_transcript.py` | `configs/script/scripts/` | Structural checks: turn count 12-16, speaker names match plan, turn order follows plan, all turns present |
+| 3 | `enumerate_turns.py` | `configs/script/scripts/` | Assigns sequential IDs (turn_01, turn_01.s01, ...) to pre-enumeration transcript |
+| 4 | `sync_configs.py` | `configs/system/scripts/` | Copies commands/agents from configs/ to .claude/, verifies reference libraries |
+| 5 | `export_for_app.py` | `configs/evaluation/scripts/` | Extracts student-facing annotations into `evaluation_student.yaml` + renders cheat sheet markdown |
 
 **Outputs:**
-- 6 Python scripts in their respective `configs/*/scripts/` directories
+- 5 Python scripts in their respective `configs/*/scripts/` directories
 - Unit tests for each script
 
 **Notes:**
@@ -461,21 +343,23 @@ passage causing the problem. End with READY TO PROCEED or NEEDS REVISION.
 
 ---
 
-## REVIEW C: Full Pipeline Integration Review
+## REVIEW B: Full Pipeline Integration Review
 
-**Why here:** The entire pipeline is now formalized. This is the last review before the pipeline is considered functional. It checks both technical integration and pedagogical quality.
+**Why here:** The entire pipeline is now formalized and has produced real output. This review checks technical integration, prompt/command quality, and pedagogical quality — all against actual generated artifacts rather than prompts in isolation.
 
 **Files to review:**
-- All 6 scripts in `configs/*/scripts/`
+- All 5 scripts in `configs/*/scripts/`
+- All subagent prompts in `configs/*/agents/`
+- All commands in `configs/*/commands/`
 - The first scenario's outputs in `registry/{scenario_id}/`
 - All schemas in `configs/*/schemas/`
 
 **Review prompt:**
 
 ```
-You are performing an integration review of the complete Polylogue 4 pipeline. Review
-both technical integration and pedagogical quality. The design specification is at
-docs/design.md.
+You are performing a full integration review of the Polylogue 4 pipeline. Review
+technical integration, prompt/command quality, and pedagogical quality — all checked
+against actual generated output. The design specification is at docs/design.md.
 
 PART 1: TECHNICAL INTEGRATION
 
@@ -501,37 +385,39 @@ first scenario outputs in registry/{scenario_id}/.
    - Do annotation locations reference valid sentence IDs that exist in script.yaml?
 
 4. EVALUATION SPLIT CORRECTNESS
-   Compare evaluation_student.yaml against evaluation_full.yaml:
-   - Does it contain ONLY student-visible fields?
-   Compare evaluation_teacher.yaml against evaluation_full.yaml:
-   - Does it contain the complete evaluation?
+   Compare evaluation_student.yaml against evaluation.yaml:
+   - Does it contain ONLY student-visible fields (location, argument_flaw
+     pattern/detection_act/explanation, thinking_behavior pattern/explanation)?
+   - Does it exclude planned, plausible_alternatives, quality_assessment,
+     facilitation_guide?
    Does cheat_sheet.md render correctly and match the example format in the design doc
    (lines 867-902)?
 
-PART 2: PEDAGOGICAL QUALITY
+5. DISCARD-AND-REGENERATE LOGIC
+   Review the Phase 5 issue log: did create_script handle any structural failures?
+   If so, did it correctly discard and retry (max 3 attempts)?
+   If not, verify the logic is present in create_script.md for when it's needed.
 
-Files: registry/{scenario_id}/scenario.yaml, script.yaml, evaluation.yaml,
-cheat_sheet.md
+PART 2: PROMPT AND COMMAND QUALITY (checked against actual output)
 
-5. FLAW DETECTABILITY
-   Read the transcript (script.yaml) as a 6th grader would. For each target flaw:
-   - Can you identify the signal moment?
-   - Rate: "most students would catch this" / "attentive students would catch this" /
-     "too subtle for 6th graders" / "too cartoonish"
-   If any flaw is rated "too subtle" or "too cartoonish," explain why and suggest
-   a calibration direction.
+Files: configs/*/agents/*.md, configs/*/commands/*.md, and the first scenario's
+outputs in registry/{scenario_id}/.
 
-6. LANGUAGE LEVEL
-   Is the transcript language appropriate for 6th graders? Flag any:
-   - Vocabulary above grade level
-   - Sentence structures that are too complex
-   - Concepts requiring specialized knowledge a 6th grader wouldn't have
+6. INFORMATION BARRIER
+   Read the generated transcript (script.yaml). Does the dialog show signs of the
+   writer "knowing" the flaw taxonomy? Look for:
+   - Unnaturally precise flaw placement that reads as performed rather than natural
+   - Taxonomic or analytical language in persona dialog (e.g., "that's a correlation
+     not causation" spoken by a 6th grader)
+   - Flaws that feel scripted rather than emerging from the persona's character
+   Also verify: does create_script.md strip target_flaws before invoking the dialog
+   writer? Does the dialog_writer_input.yaml schema exclude target_flaws?
 
-7. PERSONA VOICE
-   Do the personas sound like different people? Check:
-   - Do they have distinct speech patterns?
-   - Do their perspectives come through in what they say?
-   - Or do they blur into a single generic voice?
+7. INSTRUCTIONAL DESIGNER BOUNDARIES
+   If available, compare the pre-polish and post-polish transcripts. Did the
+   instructional designer only sharpen expression (phrasing, signal strength,
+   language level), or did it add/remove/relocate flaws? If pre-polish is not
+   available, check the instructional designer prompt for explicit boundary language.
 
 8. ACCOMPLISHES FIELD EFFECTIVENESS
    Compare scenario.yaml's accomplishes fields with what the dialog writer produced
@@ -539,19 +425,44 @@ cheat_sheet.md
    - Did the accomplishes field steer the dialog writer successfully?
    - Where did steering succeed? Where did it fail?
 
-9. ANNOTATION QUALITY
-   Are the evaluator's annotations (evaluation.yaml) in 6th-grade language?
-   Are explanations framed as perspectives, not answers?
-   Are plausible_alternatives genuinely defensible, not filler?
+PART 3: PEDAGOGICAL QUALITY
 
-10. FACILITATION GUIDE USABILITY
+Files: registry/{scenario_id}/scenario.yaml, script.yaml, evaluation.yaml,
+cheat_sheet.md
+
+9. FLAW DETECTABILITY
+   Read the transcript (script.yaml) as a 6th grader would. For each target flaw:
+   - Can you identify the signal moment?
+   - Rate: "most students would catch this" / "attentive students would catch this" /
+     "too subtle for 6th graders" / "too cartoonish"
+   If any flaw is rated "too subtle" or "too cartoonish," explain why and suggest
+   a calibration direction.
+
+10. LANGUAGE LEVEL
+    Is the transcript language appropriate for 6th graders? Flag any:
+    - Vocabulary above grade level
+    - Sentence structures that are too complex
+    - Concepts requiring specialized knowledge a 6th grader wouldn't have
+
+11. PERSONA VOICE
+    Do the personas sound like different people? Check:
+    - Do they have distinct speech patterns?
+    - Do their perspectives come through in what they say?
+    - Or do they blur into a single generic voice?
+
+12. ANNOTATION QUALITY
+    Are the evaluator's annotations (evaluation.yaml) in 6th-grade language?
+    Are explanations framed as perspectives, not answers?
+    Are plausible_alternatives genuinely defensible, not filler?
+
+13. FACILITATION GUIDE USABILITY
     Read the cheat sheet. Could a teacher:
     - Scan it in 2 minutes before class?
     - Find the right scaffold while circulating among groups?
     - Use the Phase 1 and Phase 2 prompts as written, without modification?
     Are the timing estimates realistic for a 50-minute period?
 
-11. SIGNAL MOMENT CALIBRATION
+14. SIGNAL MOMENT CALIBRATION
     For each signal moment in the transcript, check against design doc principles
     (lines 200-227):
     - Is overconfident language used for evidence-based flaws?
@@ -580,7 +491,7 @@ artifacts. End with READY TO PROCEED or NEEDS REVISION (prioritized).
 2. Hand-write scenario plan: 2 personas, 1 target flaw (Act 2: "big claim, little evidence" + confirmation bias)
 3. Hand-write transcript: 5-6 turns with one obvious signal moment (stronger than a real scenario — the point is teaching the workflow)
 4. Hand-write evaluation: annotations, quality assessment, facilitation guide tailored to the walkthrough context
-5. Run `export_for_app.py` to produce student/teacher splits and cheat sheet
+5. Run `export_for_app.py` to produce student-facing extract and cheat sheet
 6. Validate all artifacts against schemas with `validate_schema.py`
 
 **Outputs:**
@@ -588,7 +499,6 @@ artifacts. End with READY TO PROCEED or NEEDS REVISION (prioritized).
 - `configs/reference/warmup/script.yaml`
 - `configs/reference/warmup/evaluation.yaml`
 - `configs/reference/warmup/evaluation_student.yaml`
-- `configs/reference/warmup/evaluation_teacher.yaml`
 - `configs/reference/warmup/cheat_sheet.md`
 
 **Notes:**
@@ -608,8 +518,7 @@ artifacts. End with READY TO PROCEED or NEEDS REVISION (prioritized).
 | **REVIEW A** | **Schema review** | **Phase 2** | **ID mismatches, missing fields, evaluation split errors** |
 | 3 | Subagent prompts | Review A | Dialog writer steering, signal moment guidance |
 | 4 | Slash commands | Phase 3 | Orchestration logic, information barrier |
-| **REVIEW B** | **Subagent + command review** | **Phase 4** | **Information leak, accomplishes quality, enumeration sequence** |
-| 5 | First scenario | Review B | End-to-end architectural validation |
+| 5 | First scenario | Phase 4 | End-to-end architectural validation |
 | 6 | Python scripts | Phase 5 | Script formalization from manual experience |
-| **REVIEW C** | **Integration review** | **Phase 6** | **Technical integration + pedagogical quality** |
+| **REVIEW B** | **Full integration review** | **Phase 6** | **Technical integration + prompt/command quality + pedagogical quality** |
 | 7 | Warm-up scenario | Phase 5 | Onboarding artifact for first classroom use |
