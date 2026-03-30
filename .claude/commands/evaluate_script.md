@@ -52,13 +52,7 @@ If the script is not available, verify manually:
 - `quality_assessment` is present with `all_targets_surfaced` and `issues`
 - `facilitation_guide` has timing, what_to_expect, phase_1, phase_2, phase_4
 
-**Cross-section consistency check (always verify, even after schema validation):**
-- Every flaw in `facilitation_guide.what_to_expect[]` must have a matching `phase_1[].targets` entry
-- Every flaw in `facilitation_guide.what_to_expect[]` must have a matching `phase_2[].flaw` entry
-- Every `phase_2[].narrowed_options` value must be a valid `behavior_id` from the thinking behavior library
-- Every annotation's `thinking_behavior.plausible_alternatives` values must be valid `behavior_id`s
-
-If any cross-section check fails, add the missing entries before proceeding to Step 4.
+The schema includes `cross_references` rules that check facilitation_guide consistency (every what_to_expect flaw has matching phase_1 and phase_2 entries). If validation fails, fix the evaluation before proceeding to Step 4.
 
 ### Step 4: Export student-facing evaluation and cheat sheet
 

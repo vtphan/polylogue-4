@@ -280,3 +280,18 @@ fields:
               type: string
               required: true
               description: "Ready-to-use teacher prompt."
+
+# Cross-reference rules: relational constraints across sections.
+# validate_schema.py checks these after field-level validation.
+cross_references:
+  - rule: every_what_to_expect_flaw_has_phase_1
+    description: "Every flaw in what_to_expect must have a matching phase_1 entry (by targets field). The app's location hint system chains what_to_expect → phase_1 to serve turn range + detection question."
+    source: facilitation_guide.what_to_expect[].flaw
+    target: facilitation_guide.phase_1[].targets
+    check: source_subset_of_target
+
+  - rule: every_what_to_expect_flaw_has_phase_2
+    description: "Every flaw in what_to_expect must have a matching phase_2 entry (by flaw field). The app's perspective and narrowed behavior hints chain what_to_expect → phase_2."
+    source: facilitation_guide.what_to_expect[].flaw
+    target: facilitation_guide.phase_2[].flaw
+    check: source_subset_of_target

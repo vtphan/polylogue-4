@@ -136,11 +136,56 @@ def validate_object(data, fields_def, path, errors):
         validate_field(value, field_name, field_def, field_path, errors)
 
 
+def resolve_path(data, dotted_path):
+    """Resolve a dotted path like 'facilitation_guide.what_to_expect[].flaw'
+    against artifact data. Returns a list of values found at that path.
+    '[]' means iterate over list items."""
+    parts = dotted_path.split(".")
+    current = [data]
+    for part in parts:
+        next_level = []
+        if part.endswith("[]"):
+            key = part[:-2]
+            for item in current:
+                lst = item.get(key, []) if isinstance(item, dict) else []
+                if isinstance(lst, list):
+                    next_level.extend(lst)
+        else:
+            for item in current:
+                if isinstance(item, dict) and part in item:
+                    next_level.append(item[part])
+        current = next_level
+    return current
+
+
+def validate_cross_references(artifact, schema, errors):
+    """Check cross_references rules defined in the schema."""
+    rules = schema.get("cross_references", [])
+    for rule in rules:
+        rule_name = rule.get("rule", "unnamed")
+        check = rule.get("check", "")
+        source_values = set(
+            v for v in resolve_path(artifact, rule["source"]) if isinstance(v, str)
+        )
+        target_values = set(
+            v for v in resolve_path(artifact, rule["target"]) if isinstance(v, str)
+        )
+
+        if check == "source_subset_of_target":
+            missing = source_values - target_values
+            for m in sorted(missing):
+                errors.append(
+                    f"cross_reference '{rule_name}': '{m}' found in "
+                    f"{rule['source']} but missing from {rule['target']}"
+                )
+
+
 def validate(artifact, schema):
     """Validate an artifact against a schema. Returns list of error strings."""
     errors = []
     fields_def = schema.get("fields", {})
     validate_object(artifact, fields_def, "", errors)
+    validate_cross_references(artifact, schema, errors)
     return errors
 
 
