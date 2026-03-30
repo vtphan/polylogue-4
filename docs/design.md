@@ -254,13 +254,14 @@ Signal moments are the highest-risk design challenge in the system. The principl
 
 ### Subagents
 
-Four subagents, each invoked once per scenario:
+Five subagents, each with a single role:
 
 | Subagent | Used by | Purpose |
 |---|---|---|
 | **Learning scientist** | `create_scenario` | Validates the plan against pedagogical goals |
 | **Dialog writer** | `create_script` | Generates the full transcript from the plan in a single pass |
 | **Instructional designer** | `create_script` | Polishes the transcript for 6th-grade readability and signal moment clarity |
+| **Pedagogical reviewer** | `create_script` | Assesses whether the polished transcript is pedagogically effective for 6th graders — a quality gate before enumeration |
 | **Evaluator** | `evaluate_script` | Annotates the transcript with argument flaws and thinking behaviors |
 
 No persona subagents. Persona definitions live in the scenario plan and are passed to the dialog writer as context. This keeps the subagent count low and eliminates persona file lifecycle management.
@@ -336,7 +337,7 @@ turn_outline:
 
 **Process: Single-pass generation with polish.**
 
-The `create_script` command orchestrates three steps:
+The `create_script` command orchestrates four steps:
 
 1. **Generate.** Invoke the **dialog writer subagent** with the full scenario plan. The dialog writer produces the complete transcript in a single pass — all turns, all personas — writing the discussion like a screenwriter writes dialog for all characters.
 
@@ -363,7 +364,9 @@ The `create_script` command orchestrates three steps:
 
    **Constraint:** The instructional designer can adjust **how flaws are expressed** (phrasing, signal strength, overconfident language) but not **which flaws are present or where they appear**. It sharpens, it doesn't add or remove. If a flaw didn't surface at all, that's a discard-and-regenerate decision, not an editing task. If a flaw surfaced but the signal moment is too subtle or too obvious, the instructional designer calibrates the phrasing — this is its primary value.
 
-**Total LLM calls:** 2 per successful transcript (dialog writer + instructional designer). The review step is a script, not an LLM call. If discarded and regenerated on the first try, 3 LLM calls (2 dialog writer + 1 instructional designer). Maximum 4 LLM calls for `create_script` if all 3 attempts are used (3 dialog writer + 1 instructional designer on the accepted transcript). A major improvement over per-turn generation approaches.
+4. **Assess.** Invoke the **pedagogical reviewer subagent** with the polished transcript and the full scenario plan. The pedagogical reviewer produces a scored assessment (1-5) of whether the transcript works as a teaching tool for 6th graders. It evaluates flaw detectability, group dynamics, naturalism, discussion potential, and signal variety. If the score is 4 or above, the transcript proceeds to enumeration. If 3 or below, the command halts with an explanation and revision strategy for the operator. The reviewer assesses the polished transcript (not the raw output) because signal moment quality depends on the instructional designer's sharpening pass.
+
+**Total LLM calls:** 3 per successful transcript (dialog writer + instructional designer + pedagogical reviewer). The review step is a script, not an LLM call. If discarded and regenerated on the first try, 4 LLM calls (2 dialog writer + 1 instructional designer + 1 pedagogical reviewer). Maximum 5 LLM calls for `create_script` if all 3 attempts are used (3 dialog writer + 1 instructional designer + 1 pedagogical reviewer on the accepted transcript).
 
 **Discard-and-regenerate strategy.** If the dialog writer produces a transcript that doesn't pass the review script, the command discards it and tries again. **Maximum 3 attempts.** If all 3 fail, the command halts and flags the scenario plan as problematic — the operator should revise the plan in `create_scenario`. A well-designed plan should produce a usable transcript within 1-2 attempts. Persistent failures indicate a plan quality problem, not a generation problem.
 
@@ -500,6 +503,7 @@ Every handoff in the system — between commands, between a command and its suba
 | **Discussion transcript (pre-enumeration)** | Dialog writer, instructional designer | `enumerate_turns.py` | `configs/script/schemas/` |
 | **Discussion transcript** | `enumerate_turns.py` | `evaluate_script`, Perspectives app | `configs/script/schemas/` |
 | **Dialog writer input** | `create_script` (orchestrator, scenario plan minus `target_flaws`) | Dialog writer subagent | `configs/script/schemas/` |
+| **Pedagogical review** | Pedagogical reviewer subagent | `create_script` (quality gate), operator | `configs/script/schemas/` |
 | **Evaluation (full)** | `evaluate_script` (evaluator subagent) | `export_for_app.py`, operator, teacher dashboard, cheat sheet | `configs/evaluation/schemas/` |
 | **Evaluation (student-facing)** | `export_for_app.py` | Perspectives app (Phase 4) | `configs/evaluation/schemas/` |
 | **Session configuration** | Teacher (via Perspectives app) | Perspectives app | `configs/app/schemas/` |
@@ -509,7 +513,7 @@ Every handoff in the system — between commands, between a command and its suba
 
 1. **YAML throughout.** All pipeline artifacts use YAML. The app may use JSON internally but pipeline↔app handoffs are YAML.
 2. **Schemas are reference, not generated.** Schemas live in `configs/` and are read at runtime. They are never generated or modified by the pipeline.
-3. **Every subagent call has a schema.** When the orchestrator invokes a subagent (dialog writer, instructional designer, learning scientist, evaluator), the expected output format is defined by a schema. The subagent's prompt includes the schema reference.
+3. **Every subagent call has a schema.** When the orchestrator invokes a subagent (dialog writer, instructional designer, pedagogical reviewer, learning scientist, evaluator), the expected output format is defined by a schema. The subagent's prompt includes the schema reference.
 4. **Validation at every handoff.** Each command validates its inputs against the relevant schema before processing. Two modes: **strict** (halt on violation — for production use) and **warn** (log violation but continue — for early development while schemas are stabilizing). MVP starts in warn mode; strict mode is enabled once schemas are stable.
 5. **App schemas are co-designed.** Schemas consumed by the Perspectives app (discussion transcript, evaluation annotations, session configuration, student annotations) are designed with the app team, not imposed by the pipeline. The app's needs drive the format.
 
@@ -525,9 +529,9 @@ configs/
 │   ├── commands/
 │   └── agents/             # learning_scientist
 ├── script/
-│   ├── schemas/            # discussion_transcript.yaml, discussion_transcript_pre.yaml, dialog_writer_input.yaml
+│   ├── schemas/            # discussion_transcript.yaml, discussion_transcript_pre.yaml, dialog_writer_input.yaml, pedagogical_review.yaml
 │   ├── commands/
-│   └── agents/             # dialog_writer, instructional_designer
+│   └── agents/             # dialog_writer, instructional_designer, pedagogical_reviewer
 ├── evaluation/
 │   ├── schemas/            # evaluation_full.yaml, evaluation_student.yaml
 │   ├── commands/
@@ -970,6 +974,7 @@ polylogue-4/
     └── {scenario_id}/
         ├── scenario.yaml              # Plan from create_scenario
         ├── script.yaml                # Transcript from create_script
+        ├── pedagogical_review.yaml    # Pedagogical quality assessment (from create_script)
         ├── evaluation.yaml            # Full evaluation from evaluate_script (operator + teacher)
         ├── evaluation_student.yaml    # Student-facing extract (from export_for_app.py)
         └── cheat_sheet.md             # Printable facilitation cheat sheet (from export_for_app.py)

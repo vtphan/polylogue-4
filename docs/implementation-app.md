@@ -5,7 +5,7 @@
 This plan covers implementation of the Perspectives app: the student-facing web application for Polylogue 4. It is a companion to `implementation-pipeline.md` and references the design specification in `design.md`.
 
 **Prerequisites:**
-- The pipeline implementation must be complete before app development begins. The first step of app implementation is to align this plan to any spec or design changes that occurred during pipeline development. Pipeline outputs (schemas, a generated scenario, the warm-up micro-scenario) serve as the app's input contracts and test data.
+- The pipeline implementation must be complete before app development begins. The first step of app implementation is to align this plan to any spec or design changes that occurred during pipeline development. Pipeline outputs (schemas, generated scenarios in `registry/`, and the scenario sequence in `docs/scenario-sequence.md`) serve as the app's input contracts and test data.
 - Node.js 24 LTS and npm must be installed on all development machines via `nvm install --lts`. All other dependencies (Next.js, TypeScript, Prisma, Tailwind CSS) are project-level and installed by Claude Code via npm during Phase 2 (project scaffolding). No manual dependency installation is required beyond Node.js. See Multi-Machine Development below for version pinning details.
 
 ### Multi-Machine Development
@@ -75,7 +75,9 @@ This implementation plan is the **sequencing document** — it tells the develop
 
 **Other documents referenced:**
 - `design.md` — the source design specification (pedagogical framework, pipeline architecture, flaw taxonomy)
-- `implementation-pipeline.md` — pipeline build plan (schemas, subagent prompts, scripts) whose outputs the app consumes
+- `implementation-pipeline.md` — pipeline build plan (Phases 1-6.3, schemas, subagent prompts, scripts) whose outputs the app consumes
+- `scenario-sequence.md` — operator guide with ready-to-use prompts for the 7-scenario UMS pilot sequence
+- `difficulty-calibration.md` — design-time and runtime difficulty tuning levers
 
 ---
 
@@ -176,6 +178,7 @@ Pipeline artifacts (YAML) are imported into the app in two distinct ways:
 | `evaluation_student.yaml` | AI annotations — student-visible fields only | Phase 4 AI reveal |
 | `evaluation.yaml` | Full evaluation: all annotations (including `planned`, `plausible_alternatives`), quality assessment, facilitation guide | Teacher dashboard + cheat sheet display |
 | `scenario.yaml` | Scenario plan (not student-visible, used for teacher context) | Teacher dashboard |
+| `pedagogical_review.yaml` | Pedagogical quality assessment (score 1-5, explanation, revision strategy) | Teacher dashboard (optional — shows scenario quality score) |
 
 ```
 Reference libraries (one-time seed)
@@ -287,10 +290,11 @@ This structure will be refined during implementation. It is included here to sho
 
 8. **REVIEW B** — full app flow with all phases and roles.
 
-9. **Session management + warm-up integration** — teacher creates sessions, assigns groups, warm-up onboarding flow.
+9. **Session management + onboarding** — teacher creates sessions, assigns groups, onboarding flow.
    - Reference: `uiux-app.md > Teacher > Create Session` (scenario selection, group assignment, session code)
    - Reference: `uiux-app.md > Student > Join` (session code entry, authentication)
-   - Reference: `uiux-app.md > Onboarding` (warm-up micro-scenario, tutorial status bar messages)
+   - Reference: `uiux-app.md > Onboarding` (tutorial status bar messages)
+   - Note: The warm-up scenario (Scenario 1 in `docs/scenario-sequence.md`) is optional. If used, it is hand-crafted and stored in `configs/reference/warmup/`. If skipped, students learn the tool on their first real scenario.
 
 10. **Polish + deployment** — university server setup, final testing.
     - Reference: `uiux-app.md > Tablet` (verify all tablet interactions, orientation handling, keyboard management)
