@@ -220,7 +220,7 @@ NEEDS REVISION (with prioritized list of what to fix).
 |---|----------|------|---------------|
 | 1 | Learning scientist | `configs/scenario/agents/learning_scientist.md` | Must check flaw detectability for 6th graders, not just pedagogical soundness in the abstract |
 | 2 | Dialog writer | `configs/script/agents/dialog_writer.md` | Must steer toward flaws via `accomplishes` fields without seeing flaw names; must produce distinct persona voices; must calibrate signal moments |
-| 3 | Instructional designer | `configs/script/agents/instructional_designer.md` | Must sharpen expression without adding/removing flaws; must enforce 6th-grade language |
+| 3 | Instructional designer | `configs/script/agents/instructional_designer.md` | Receives full scenario plan (including `target_flaws`) and pre-enumeration transcript. No information barrier — needs flaw locations to calibrate signal moments. Must sharpen expression without adding/removing flaws; must enforce 6th-grade language |
 | 4 | Evaluator | `configs/evaluation/agents/evaluator.md` | Must produce annotations + quality assessment + facilitation guide in a single pass |
 
 **Outputs:**
@@ -265,7 +265,7 @@ NEEDS REVISION (with prioritized list of what to fix).
 - `create_script` is the most complex command. It must:
   - Strip `target_flaws` from the scenario plan before passing to the dialog writer
   - Run structural checks (review_transcript.py or manual) after dialog writer output
-  - Implement discard-and-regenerate (max 3 attempts)
+  - Implement discard-and-regenerate (max 3 attempts). Each retry is a clean invocation with identical input — no feedback from the failed attempt is passed to the dialog writer. If the plan consistently produces structural failures across 3 attempts, the plan is the problem.
   - Pass the raw transcript + full plan to the instructional designer
   - Apply enumeration (enumerate_turns.py or manual) after polish
 - Commands should include manual fallback instructions for when scripts are not yet available: "If `review_transcript.py` is not available, verify manually: turn count within 12-16, speaker names match plan, turn order follows plan."
@@ -306,6 +306,7 @@ NEEDS REVISION (with prioritized list of what to fix).
 **Notes:**
 - Start with 1-2 target flaws, not 3. This isolates whether the `accomplishes` field approach works before adding complexity.
 - Document every manual operation — this directly informs script formalization in Phase 6.
+- Produce the cheat sheet manually following the example format in the design doc (lines 866-900). This manual version directly informs the template that `export_for_app.py` will use in Phase 6.
 - If the dialog writer produces a transcript where target flaws don't surface, this indicates a prompt quality problem (return to Phase 3 for revision), not a generation problem.
 
 ---
