@@ -302,7 +302,7 @@ Review phases will be inserted after the core annotation flow (phase 5) and afte
 
 These decisions are deferred until pipeline implementation is complete:
 
-1. ~~**Authentication approach.**~~ **Decided.** Session code + student name, as specified in `uiux-app.md > Student > Join`. Teacher creates a session (which generates a 6-character code), pre-assigns students to groups. Students enter the code + their name to join. No accounts, no passwords. Simple enough for 6th graders, sufficient for a research prototype on a private university network. Can be revisited if UMS IT requires stricter auth.
+1. ~~**Authentication approach.**~~ **Decided.** Session code + full student name, as specified in `uiux-app.md > Student > Join`. Teacher creates a session (which generates a 6-character code), pre-assigns students by full name to groups. Students enter the code + their full name to join (case-insensitive, whitespace-trimmed match). The app displays first name + last initial everywhere. No accounts, no passwords. Simple enough for 6th graders, sufficient for a research prototype on a private university network.
 
 2. ~~**YAML import workflow.**~~ **Decided.** Teacher imports scenarios through the dashboard UI, as specified in `uiux-app.md > Teacher > Dashboard`. File upload or path input for the scenario's YAML artifacts. This keeps the workflow self-contained in the app — the researcher doesn't need CLI access during class. A CLI import script can be added later if bulk import is needed.
 

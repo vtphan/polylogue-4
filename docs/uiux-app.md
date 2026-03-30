@@ -283,15 +283,17 @@ The student enters a session using a code provided by the teacher.
 **Layout:**
 - Centered card on screen
 - Session code input field (6-character alphanumeric, large font)
-- Student name input field (first name only — for display in peer comparison)
+- Student name input field (full name, e.g., "Amaya Torres")
 - "Join" button
 
 **Behavior:**
 - Validates session code exists and is active
-- Validates student is assigned to a group in this session
+- Validates student name against the pre-assigned list (case-insensitive, whitespace-trimmed). Error message if no match: "We don't see that name in this session. Check with your teacher."
 - On success: redirects to the activity view, Phase 1
 
-**No account creation.** Students are pre-assigned to groups by the teacher. The join screen just authenticates them into their assigned slot. The session code + name combination is the authentication mechanism.
+**No account creation.** Students are pre-assigned to groups by the teacher. The join screen authenticates them into their assigned slot. The session code + full name combination is the authentication mechanism.
+
+**Display names.** The app stores the full name but displays first name + last initial everywhere (comparison cards, annotation markers, student monitor). Display names are derived automatically — the teacher enters full names during session creation and the app handles the rest.
 
 ---
 
@@ -931,7 +933,7 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Group assignment.** Teacher types student names directly. Groups of 4-5. Teacher can add/remove groups and students. No class roster import for MVP — manual entry only.
+**Group assignment.** Teacher types student full names directly (e.g., "Amaya Torres"). Groups of 4-5. Teacher can add/remove groups and students. No class roster import for MVP — manual entry only. The app derives display names (first name + last initial) automatically.
 
 **Session code.** Auto-generated on creation. Teacher shares it verbally or writes it on the board. Students use it to join.
 
