@@ -29,6 +29,7 @@ PHASE 1: Student isn't finding flaws
 → "Look at turn 5. Maya talks about a school in Oregon. Is one school enough to know something will work at every school?"
 → "Follow Jordan's turns from turn 4 all the way to turn 10. He asks some really good questions early on. What happens to those questions by the end?"
 → "Re-read turns 7 and 9. Pay attention to how Maya talks about problems and downsides. Does she think there are any?"
+→ "Look at turn 9. Maya calls compostable trays 'a proven solution.' Go back and check — how much proof did she actually give? Does what she showed match how sure she sounds?"
 
 PHASE 2: Student found flaw but stuck on thinking behavior
 → For "They're saying a lot based on very little": Narrow to 3: "They only paid attention to things that agreed with them" / "They got stuck on the first thing they heard and couldn't let go" / "They only focused on one part and missed the bigger picture"

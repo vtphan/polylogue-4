@@ -136,6 +136,9 @@ facilitation_guide:
     - prompt: "Re-read turns 7 and 9. Pay attention to how Maya talks about problems and downsides. Does she think there are any?"
       targets: missing_downsides
 
+    - prompt: "Look at turn 9. Maya calls compostable trays 'a proven solution.' Go back and check — how much proof did she actually give? Does what she showed match how sure she sounds?"
+      targets: conclusion_exceeds_evidence
+
   phase_2:
     - flaw: big_claim_little_evidence
       narrowed_options:

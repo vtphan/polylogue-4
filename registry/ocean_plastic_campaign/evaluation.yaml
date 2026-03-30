@@ -160,6 +160,9 @@ facilitation_guide:
     - prompt: "Read the last turn — turn 12. Mia says they have 'the research and a real plan.' Go back and count: how many sources did they actually find? And does their plan cover how they'd actually do everything?"
       targets: conclusion_exceeds_evidence
 
+    - prompt: "Re-read turn 7. Mia says she has 'a real article with real statistics and a whole documentary' and calls that 'pretty solid.' Is that actually a strong enough source to prove what she's claiming?"
+      targets: weak_source_strong_claim
+
   phase_2:
     - flaw: big_claim_little_evidence
       narrowed_options:

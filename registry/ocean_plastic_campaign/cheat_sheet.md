@@ -34,6 +34,7 @@ PHASE 1: Student isn't finding flaws
 → "Look at turns 9 through 11. Jaylen is describing a lot of cool activities. Now ask yourself: could they actually pull all of this off? What would they need?"
 → "Follow Jaylen's turns in order. In turn 6, he asks a question. What happens to that question? Does it ever get answered?"
 → "Read the last turn — turn 12. Mia says they have 'the research and a real plan.' Go back and count: how many sources did they actually find? And does their plan cover how they'd actually do everything?"
+→ "Re-read turn 7. Mia says she has 'a real article with real statistics and a whole documentary' and calls that 'pretty solid.' Is that actually a strong enough source to prove what she's claiming?"
 
 PHASE 2: Student found flaw but stuck on thinking behavior
 → For "They're saying a lot based on very little": Narrow to 3: "They only paid attention to things that agreed with them" / "They believed it because they felt strongly, not because they had proof" / "They only looked at sources and opinions that agreed with them"
