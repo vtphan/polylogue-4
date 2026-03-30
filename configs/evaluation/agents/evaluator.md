@@ -89,6 +89,8 @@ Produce a complete facilitation guide the teacher can use to run the 50-minute c
 
 Phase 3 scaffolds are generic (same for every scenario) and are hardcoded in the app and cheat sheet template. Do not generate Phase 3 scaffolds.
 
+**Consistency rule:** Every flaw listed in `what_to_expect` must have a corresponding entry in both `phase_1` (with a matching `targets` value) and `phase_2` (with a matching `flaw` value). The app's hint system chains these sections together — a flaw in `what_to_expect` without a `phase_1` entry breaks the location hint, and without a `phase_2` entry breaks the perspective and narrowed behavior hints.
+
 ## Writing Guidelines
 
 ### Explanations Must Be 6th-Grade Language
