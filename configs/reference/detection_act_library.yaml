@@ -1,0 +1,101 @@
+# Detection Act Library
+# Source of truth for all 19 argument flaw patterns organized by 5 detection acts.
+# Canonical IDs (snake_case) are used in all schemas and pipeline artifacts.
+# Plain-language names and descriptions are written for 6th graders.
+
+detection_acts:
+  - act_id: somethings_wrong
+    name: "Something's Wrong"
+    student_question: "That's not right / That's not how it works"
+    patterns:
+      - pattern_id: factual_error
+        plain_language: "That's not true"
+        description: "A specific claim that is verifiably wrong"
+
+      - pattern_id: misapplied_idea
+        plain_language: "That's not what that means"
+        description: "Using a concept or term incorrectly"
+
+      - pattern_id: wrong_cause
+        plain_language: "That's not why it happens"
+        description: "Saying one thing causes another when it doesn't"
+
+  - act_id: not_enough_support
+    name: "Not Enough Support"
+    student_question: "How do they know that? / That's a big claim from not much proof"
+    patterns:
+      - pattern_id: big_claim_little_evidence
+        plain_language: "They're saying a lot based on very little"
+        description: "A big conclusion from just one or two pieces of evidence"
+
+      - pattern_id: one_example_as_proof
+        plain_language: "That's just one example"
+        description: "One story or example treated as if it settles the whole question"
+
+      - pattern_id: correlation_as_causation
+        plain_language: "Just because two things happened together doesn't mean one caused the other"
+        description: "Two things happened at the same time, so they assume one caused the other"
+
+      - pattern_id: weak_source_strong_claim
+        plain_language: "That's not a strong enough source for that claim"
+        description: "A weak source like one article or one person's opinion treated as solid proof"
+
+      - pattern_id: guess_treated_as_fact
+        plain_language: "They're acting like they know but they're just guessing"
+        description: "Saying something with certainty when it's really just a guess"
+
+  - act_id: somethings_missing
+    name: "Something's Missing"
+    student_question: "They didn't think about ___ / What about ___?"
+    patterns:
+      - pattern_id: missing_practical_details
+        plain_language: "How would that actually work?"
+        description: "No thought about cost, time, space, or how to actually do it"
+
+      - pattern_id: missing_people
+        plain_language: "They didn't ask ___"
+        description: "Only asking one person or group when others are clearly affected"
+
+      - pattern_id: missing_downsides
+        plain_language: "They only talked about the good stuff"
+        description: "Only mentioning the positives without any risks or downsides"
+
+      - pattern_id: missing_conditions
+        plain_language: "That only works if ___"
+        description: "Not thinking about what needs to be true for the plan to work"
+
+  - act_id: doesnt_fit_together
+    name: "Doesn't Fit Together"
+    student_question: "That doesn't match / The ending doesn't follow from what they showed"
+    patterns:
+      - pattern_id: conclusion_exceeds_evidence
+        plain_language: "They're claiming way more than they showed"
+        description: "The final claim goes way beyond what they actually proved"
+
+      - pattern_id: parts_contradict
+        plain_language: "Wait, that's the opposite of what they said before"
+        description: "Different parts of the discussion say opposite things"
+
+      - pattern_id: solution_doesnt_match_problem
+        plain_language: "That doesn't solve what they said the problem was"
+        description: "The solution they suggest doesn't actually fix the problem they described"
+
+  - act_id: not_really_resolved
+    name: "Not Really Resolved"
+    student_question: "They agreed but didn't actually solve the problem / Someone had a good point but the group just dropped it"
+    patterns:
+      - pattern_id: abandoned_concern
+        plain_language: "Someone raised a good point but gave up on it"
+        description: "A good point gets dropped after pushback without ever being answered"
+
+      - pattern_id: fake_agreement
+        plain_language: "They said they agreed but they actually didn't"
+        description: "The group says they agree but they still have unresolved disagreements"
+
+      - pattern_id: steamrolled
+        plain_language: "One person just kept talking louder until everyone gave in"
+        description: "Someone gives in not because they were wrong but because they couldn't keep arguing"
+
+      - pattern_id: harmony_over_accuracy
+        plain_language: "They just wanted everyone to feel included, not to get it right"
+        description: "The group cares more about everyone feeling good than about actually solving the problem"

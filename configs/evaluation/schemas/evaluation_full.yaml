@@ -1,0 +1,282 @@
+# Schema: Evaluation (Full)
+# Produced by: evaluate_script (evaluator subagent)
+# Consumed by: export_for_app.py, operator, teacher dashboard, cheat sheet rendering
+# Design doc: lines 430-482
+
+schema:
+  name: evaluation_full
+  description: Complete evaluation — annotations, quality assessment, and facilitation guide. Contains teacher/operator-only fields not shown to students.
+
+fields:
+  scenario_id:
+    type: string
+    required: true
+    description: "Matches the scenario plan's scenario_id."
+
+  annotations:
+    type: list
+    required: true
+    description: "All identified flaws — both planned targets and emergent ones."
+    items:
+      type: object
+      fields:
+        annotation_id:
+          type: string
+          required: true
+          description: "Unique identifier for this annotation (e.g., 'ann_01')."
+
+        location:
+          type: object
+          required: true
+          fields:
+            turn:
+              type: string
+              required: true
+              description: "The turn where this flaw appears (e.g., 'turn_03')."
+              constraints:
+                pattern: "turn_\\d{2}"
+
+            sentences:
+              type: list
+              required: true
+              description: "Specific sentence IDs (e.g., ['turn_03.s02', 'turn_03.s03']). May span multiple turns for cross-turn flaws."
+              items:
+                type: string
+                constraints:
+                  pattern: "turn_\\d{2}\\.s\\d{2}"
+
+        argument_flaw:
+          type: object
+          required: true
+          fields:
+            pattern:
+              type: string
+              required: true
+              description: "Canonical ID from the argument flaw library (e.g., 'big_claim_little_evidence')."
+
+            detection_act:
+              type: string
+              required: true
+              description: "act_id from the detection act library (e.g., 'not_enough_support')."
+
+            explanation:
+              type: string
+              required: true
+              description: "6th-grade explanation of the flaw, framed as a perspective (not a verdict)."
+
+        thinking_behavior:
+          type: object
+          required: true
+          fields:
+            pattern:
+              type: string
+              required: true
+              description: "Canonical ID from the thinking behavior library (e.g., 'confirmation_bias')."
+
+            explanation:
+              type: string
+              required: true
+              description: "6th-grade explanation of the thinking behavior."
+
+            plausible_alternatives:
+              type: list
+              required: true
+              description: "Other defensible thinking behaviors that could explain this flaw. Used by teacher for Phase 2 scaffolding."
+              items:
+                type: string
+
+        planned:
+          type: boolean
+          required: true
+          description: "true if this was a target flaw from the scenario plan; false if it emerged beyond the plan."
+
+  summary:
+    type: object
+    required: true
+    fields:
+      total_annotations:
+        type: integer
+        required: true
+        description: "Total number of annotations."
+
+      target_flaws_surfaced:
+        type: integer
+        required: true
+        description: "How many of the planned target flaws actually appeared."
+
+      target_flaws_planned:
+        type: integer
+        required: true
+        description: "How many target flaws were in the scenario plan."
+
+  quality_assessment:
+    type: object
+    required: true
+    description: "Operator/teacher-facing quality check. NOT shown to students."
+    fields:
+      all_targets_surfaced:
+        type: boolean
+        required: true
+        description: "Did all planned target flaws appear in the transcript?"
+
+      issues:
+        type: list
+        required: true
+        description: "Quality issues found. Empty list if no issues."
+        items:
+          type: object
+          fields:
+            type:
+              type: string
+              required: true
+              constraints:
+                enum:
+                  - missing_flaw
+                  - too_subtle
+                  - too_obvious
+
+            description:
+              type: string
+              required: true
+
+            target_flaw:
+              type: string
+              required: true
+              description: "Which planned flaw is affected."
+
+            recommendation:
+              type: string
+              required: true
+              constraints:
+                enum:
+                  - usable_as_is
+                  - consider_regeneration
+                  - needs_new_plan
+
+  facilitation_guide:
+    type: object
+    required: true
+    description: "Teacher-facing facilitation support. NOT shown to students."
+    fields:
+      timing:
+        type: object
+        required: true
+        fields:
+          phase_1_minutes:
+            type: integer
+            required: true
+            description: "Recommended minutes for Phase 1."
+
+          phase_2_minutes:
+            type: integer
+            required: true
+            description: "Recommended minutes for Phase 2."
+
+          phase_3_minutes:
+            type: integer
+            required: true
+            description: "Recommended minutes for Phase 3."
+
+          phase_4_minutes:
+            type: integer
+            required: true
+            description: "Recommended minutes for Phase 4."
+
+      what_to_expect:
+        type: list
+        required: true
+        description: "Teacher's map of the transcript — what students should notice."
+        items:
+          type: object
+          fields:
+            flaw:
+              type: string
+              required: true
+              description: "Flaw pattern canonical ID."
+
+            turns:
+              type: string
+              required: true
+              description: "Where it appears (e.g., 'turns 5-8 (Mia)')."
+
+            signal:
+              type: string
+              required: true
+              description: "What students should notice (e.g., \"Mia says 'the research proves...'\")."
+
+            difficulty:
+              type: string
+              required: true
+              constraints:
+                enum:
+                  - most_will_catch
+                  - harder_to_spot
+                  - easy_to_miss
+
+      phase_1:
+        type: list
+        required: true
+        description: "Scaffolds for students not finding flaws."
+        items:
+          type: object
+          fields:
+            prompt:
+              type: string
+              required: true
+              description: "Ready-to-use teacher prompt (e.g., \"Re-read turns 5-8 with just this question: How do they know that?\")."
+
+            targets:
+              type: string
+              required: true
+              description: "Which flaw this scaffold helps surface."
+
+      phase_2:
+        type: list
+        required: true
+        description: "Scaffolds for students stuck on thinking behaviors."
+        items:
+          type: object
+          fields:
+            flaw:
+              type: string
+              required: true
+              description: "Which flaw this relates to."
+
+            narrowed_options:
+              type: list
+              required: true
+              description: "2-3 thinking behaviors to choose from (subset of library)."
+              items:
+                type: string
+              constraints:
+                min_length: 2
+                max_length: 3
+
+            perspective_prompt:
+              type: string
+              required: true
+              description: "Empathy-based prompt (e.g., \"Imagine you're Mia...\")."
+
+      # Phase 3 scaffolds are generic (same for every scenario) — hardcoded in the
+      # app UI and cheat sheet template, not generated per scenario.
+
+      phase_4:
+        type: list
+        required: true
+        description: "Scaffolds for class discussion."
+        items:
+          type: object
+          fields:
+            type:
+              type: string
+              required: true
+              constraints:
+                enum:
+                  - challenge
+                  - student_victory
+                  - missed_flaw
+
+            prompt:
+              type: string
+              required: true
+              description: "Ready-to-use teacher prompt."

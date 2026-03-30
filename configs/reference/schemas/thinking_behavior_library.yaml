@@ -1,0 +1,45 @@
+# Schema: Thinking Behavior Library
+# Defines the structure of configs/reference/thinking_behavior_library.yaml
+# Consumed by: Perspectives app (Phase 2 UI), subagent prompts, validation scripts
+
+schema:
+  name: thinking_behavior_library
+  description: Structure for the thinking behavior reference library — all 8 cognitive patterns.
+
+fields:
+  thinking_behaviors:
+    type: list
+    required: true
+    description: The eight thinking behaviors.
+    items:
+      type: object
+      fields:
+        behavior_id:
+          type: string
+          required: true
+          description: "Canonical snake_case ID (e.g., 'confirmation_bias'). Used in all schemas and pipeline artifacts."
+          constraints:
+            enum:
+              - confirmation_bias
+              - anchoring_bias
+              - emotional_reasoning
+              - black_and_white_thinking
+              - groupthink
+              - overreliance_on_authority
+              - echo_chamber
+              - tunnel_vision
+
+        name:
+          type: string
+          required: true
+          description: "Plain-language name in 6th-grade language (e.g., \"They only paid attention to things that agreed with them\")."
+
+        description:
+          type: string
+          required: true
+          description: "What this behavior looks like, described in 6th-grade language."
+
+        formal_term:
+          type: string
+          required: true
+          description: "Academic/formal term for teacher reference (e.g., \"Confirmation bias\")."

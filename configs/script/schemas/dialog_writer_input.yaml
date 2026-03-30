@@ -1,0 +1,103 @@
+# Schema: Dialog Writer Input
+# Produced by: create_script (strips target_flaws from scenario plan)
+# Consumed by: dialog writer subagent
+# Design doc: lines 344-349
+# INFORMATION BARRIER: This schema deliberately excludes target_flaws, flaw pattern
+# names, thinking behavior names, and detection act labels. The dialog writer steers
+# toward flaws via the accomplishes field without knowing the flaw taxonomy.
+
+schema:
+  name: dialog_writer_input
+  description: The scenario plan as seen by the dialog writer — persona definitions, turn outline, and discussion arc, but NO flaw taxonomy information.
+
+fields:
+  scenario_id:
+    type: string
+    required: true
+    description: "Matches the scenario plan's scenario_id."
+
+  topic:
+    type: string
+    required: true
+    description: "The discussion topic."
+
+  context:
+    type: string
+    required: true
+    description: "Background context for the discussion."
+
+  personas:
+    type: list
+    required: true
+    description: "Full persona definitions including weaknesses (phrased as natural character traits, not flaw labels)."
+    constraints:
+      min_length: 2
+      max_length: 3
+    items:
+      type: object
+      fields:
+        persona_id:
+          type: string
+          required: true
+
+        name:
+          type: string
+          required: true
+
+        role:
+          type: string
+          required: true
+
+        perspective:
+          type: string
+          required: true
+          description: "What the persona believes or advocates for."
+
+        strengths:
+          type: list
+          required: true
+          items:
+            type: string
+
+        weaknesses:
+          type: list
+          required: true
+          description: "Knowledge gaps and tendencies in natural language — NOT flaw labels."
+          items:
+            type: string
+
+  discussion_arc:
+    type: string
+    required: true
+    description: "How the discussion opens, where tension builds, how it resolves or fails to resolve."
+
+  turn_outline:
+    type: list
+    required: true
+    description: "Turn-by-turn plan with speaker and accomplishes only."
+    constraints:
+      min_length: 12
+      max_length: 16
+    items:
+      type: object
+      fields:
+        turn:
+          type: integer
+          required: true
+          description: "Turn number."
+
+        speaker:
+          type: string
+          required: true
+          description: "persona_id of who speaks."
+
+        accomplishes:
+          type: string
+          required: true
+          description: "What this turn does — steers toward flaws without naming them."
+
+  # MUST NOT include:
+  # - target_flaws
+  # - flaw_pattern / thinking_behavior canonical IDs
+  # - detection_act labels
+  # - instructional_goals

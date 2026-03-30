@@ -1,0 +1,87 @@
+# Schema: Evaluation (Student-Facing)
+# Produced by: export_for_app.py (extracted from evaluation_full)
+# Consumed by: Perspectives app (Phase 4 student view)
+# Design doc: lines 631, 634-646
+#
+# MUST include: location, argument_flaw (pattern, detection_act, explanation),
+#               thinking_behavior (pattern, explanation)
+# MUST NOT include: planned, plausible_alternatives, quality_assessment, facilitation_guide
+
+schema:
+  name: evaluation_student
+  description: Student-facing evaluation — annotations only, stripped of all teacher/operator fields. Prevention of data leakage by design.
+
+fields:
+  scenario_id:
+    type: string
+    required: true
+    description: "Matches the scenario plan's scenario_id."
+
+  annotations:
+    type: list
+    required: true
+    description: "AI-identified flaws — framed as the AI's perspective, not the answer."
+    items:
+      type: object
+      fields:
+        annotation_id:
+          type: string
+          required: true
+          description: "Matches annotation_id from the full evaluation."
+
+        location:
+          type: object
+          required: true
+          fields:
+            turn:
+              type: string
+              required: true
+              description: "The turn where this flaw appears."
+              constraints:
+                pattern: "turn_\\d{2}"
+
+            sentences:
+              type: list
+              required: true
+              description: "Specific sentence IDs."
+              items:
+                type: string
+                constraints:
+                  pattern: "turn_\\d{2}\\.s\\d{2}"
+
+        argument_flaw:
+          type: object
+          required: true
+          fields:
+            pattern:
+              type: string
+              required: true
+              description: "Canonical ID — resolved to plain-language name via the detection act library."
+
+            detection_act:
+              type: string
+              required: true
+              description: "act_id — tells students which detection question applies."
+
+            explanation:
+              type: string
+              required: true
+              description: "6th-grade explanation, framed as a perspective."
+
+        thinking_behavior:
+          type: object
+          required: true
+          fields:
+            pattern:
+              type: string
+              required: true
+              description: "Canonical ID — resolved to plain-language name via the thinking behavior library."
+
+            explanation:
+              type: string
+              required: true
+              description: "6th-grade explanation of why the AI thinks this behavior was at work."
+
+        # EXCLUDED from student view:
+        # - planned (boolean) — students don't know which flaws were designed
+        # - thinking_behavior.plausible_alternatives — teacher uses from cheat sheet

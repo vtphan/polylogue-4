@@ -1,0 +1,139 @@
+# Schema: Scenario Plan
+# Produced by: create_scenario
+# Consumed by: create_script, teacher dashboard
+# Design doc: lines 308-332
+
+schema:
+  name: scenario_plan
+  description: The complete discussion plan targeting specific flaw-behavior combinations.
+
+fields:
+  scenario_id:
+    type: string
+    required: true
+    description: "Unique identifier for this scenario (snake_case, e.g., 'ocean_pollution_awareness')."
+
+  topic:
+    type: string
+    required: true
+    description: "The discussion topic (e.g., 'Whether our school should start a community garden')."
+
+  context:
+    type: string
+    required: true
+    description: "Background context for the discussion — what the students have been working on, what the PBL driving question is."
+
+  instructional_goals:
+    type: list
+    required: true
+    description: "What the teacher wants students to practice or learn from this scenario."
+    items:
+      type: string
+    constraints:
+      min_length: 1
+
+  personas:
+    type: list
+    required: true
+    description: "The 2-3 AI personas who will participate in the discussion."
+    constraints:
+      min_length: 2
+      max_length: 3
+    items:
+      type: object
+      fields:
+        persona_id:
+          type: string
+          required: true
+          description: "Unique identifier within this scenario (snake_case, e.g., 'mia')."
+
+        name:
+          type: string
+          required: true
+          description: "Display name for the persona (e.g., 'Mia')."
+
+        role:
+          type: string
+          required: true
+          description: "The persona's role in the group (e.g., 'Lead researcher on water quality')."
+
+        perspective:
+          type: string
+          required: true
+          description: "What the persona believes or advocates for."
+
+        strengths:
+          type: list
+          required: true
+          description: "What this persona knows well — areas of genuine competence."
+          items:
+            type: string
+
+        weaknesses:
+          type: list
+          required: true
+          description: "What they'll get wrong and why — phrased as knowledge gaps or tendencies in natural language, NOT as flaw labels."
+          items:
+            type: string
+
+  discussion_arc:
+    type: string
+    required: true
+    description: "How the discussion opens, where tension builds, and how it resolves or fails to resolve."
+
+  target_flaws:
+    type: list
+    required: true
+    description: "The 1-3 flaw-behavior combinations this scenario targets."
+    constraints:
+      min_length: 1
+      max_length: 3
+    items:
+      type: object
+      fields:
+        flaw_pattern:
+          type: string
+          required: true
+          description: "Canonical ID from the argument flaw library (e.g., 'big_claim_little_evidence')."
+
+        thinking_behavior:
+          type: string
+          required: true
+          description: "Canonical ID from the thinking behavior library (e.g., 'confirmation_bias')."
+
+        surfaces_in:
+          type: list
+          required: true
+          description: "Turn numbers where this flaw appears in the discussion."
+          items:
+            type: integer
+
+        persona:
+          type: string
+          required: true
+          description: "persona_id of who produces this flaw."
+
+  turn_outline:
+    type: list
+    required: true
+    description: "Turn-by-turn plan for the discussion."
+    constraints:
+      min_length: 12
+      max_length: 16
+    items:
+      type: object
+      fields:
+        turn:
+          type: integer
+          required: true
+          description: "Turn number (sequential, starting at 1)."
+
+        speaker:
+          type: string
+          required: true
+          description: "persona_id of who speaks this turn."
+
+        accomplishes:
+          type: string
+          required: true
+          description: "What this turn does for the discussion. For flaw-surfacing turns, steers toward the flaw without naming it. For other turns, describes the conversational function."

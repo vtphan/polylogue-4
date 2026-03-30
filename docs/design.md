@@ -454,7 +454,7 @@ quality_assessment:
     - type: string                 # "missing_flaw", "too_subtle", "too_obvious"
       description: string          # what the issue is
       target_flaw: string          # which planned flaw is affected
-      recommendation: string       # "usable as-is", "consider regeneration", "needs new plan"
+      recommendation: string       # "usable_as_is", "consider_regeneration", "needs_new_plan"
 facilitation_guide:
   timing:
     phase_1_minutes: integer         # recommended, e.g., 10-12
@@ -465,7 +465,7 @@ facilitation_guide:
     - flaw: string                   # e.g., "big_claim_little_evidence"
       turns: string                  # e.g., "turns 5-8 (Mia)"
       signal: string                 # what students should notice, e.g., "Mia says 'the research proves...'"
-      difficulty: string             # "most will catch it", "harder to spot", "easy to miss"
+      difficulty: string             # "most_will_catch", "harder_to_spot", "easy_to_miss"
   phase_1:                           # scaffolds for students not finding flaws
     - prompt: string                 # e.g., "Re-read turns 5-8 with just this question: How do they know that?"
       targets: string                # which flaw this helps surface
@@ -549,7 +549,7 @@ Deterministic tasks are performed by Python scripts, not LLM agents. Scripts are
 | `validate_schema.py` | All commands and subagents | Validates a YAML artifact against its schema; halts with clear error on violation | Deterministic: conforms or doesn't |
 | `review_transcript.py` | `create_script` | Structural checks on raw transcript: turn count within 12-16, speaker names match plan, turn order follows plan | Deterministic: structural validation |
 | `enumerate_turns.py` | `create_script` | Assigns sequential IDs to turns and sentences (turn_01.s01, etc.) after the instructional designer polish pass | Deterministic: sequential numbering |
-| `sync_configs.py` | `initialize_polylogue` | Copies commands and subagents from `configs/` to `.claude/`; verifies reference libraries | Deterministic: file copy and verification |
+| `sync_configs.py` | `initialize_polylogue` | Copies commands from `configs/*/commands/` to `.claude/commands/`, agents from `configs/*/agents/` to `.claude/agents/`; verifies reference libraries | Deterministic: file copy and verification |
 | `export_for_app.py` | `evaluate_script` | Extracts student-facing annotations into `evaluation_student.yaml` (stripped of `planned`, `plausible_alternatives`, `quality_assessment`, `facilitation_guide`); also renders cheat sheet as printable markdown | Deterministic: extract + format |
 
 ### Script Design Rules
@@ -973,7 +973,7 @@ polylogue-4/
         └── cheat_sheet.md             # Printable facilitation cheat sheet (from export_for_app.py)
 ```
 
-**Sync mechanism.** Commands and subagents are manually copied from `configs/` to `.claude/` via the `initialize_polylogue` command. This is a one-time setup step, repeated only when commands or subagents are added or changed. No automated build step for MVP.
+**Sync mechanism.** Commands are copied from `configs/*/commands/` to `.claude/commands/`, and subagents from `configs/*/agents/` to `.claude/agents/`, via the `initialize_polylogue` command. This is a one-time setup step, repeated only when commands or subagents are added or changed. No automated build step for MVP.
 
 ---
 

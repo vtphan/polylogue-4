@@ -1,0 +1,121 @@
+# Schema: Student Annotations
+# Produced by: student (via Perspectives app)
+# Consumed by: Perspectives app, teacher dashboard
+# Design doc: lines 653-675
+
+schema:
+  name: student_annotations
+  description: A single student annotation — the primary data artifact the app produces. Foundation for Phase 3 comparison, Phase 4 discussion, teacher monitoring, and researcher data access.
+
+fields:
+  annotation_id:
+    type: string
+    required: true
+    description: "Unique identifier for this annotation."
+
+  student_id:
+    type: string
+    required: true
+    description: "Who created this annotation."
+
+  group_id:
+    type: string
+    required: true
+    description: "Which group the student belongs to."
+
+  scenario_id:
+    type: string
+    required: true
+    description: "Which scenario this annotation is for."
+
+  phase_created:
+    type: integer
+    required: true
+    description: "Which phase this annotation was first created in (1, 2, or 3)."
+    constraints:
+      enum:
+        - 1
+        - 2
+        - 3
+
+  location:
+    type: object
+    required: true
+    fields:
+      sentences:
+        type: list
+        required: true
+        description: "Sentence IDs the student selected (e.g., ['turn_03.s02', 'turn_03.s03'])."
+        items:
+          type: string
+          constraints:
+            pattern: "turn_\\d{2}\\.s\\d{2}"
+
+  detection_act:
+    type: string
+    required: true
+    description: "act_id from the detection act library (e.g., 'not_enough_support')."
+
+  description:
+    type: string
+    required: true
+    description: "Free-text in the student's own words — what they noticed."
+
+  thinking_behavior:
+    type: string
+    required: false
+    description: "behavior_id from the library, or null if not yet assigned (Phase 1 only) or if behavior_source is 'own_words'."
+
+  behavior_source:
+    type: string
+    required: false
+    description: "How the student identified the thinking behavior."
+    constraints:
+      enum:
+        - library
+        - own_words
+
+  behavior_own_words:
+    type: string
+    required: false
+    description: "Free-text behavior description when behavior_source is 'own_words'. null otherwise."
+
+  behavior_explanation:
+    type: string
+    required: false
+    description: "How the student connects the behavior to the flaw. null if not yet provided."
+
+  submitted:
+    type: boolean
+    required: true
+    description: "true after Phase 2 submission. Triggers Phase 3 visibility to peers."
+
+  revision_history:
+    type: list
+    required: true
+    description: "Log of revisions. Empty list for new annotations."
+    items:
+      type: object
+      fields:
+        revised_at:
+          type: timestamp
+          required: true
+
+        phase:
+          type: integer
+          required: true
+          description: "Which phase the revision occurred in (2, 3, or 4)."
+          constraints:
+            enum:
+              - 2
+              - 3
+              - 4
+
+        change_type:
+          type: string
+          required: true
+          description: "Whether this was editing an existing annotation or creating a new one."
+          constraints:
+            enum:
+              - revision
+              - new

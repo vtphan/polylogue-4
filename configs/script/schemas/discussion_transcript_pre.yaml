@@ -1,0 +1,67 @@
+# Schema: Discussion Transcript (pre-enumeration)
+# Produced by: dialog writer, then instructional designer (polish pass)
+# Consumed by: enumerate_turns.py
+# Design doc: line 391
+# Same structure as discussion_transcript.yaml but WITHOUT id fields on sentences
+# and WITHOUT turn_id fields on turns. Turns are ordered but unnumbered.
+
+schema:
+  name: discussion_transcript_pre
+  description: Pre-enumeration transcript — same structure as the final transcript but without IDs. The dialog writer and instructional designer work with this format.
+
+fields:
+  scenario_id:
+    type: string
+    required: true
+    description: "Matches the scenario plan's scenario_id."
+
+  personas:
+    type: list
+    required: true
+    description: "Persona display information. Only includes fields safe for students."
+    items:
+      type: object
+      fields:
+        persona_id:
+          type: string
+          required: true
+          description: "Matches persona_id from the scenario plan."
+
+        name:
+          type: string
+          required: true
+          description: "Display name (e.g., 'Mia')."
+
+        role:
+          type: string
+          required: true
+          description: "The persona's role in the group."
+
+  turns:
+    type: list
+    required: true
+    description: "The discussion turns in order. No turn_id — turns are ordered by position."
+    constraints:
+      min_length: 12
+      max_length: 16
+    items:
+      type: object
+      fields:
+        speaker:
+          type: string
+          required: true
+          description: "persona_id of who speaks this turn."
+
+        sentences:
+          type: list
+          required: true
+          description: "The sentences within this turn, in order. No id fields — sentences are ordered by position."
+          constraints:
+            min_length: 1
+          items:
+            type: object
+            fields:
+              text:
+                type: string
+                required: true
+                description: "The sentence text."

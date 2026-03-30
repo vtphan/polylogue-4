@@ -1,0 +1,59 @@
+# Schema: Detection Act Library
+# Defines the structure of configs/reference/detection_act_library.yaml
+# Consumed by: Perspectives app (Phase 1 UI), subagent prompts, validation scripts
+
+schema:
+  name: detection_act_library
+  description: Structure for the detection act reference library — all 19 argument flaw patterns organized by 5 detection acts.
+
+fields:
+  detection_acts:
+    type: list
+    required: true
+    description: The five detection acts, each containing its argument flaw patterns.
+    items:
+      type: object
+      fields:
+        act_id:
+          type: string
+          required: true
+          description: "Canonical snake_case ID for the detection act (e.g., 'somethings_wrong')."
+          constraints:
+            enum:
+              - somethings_wrong
+              - not_enough_support
+              - somethings_missing
+              - doesnt_fit_together
+              - not_really_resolved
+
+        name:
+          type: string
+          required: true
+          description: "Display name for the detection act (e.g., \"Something's Wrong\")."
+
+        student_question:
+          type: string
+          required: true
+          description: "The question a student asks when this act applies (e.g., \"That's not right / That's not how it works\")."
+
+        patterns:
+          type: list
+          required: true
+          description: Argument flaw patterns belonging to this detection act.
+          items:
+            type: object
+            fields:
+              pattern_id:
+                type: string
+                required: true
+                description: "Canonical snake_case ID for the flaw pattern (e.g., 'big_claim_little_evidence'). Used in all schemas and pipeline artifacts."
+
+              plain_language:
+                type: string
+                required: true
+                description: "Student-facing name in 6th-grade language (e.g., \"They're saying a lot based on very little\")."
+
+              description:
+                type: string
+                required: true
+                description: "What this flaw looks like, described in 6th-grade language."

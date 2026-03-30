@@ -1,0 +1,46 @@
+# Thinking Behavior Library
+# Source of truth for all 8 thinking behaviors.
+# Canonical IDs (snake_case) are used in all schemas and pipeline artifacts.
+# Plain-language names and descriptions are written for 6th graders.
+# Formal terms are included for teacher reference.
+
+thinking_behaviors:
+  - behavior_id: confirmation_bias
+    name: "They only paid attention to things that agreed with them"
+    description: "Looking for, remembering, or believing only information that supports what you already think — and ignoring anything that disagrees"
+    formal_term: "Confirmation bias"
+
+  - behavior_id: anchoring_bias
+    name: "They got stuck on the first thing they heard and couldn't let go"
+    description: "Relying too much on the very first piece of information you hear, and letting it shape everything you think after that"
+    formal_term: "Anchoring bias"
+
+  - behavior_id: emotional_reasoning
+    name: "They believed it because they felt strongly, not because they had proof"
+    description: "Making up your mind based on how you feel — like excitement or frustration — instead of looking at the actual evidence"
+    formal_term: "Emotional reasoning"
+
+  - behavior_id: black_and_white_thinking
+    name: "They acted like it was either totally great or totally terrible"
+    description: "Seeing things as only two options — all good or all bad, right or wrong — without considering anything in between"
+    formal_term: "Black-and-white thinking"
+
+  - behavior_id: groupthink
+    name: "They just went along with everyone else instead of thinking for themselves"
+    description: "Going along with the group instead of saying what you really think, because you don't want to be the one who disagrees"
+    formal_term: "Groupthink"
+
+  - behavior_id: overreliance_on_authority
+    name: "They believed it because of who said it, not because the evidence was good"
+    description: "Believing something just because the person who said it sounded confident or important, without checking if the evidence is actually strong"
+    formal_term: "Overreliance on authority"
+
+  - behavior_id: echo_chamber
+    name: "They only looked at sources and opinions that agreed with them"
+    description: "Surrounding yourself with information that tells you what you already believe, and never looking for different points of view"
+    formal_term: "Echo chamber effect"
+
+  - behavior_id: tunnel_vision
+    name: "They only focused on one part and missed the bigger picture"
+    description: "Paying so much attention to one thing that you miss other important parts of the problem"
+    formal_term: "Tunnel vision"

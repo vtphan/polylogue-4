@@ -1,0 +1,107 @@
+# Schema: Session Configuration
+# Produced by: teacher (via Perspectives app dashboard)
+# Consumed by: Perspectives app
+# Design doc: lines 681-699
+#
+# Contains both teacher-authored fields (set at creation) and app-runtime fields
+# (initialized by the app, updated during the session). The schema defines the
+# structure for both, but the app owns the runtime fields.
+
+schema:
+  name: session_configuration
+  description: Controls grouping, phase advancement, and scenario selection for a class session.
+
+fields:
+  session_id:
+    type: string
+    required: true
+    description: "Unique identifier for this session."
+
+  scenario_id:
+    type: string
+    required: true
+    description: "Which scenario this session uses."
+
+  is_warmup:
+    type: boolean
+    required: true
+    description: "true for the tutorial micro-scenario, false for real scenarios."
+
+  created_at:
+    type: timestamp
+    required: true
+    description: "When the session was created."
+
+  groups:
+    type: list
+    required: true
+    description: "Student groups for this session (4-5 students per group)."
+    items:
+      type: object
+      fields:
+        group_id:
+          type: string
+          required: true
+          description: "Unique identifier for this group within the session."
+
+        student_ids:
+          type: list
+          required: true
+          description: "Student identifiers in this group."
+          items:
+            type: string
+
+  # --- Runtime fields below (owned by the app, not imported from YAML) ---
+
+  active_phase:
+    type: integer
+    required: true
+    description: "Current phase (1, 2, 3, or 4). Teacher controls advancement. App initializes to 1."
+    constraints:
+      min: 1
+      max: 4
+
+  phase_transitions:
+    type: list
+    required: true
+    description: "Log of phase transitions. Empty list at session creation."
+    items:
+      type: object
+      fields:
+        from_phase:
+          type: integer
+          required: true
+
+        to_phase:
+          type: integer
+          required: true
+
+        transitioned_at:
+          type: timestamp
+          required: true
+
+  student_activity:
+    type: list
+    required: true
+    description: "Per-student activity tracking for teacher monitoring. Entries created with null timestamps and zero counts at session start."
+    items:
+      type: object
+      fields:
+        student_id:
+          type: string
+          required: true
+
+        first_opened:
+          type: timestamp
+          required: false
+          description: "When the student first opened the transcript. null if not yet opened."
+
+        last_active:
+          type: timestamp
+          required: false
+          description: "Last interaction (annotation, scroll, selection). null if not yet active."
+
+        annotation_count:
+          type: integer
+          required: true
+          description: "Current number of annotations. Initialized to 0."

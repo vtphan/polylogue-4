@@ -1,0 +1,103 @@
+# Schema: Learning Scientist Validation
+# Produced by: learning scientist subagent
+# Consumed by: create_scenario (revision step)
+# Design doc: lines 298-303
+
+schema:
+  name: learning_scientist_validation
+  description: Validation feedback on a scenario plan from the learning scientist subagent.
+
+fields:
+  scenario_id:
+    type: string
+    required: true
+    description: "The scenario_id of the plan being validated."
+
+  overall_assessment:
+    type: string
+    required: true
+    description: "Overall judgment on the plan."
+    constraints:
+      enum:
+        - ready
+        - revise
+        - rethink
+
+  flaw_assessments:
+    type: list
+    required: true
+    description: "Assessment of each target flaw's detectability and design."
+    items:
+      type: object
+      fields:
+        flaw_pattern:
+          type: string
+          required: true
+          description: "Canonical ID of the flaw being assessed."
+
+        thinking_behavior:
+          type: string
+          required: true
+          description: "Canonical ID of the paired thinking behavior."
+
+        detectable_by_6th_graders:
+          type: string
+          required: true
+          description: "Assessment of whether 6th graders can find this flaw given the topic and personas."
+          constraints:
+            enum:
+              - "yes"
+              - "with_scaffolding"
+              - "too_subtle"
+              - "too_obvious"
+
+        surfaces_naturally:
+          type: boolean
+          required: true
+          description: "Does the turn outline create conditions for this flaw to emerge from the persona's character rather than feeling forced?"
+
+        feedback:
+          type: string
+          required: true
+          description: "Specific feedback on this flaw-behavior combination in the plan."
+
+  language_level:
+    type: string
+    required: true
+    description: "Assessment of whether the plan's content complexity is appropriate for 6th grade."
+    constraints:
+      enum:
+        - appropriate
+        - too_complex
+        - too_simple
+
+  instructional_goals_achievable:
+    type: boolean
+    required: true
+    description: "Are the stated instructional goals achievable through this plan?"
+
+  suggestions:
+    type: list
+    required: false
+    description: "Specific revision suggestions, ordered by priority."
+    items:
+      type: object
+      fields:
+        priority:
+          type: string
+          required: true
+          constraints:
+            enum:
+              - must_fix
+              - should_fix
+              - consider
+
+        target:
+          type: string
+          required: true
+          description: "What part of the plan this suggestion applies to (e.g., 'turn_outline', 'persona:mia', 'target_flaw:big_claim_little_evidence')."
+
+        suggestion:
+          type: string
+          required: true
+          description: "The specific change recommended."

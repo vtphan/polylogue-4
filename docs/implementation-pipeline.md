@@ -220,7 +220,7 @@ NEEDS REVISION (with prioritized list of what to fix).
 |---|----------|------|---------------|
 | 1 | Learning scientist | `configs/scenario/agents/learning_scientist.md` | Must check flaw detectability for 6th graders, not just pedagogical soundness in the abstract |
 | 2 | Dialog writer | `configs/script/agents/dialog_writer.md` | Must steer toward flaws via `accomplishes` fields without seeing flaw names; must produce distinct persona voices; must calibrate signal moments |
-| 3 | Instructional designer | `configs/script/agents/instructional_designer.md` | Receives full scenario plan (including `target_flaws`) and pre-enumeration transcript. No information barrier — needs flaw locations to calibrate signal moments. Must sharpen expression without adding/removing flaws; must enforce 6th-grade language |
+| 3 | Instructional designer | `configs/script/agents/instructional_designer.md` | Receives full scenario plan (including `target_flaws`) and pre-enumeration transcript. No information barrier — needs flaw locations to calibrate signal moments. Must sharpen expression without adding/removing flaws; must enforce 6th-grade language; must flag completely absent target flaws (early signal before evaluate_script) |
 | 4 | Evaluator | `configs/evaluation/agents/evaluator.md` | Must produce annotations + quality assessment + facilitation guide in a single pass |
 
 **Outputs:**
@@ -253,7 +253,7 @@ NEEDS REVISION (with prioritized list of what to fix).
 
 | # | Command | File | Orchestration logic |
 |---|---------|------|-------------------|
-| 1 | initialize_polylogue | `configs/system/commands/initialize_polylogue.md` | Copy configs to .claude/, verify structure |
+| 1 | initialize_polylogue | `configs/system/commands/initialize_polylogue.md` | Copy commands to `.claude/commands/`, agents to `.claude/agents/`, verify structure |
 | 2 | create_scenario | `configs/scenario/commands/create_scenario.md` | Draft plan → learning scientist validation → revise → output |
 | 3 | create_script | `configs/script/commands/create_script.md` | Dialog writer → structural review → instructional designer → enumeration |
 | 4 | evaluate_script | `configs/evaluation/commands/evaluate_script.md` | Evaluator → export split |
@@ -282,7 +282,7 @@ NEEDS REVISION (with prioritized list of what to fix).
 - PBL reference: `references/PBL/6th Grade STEM (Fall 2025).txt` — driving question: "What are the major threats affecting our global environment, and what can our communities do to protect our ecosystems?"
 
 **Tasks:**
-1. Run `initialize_polylogue` to copy commands and agents to `.claude/`
+1. Run `initialize_polylogue` to copy commands to `.claude/commands/` and agents to `.claude/agents/`
 2. Choose a specific topic derived from the 6th-grade PBL unit (e.g., a group researching ocean pollution and proposing a school awareness campaign)
 3. Run `create_scenario` with:
    - The chosen topic and context
@@ -308,6 +308,7 @@ NEEDS REVISION (with prioritized list of what to fix).
 - Document every manual operation — this directly informs script formalization in Phase 6.
 - Produce the cheat sheet manually following the example format in the design doc (lines 866-900). This manual version directly informs the template that `export_for_app.py` will use in Phase 6.
 - If the dialog writer produces a transcript where target flaws don't surface, this indicates a prompt quality problem (return to Phase 3 for revision), not a generation problem.
+- Save all intermediate artifacts (pre-enumeration transcript, manual cheat sheet, any manual evaluation split) alongside the final outputs. These serve as test fixtures for Phase 6 script unit tests.
 
 ---
 
@@ -327,7 +328,7 @@ NEEDS REVISION (with prioritized list of what to fix).
 | 1 | `validate_schema.py` | `configs/shared/scripts/` | Validates any YAML artifact against its schema. Two modes: strict (halt) and warn (log, continue) |
 | 2 | `review_transcript.py` | `configs/script/scripts/` | Structural checks: turn count 12-16, speaker names match plan, turn order follows plan, all turns present |
 | 3 | `enumerate_turns.py` | `configs/script/scripts/` | Assigns sequential IDs (turn_01, turn_01.s01, ...) to pre-enumeration transcript |
-| 4 | `sync_configs.py` | `configs/system/scripts/` | Copies commands/agents from configs/ to .claude/, verifies reference libraries |
+| 4 | `sync_configs.py` | `configs/system/scripts/` | Copies commands from `configs/*/commands/` to `.claude/commands/`, agents from `configs/*/agents/` to `.claude/agents/`, verifies reference libraries |
 | 5 | `export_for_app.py` | `configs/evaluation/scripts/` | Extracts student-facing annotations into `evaluation_student.yaml` + renders cheat sheet markdown |
 
 **Outputs:**
