@@ -1240,7 +1240,7 @@ This is the teacher's primary screen during class. Two-panel layout:
 - Not started (circle outline): `student_activity.first_opened` is null — student hasn't opened the transcript
 - Active (solid circle): `student_activity.first_opened` is non-null — student has opened the transcript
 - Submitted (checkmark): annotation's `submitted` field is true
-- May need help (warning): active for >80% of the scenario's `facilitation_guide.timing.phase_1_minutes` with 0 annotations, or >100% of phase time with fewer annotations than group average (thresholds are derived from the facilitation guide timing for this scenario, not hardcoded)
+- May need help (warning): >50% of the scenario's `facilitation_guide.timing.phase_1_minutes` elapsed since phase start with 0 annotations, or >100% of phase time with fewer annotations than group average. Time is measured from the phase start (phase clock), not from the student's `first_opened` — late-arriving students are flagged immediately because they need help catching up. The flag persists until the student creates an annotation. Thresholds are derived from the facilitation guide timing for this scenario, not hardcoded.
 
 **Annotation count** displays `student_activity.annotation_count`. Updates via polling (every 5-10 seconds).
 
@@ -1461,7 +1461,7 @@ The following algorithm operates on a uniform annotation shape (student, peer, a
 **Display:** Grouped by group. Each group header shows flaw coverage indicator (e.g., "◆◆○ (2/3)"). Each student shows:
 - Status indicator (not started / active / submitted / may need help)
 - Annotation count (`student_activity.annotation_count`)
-- Time since first opened (computed from `student_activity.first_opened` — "may need help" thresholds use the scenario's `facilitation_guide.timing` rather than hardcoded values)
+- Time since phase start (computed from `PhaseTransition` timestamps — "may need help" thresholds use elapsed time since the current phase started, not since the student's `first_opened`)
 
 **Polling:** Refreshes every 5-10 seconds via API call. Flaw coverage is included in the same polling response to avoid extra requests.
 

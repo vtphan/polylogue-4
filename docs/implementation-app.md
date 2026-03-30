@@ -350,6 +350,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
      User:
        id, displayName, username (auto-derived: lowercase, spaces→dots),
        passwordHash (nullable — null for students), role (teacher/researcher/student),
+       createdBy (FK to User, nullable — the teacher who created this student; null for teachers/researchers),
        createdAt
      ```
    - Students are created as `User` records with `role: "student"` and `passwordHash: null` when the teacher creates a session and assigns student names to groups.
@@ -421,7 +422,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 
    | Table | Notes |
    |-------|-------|
-   | `User` | id, displayName, username (auto-derived), passwordHash (nullable — null for students), role (teacher/researcher/student), createdAt. Teachers and researchers seeded from `seed.yaml`; students created when teacher assigns them to a session. |
+   | `User` | id, displayName, username (auto-derived), passwordHash (nullable — null for students), role (teacher/researcher/student), createdBy (FK to User, nullable — the teacher who created this student; null for teachers/researchers), createdAt. Teachers and researchers seeded from `seed.yaml`; students created when teacher assigns them to a session. Student upsert key: displayName + createdBy. |
    | `ClassSession` | session_id, scenario_id (FK), teacher_id (FK to User), lifeline_budget, location_hint_cap, character_hint_cap, perspective_hint_cap, narrowed_hint_cap, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), status (`active`/`archived`, default `active`), created_at. Hint caps computed at session creation from scenario flaw/persona counts. Auto-archives 2 hours after `created_at` (checked on dashboard load and via a periodic server check). Named `ClassSession` to avoid collision with BetterAuth's `session` table (auth sessions). |
    | `Group` | group_id, session_id (FK) |
    | `GroupMember` | user_id (FK to User, role=student), group_id (FK) |
@@ -1105,7 +1106,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - Not started (○): `first_opened` is null
      - Active (●): `first_opened` is non-null
      - Submitted (✓): all annotations have `submitted: true`
-     - May need help (⚠): active for >80% of `facilitation_guide.timing.phase_1_minutes` with 0 annotations, or >100% of phase time with fewer annotations than group average (thresholds are derived from the scenario's facilitation guide timing, not hardcoded)
+     - May need help (⚠): >50% of `facilitation_guide.timing.phase_1_minutes` elapsed since phase start with 0 annotations, or >100% of phase time with fewer annotations than group average. Time is measured from the phase start (phase clock), not from the student's `first_opened` — late-arriving students are flagged immediately because they need help catching up. The flag persists until the student creates an annotation. Thresholds are derived from the scenario's facilitation guide timing, not hardcoded.
      - Hints exhausted (flag): student has used all lifelines AND has 0-1 annotations
    - Class-level summary: total active, submitted count, and how many target flaws have been found by at least one group
    - Tapping student name opens their annotations in detail panel (read-only)
@@ -1299,7 +1300,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - Group assignment: teacher types full student names into groups. Groups of 4-5. Add/remove groups and students. **Duplicate name validation:** no two students in the same session can have the same full name — inline error if a duplicate is entered (if two students genuinely share a name, the teacher adds a middle initial to distinguish them). Optional "Auto-assign" button to randomly distribute unassigned students across groups (borrowed from CrossCheck's pattern — useful when the teacher has many students to assign quickly).
    - "Create Session" button:
      - Auto-generates 6-character alphanumeric session code (uppercase, no ambiguous characters like O/0, I/1)
-     - Creates `User` records for each student (role=student, no password) if they don't already exist (upsert by displayName — same student can appear in multiple sessions)
+     - Creates `User` records for each student (role=student, no password) if they don't already exist (upsert by displayName + teacher_id — the same student name under the same teacher reuses the User record across sessions, but different teachers' students are always separate to avoid name collisions)
      - Creates `ClassSession` (with teacher_id FK), `Group`, `GroupMember`, `StudentActivity` records
      - `active_phase` initialized to 1, `reflection_active` to false
      - Redirects to active session view, displays session code prominently

@@ -657,7 +657,7 @@ annotation_id: string
 student_id: string
 group_id: string
 scenario_id: string
-phase_created: integer               # 1, 2, or 3 — which phase this was first created in
+phase_created: integer               # 1, 2, 3, or 4 — which phase this was first created in
 location:
   sentences: [string]                 # sentence IDs selected, e.g., ["turn_03.s02", "turn_03.s03"]
 detection_act: string                 # act_id from detection act library, e.g., "not_enough_support"
