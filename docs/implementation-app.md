@@ -200,6 +200,8 @@ The app does not read YAML at runtime. YAML is the pipeline-to-app interface; SQ
 - The evaluation split (student vs. teacher) is enforced at import time — student-facing routes query only the student-visible annotation data
 - Research data access is a database query, not file parsing
 
+**Runtime data in the Prisma schema.** The pipeline's session configuration schema (design.md) defines both teacher-authored fields and app-runtime fields (`active_phase`, `phase_transitions`, `student_activity`) in one logical structure. In the Prisma schema, `student_activity` should map to a separate database table (e.g., `StudentActivity`) with a foreign key to `Session`, not embedded in a JSON column. This gives proper indexing for the teacher dashboard polling queries. The pipeline schema describes the logical structure; the Prisma schema describes the physical storage.
+
 ### Project Structure (Preliminary)
 
 ```

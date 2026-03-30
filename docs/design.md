@@ -692,6 +692,8 @@ student_activity:                     # for teacher monitoring — distinguishes
     annotation_count: integer         # current number of annotations
 ```
 
+**Runtime vs. configuration fields.** The session configuration schema contains both teacher-authored fields (`session_id`, `scenario_id`, `groups`, `is_warmup`) and app-runtime fields (`active_phase`, `phase_transitions`, `student_activity`). Teacher-authored fields are set at session creation and imported from the teacher's input. Runtime fields are initialized by the app (`active_phase` defaults to 1, `student_activity` entries created with null timestamps and zero counts) and updated during the session. The schema defines the structure for both, but the app owns the runtime fields — they are never imported from YAML.
+
 ### Phase Transition Rules
 
 | Transition | Trigger | What happens |
