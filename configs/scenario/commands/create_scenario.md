@@ -110,10 +110,12 @@ Before saving, verify:
 
 ## What's Next
 
-The scenario plan is saved. Now generate the transcript:
+When the scenario plan is saved, display the next command for the operator to copy-paste:
 
 ```
-/create_script
+Next step — copy and paste this command:
+
+/create_script {scenario_id}
 ```
 
-Provide the `scenario_id` from this scenario (e.g., `ocean_plastic_campaign`). The command will invoke the dialog writer, run structural checks, polish with the instructional designer, and assess pedagogical quality. If the pedagogical reviewer scores the transcript 4 or above, it proceeds to enumeration. If 3 or below, the command halts with a revision strategy — review it and decide whether to revise the plan or adjust prompt guidance.
+Replace `{scenario_id}` with the actual scenario_id from this run (e.g., `/create_script ocean_plastic_campaign`). The command will invoke the dialog writer, run structural checks, polish with the instructional designer, and assess pedagogical quality. If the pedagogical reviewer scores the transcript 4 or above, it proceeds to enumeration. If 3 or below, the command halts with a revision strategy.

@@ -162,12 +162,14 @@ Structural review and enumeration are scripts (or manual), not LLM calls.
 
 ## What's Next
 
-The transcript is generated and enumerated. Now produce annotations and facilitation materials:
+When the transcript is saved, display the next command for the operator to copy-paste:
 
 ```
-/evaluate_script
+Next step — copy and paste this command:
+
+/evaluate_script {scenario_id}
 ```
 
-Provide the same `scenario_id`. The evaluator will annotate all flaws (planned and emergent), produce a quality assessment, and generate a facilitation guide with per-phase scaffolds. It also exports the student-facing evaluation and a printable cheat sheet.
+Replace `{scenario_id}` with the actual scenario_id from this run (e.g., `/evaluate_script ocean_plastic_campaign`). The evaluator will annotate all flaws, produce a quality assessment, and generate a facilitation guide with per-phase scaffolds.
 
-After evaluation, the scenario is complete. All artifacts are in `registry/{scenario_id}/`. Review the cheat sheet to familiarize yourself with the discussion before using it in class.
+After evaluation, the scenario is complete. Review the cheat sheet (`registry/{scenario_id}/cheat_sheet.md`) before class.

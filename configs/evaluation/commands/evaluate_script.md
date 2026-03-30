@@ -138,21 +138,34 @@ This command does NOT trigger regeneration automatically.
 
 ## What's Next
 
-This scenario is complete. All artifacts are in `registry/{scenario_id}/`.
+When the evaluation is saved, display a summary for the operator:
 
-**Review the quality assessment.** If `all_targets_surfaced` is true and there are no issues, the scenario is ready for classroom use. If there are issues:
+```
+Scenario complete: {scenario_id}
+
+Artifacts saved to registry/{scenario_id}/:
+  scenario.yaml          — plan
+  script.yaml            — transcript
+  evaluation.yaml        — full evaluation
+  evaluation_student.yaml — student-facing annotations
+  cheat_sheet.md         — facilitation reference
+
+Quality: {all_targets_surfaced ? "All target flaws surfaced" : "Issues found — see quality_assessment"}
+```
+
+**Review the quality assessment.** If there are issues:
 - **usable_as_is**: Minor issues, transcript works as-is
-- **consider_regeneration**: Re-run `/create_script` with the same plan
+- **consider_regeneration**: Re-run `/create_script {scenario_id}`
 - **needs_new_plan**: Revise the plan via `/create_scenario`
 
-**Review the cheat sheet** (`cheat_sheet.md`) before class. It takes 2 minutes to scan and tells you everything you need to facilitate the session.
+**Review the cheat sheet** before class — takes 2 minutes to scan.
 
-**To generate the next scenario**, run `/create_scenario` again with the next prompt from `docs/scenario-sequence.md`.
+**To generate the next scenario**, run `/create_scenario` with the next prompt from `docs/scenario-sequence.md`.
 
-**Full workflow reference:**
+**Full workflow:**
 ```
-/initialize_polylogue  →  (one-time setup)
-/create_scenario       →  (design the plan)
-/create_script         →  (generate the transcript)
-/evaluate_script       →  (annotate and produce facilitation materials)
+/initialize_polylogue  →  one-time setup
+/create_scenario       →  design the plan
+/create_script         →  generate the transcript
+/evaluate_script       →  annotate and produce facilitation materials
 ```
