@@ -70,6 +70,8 @@ Produce a complete facilitation guide the teacher can use to run the 50-minute c
 
 **What to expect**: For each annotated flaw, tell the teacher:
 - Which flaw and where it appears (turns and persona)
+- `turns`: human-readable location (e.g., "turns 5-8 (Mia)")
+- `turn_ids`: structured list of turn IDs (e.g., `[turn_05, turn_06, turn_07, turn_08]`) — used by the app's lifeline targeting logic
 - What the signal is — the specific language students should notice
 - Difficulty: `most_will_catch` / `harder_to_spot` / `easy_to_miss`
 
@@ -78,6 +80,7 @@ Produce a complete facilitation guide the teacher can use to run the 50-minute c
 - Focus-on-a-persona prompts: direct students to follow one persona's turns
 
 **Phase 2 scaffolds** (for students stuck on thinking behaviors):
+- Character hint (Level 1 lifeline): for each flaw, write a 6th-grade-friendly prompt about the persona's character trait relevant to this flaw. E.g., "Think about Mia. She's really passionate about this topic. How might that affect what she says?" This should gently direct attention to the persona without naming the flaw or behavior. Store as `character_hint`.
 - Narrowed options: for each flaw, provide 2-3 thinking behaviors to choose from (drawn from the primary behavior + plausible alternatives)
 - Perspective-taking prompts: "Imagine you're [persona]..." prompts that help students empathize with the thinking behind the flaw
 
@@ -152,6 +155,7 @@ facilitation_guide:
   what_to_expect:
     - flaw: big_claim_little_evidence
       turns: "turns 3-5 (Mia)"
+      turn_ids: [turn_03, turn_04, turn_05]
       signal: "Mia says 'the research proves...' based on two articles"
       difficulty: most_will_catch
   phase_1:
@@ -159,6 +163,7 @@ facilitation_guide:
       targets: big_claim_little_evidence
   phase_2:
     - flaw: big_claim_little_evidence
+      character_hint: "Think about Mia. She found two articles that really excited her. How might that excitement affect what she says about the evidence?"
       narrowed_options:
         - confirmation_bias
         - tunnel_vision

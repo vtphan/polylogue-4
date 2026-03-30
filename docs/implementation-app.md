@@ -396,6 +396,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    | `Transcript` | `script.yaml` | scenario_id (FK), personas (JSON — name+role only), turns (JSON) |
    | `AIAnnotation` | `evaluation_student.yaml` | annotation_id, scenario_id (FK), location (JSON), argument_flaw (JSON), thinking_behavior (JSON) |
    | `TeacherEvaluation` | `evaluation.yaml` | scenario_id (FK), annotations (JSON — full including planned, plausible_alternatives), summary (JSON), quality_assessment (JSON), facilitation_guide (JSON) |
+   | `PedagogicalReview` | `pedagogical_review.yaml` | scenario_id (FK), overall_score (integer 1-5), explanation (text), revision_strategy (text, nullable), flaw_assessments (JSON) |
 
    **App-owned (runtime):**
 
@@ -445,7 +446,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
 7. **Write YAML import logic.** `src/lib/import.ts`:
    - `importReferenceLibraries(detectionActPath, thinkingBehaviorPath)` — one-time seed. Parses YAML, upserts `DetectionAct`, `FlawPattern`, `ThinkingBehavior` records.
-   - `importScenario(scenarioDir)` — per-scenario import. Reads `scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml` from a directory. Creates `Scenario`, `Transcript`, `AIAnnotation`, `TeacherEvaluation` records. Validates file existence before import. Returns the scenario_id.
+   - `importScenario(scenarioDir)` — per-scenario import. Reads `scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and `pedagogical_review.yaml` from a directory. Creates `Scenario`, `Transcript`, `AIAnnotation`, `TeacherEvaluation`, `PedagogicalReview` records. `pedagogical_review.yaml` is optional — if absent, no `PedagogicalReview` record is created. Validates file existence before import (except optional files). Returns the scenario_id.
    - Both functions are idempotent — re-importing overwrites existing records (upsert by primary key).
 
 8. **Write database seed script.** `prisma/seed.ts`:
@@ -664,8 +665,8 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    - Data source: `TeacherEvaluation` → `facilitation_guide` fields
 
    c. **Graduated hint levels:** Each tap reveals the next level for the target flaw:
-   - Level 1 (Character): rephrased persona weakness from `scenario.yaml`. Optional — skip if no natural hint exists (e.g., for emergent flaws).
-   - Level 2 (Location): turn reference from `facilitation_guide.phase_1[].prompt`
+   - Level 1 (Character): Primary source: `facilitation_guide.phase_2[].character_hint` — a pre-written, 6th-grade-friendly prompt about the persona's character trait relevant to this flaw (e.g., "Think about Mia. She's really passionate about this topic. How might that affect what she says?"). Fallback: if `character_hint` is absent (e.g., for emergent flaws the evaluator didn't generate a hint for), derive one from `scenario.yaml` persona weaknesses using a template: "Think about [name]. [weakness rephrased as question]." If neither source produces a usable hint, skip Level 1 and start at Level 2.
+   - Level 2 (Location): turn reference from `facilitation_guide.what_to_expect[].turn_ids` (structured) — rendered as "Re-read turns N through M."
    - Level 3 (Question): detection question from `facilitation_guide.phase_1[].prompt`
    - Level 4 (Pattern): `plain_language` + `description` from detection act library
 
@@ -969,18 +970,20 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 1. **Dashboard home** (`/teacher`). Reference: `uiux-app.md > Teacher > Dashboard`:
    - Active sessions list: each shows scenario topic, current phase, student count, submission count
-   - Available scenarios list: each shows scenario_id, flaw count, persona count
+   - Available scenarios list: each shows scenario_id, flaw count, persona count, pedagogical review score (if available), and `discussion_arc` as a one-line summary beneath each scenario
    - "Create New Session" button (routes to session creation — Phase 8)
-   - "Import New Scenario" button: opens file upload for scenario YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`). Uses `importScenario()` from `src/lib/import.ts`.
+   - "Import New Scenario" button: opens file upload for scenario YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and optionally `pedagogical_review.yaml`). Uses `importScenario()` from `src/lib/import.ts`.
    - Teacher design language: compact layout, smaller type, professional aesthetic
 
 2. **Active session view** (`/teacher/session/[id]`). Two-panel layout:
    - Header: scenario topic, current phase, session code, "Advance to Phase [N]" button
+   - Below header: `discussion_arc` from `Scenario` table — a one-line narrative summary of how the discussion unfolds, orienting the teacher to the scenario's shape
    - Left panel (~50%): Student Monitor
    - Right panel (~50%): Detail Panel (context-dependent)
 
 3. **StudentActivityTable component.** Implement per `uiux-app.md > Component > StudentActivityTable`:
    - Grouped by group
+   - Per group: flaw coverage indicator — how many target flaws have been found by at least one student in the group. A flaw is "found" if any student's annotation sentence IDs overlap with the AI annotation sentence IDs for that flaw (from `TeacherEvaluation`). Displayed as compact diamonds (e.g., "◆◆○ (2/3)"). Computed server-side.
    - Per student: status indicator + annotation count + submission status
    - Status indicators (derived from `StudentActivity` + `Annotation` tables):
      - Not started (○): `first_opened` is null
@@ -988,9 +991,10 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - Submitted (✓): all annotations have `submitted: true`
      - May need help (⚠): active >5 min with 0 annotations, or >8 min with fewer annotations than group average
      - Lifelines exhausted (flag): student has used all lifelines AND has 0-1 annotations
+   - Class-level summary: total active, submitted count, and how many target flaws have been found by at least one group
    - Tapping student name opens their annotations in detail panel (read-only)
    - Tapping group name opens group comparison in detail panel (Phase 3+)
-   - Polling: `GET /api/session/[id]/activity` every 10 seconds
+   - Polling: `GET /api/session/[id]/activity` every 10 seconds (includes flaw coverage data in the same response)
 
 4. **Phase controls.** "Advance to Phase [N]" button opens confirmation dialog per `uiux-app.md > Teacher > Monitor > Phase Controls`:
    - Shows: submitted count, unsubmitted count
@@ -1009,9 +1013,11 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 6. **Cheat sheet page** (`/teacher/session/[id]/cheatsheet`). Implement per `uiux-app.md > Teacher > Cheat Sheet`:
    - Full-page rendering of `facilitation_guide` from `TeacherEvaluation` table
-   - Sections: TIMING, WHAT TO EXPECT, PHASE 1, PHASE 2, PHASE 3 (hardcoded), PHASE 4
+   - Sections: TIMING, WHAT TO EXPECT, WHY THIS FLAW WORKS (from `PedagogicalReview`), PHASE 1, PHASE 2 (with VALID ALTERNATIVES), PHASE 3 (hardcoded), PHASE 4
+   - **WHY THIS FLAW WORKS**: For each target flaw, render the `expression_quality` text from `PedagogicalReview.flaw_assessments[]` (matched by `flaw_pattern`). Collapsible — collapsed by default for quick scanning, expandable for deeper prep. Only shown if `PedagogicalReview` data exists for this scenario.
+   - **VALID ALTERNATIVES**: Beneath each Phase 2 scaffold entry, show the full `plausible_alternatives` list from the matching annotation in `TeacherEvaluation.annotations[]` (matched by `flaw` field). Resolved to plain-language behavior names. Formatted as "Also defensible: [name 1], [name 2]." Helps the teacher distinguish productive disagreements from confused ones during Phase 3.
    - Schema field mapping per the table in `uiux-app.md > Teacher > Cheat Sheet`
-   - Print-friendly: no navigation chrome, clean margins, "Print" button
+   - Print-friendly: no navigation chrome, clean margins, "Print" button. Collapsible sections print as collapsed.
    - "Back to Session" link
    - Resolve flaw pattern IDs to plain-language names using reference libraries
 
@@ -1020,17 +1026,18 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - `GET /api/session/[id]/activity` — returns `StudentActivity` records for all students in session (teacher polls this)
 
 **Outputs:**
-- Teacher dashboard at `/teacher` with session list and scenario import
-- Active session view at `/teacher/session/[id]` with student monitor and phase controls
-- StudentActivityTable component with polling
+- Teacher dashboard at `/teacher` with session list (including discussion arc summaries), scenario import
+- Active session view at `/teacher/session/[id]` with discussion arc, student monitor, flaw coverage, and phase controls
+- StudentActivityTable component with polling and per-group flaw coverage indicators
 - Phase advance logic (force-submit, snapshot, transition)
 - Detail panel (cheat sheet summary, student annotations, group comparison)
-- Cheat sheet page at `/teacher/session/[id]/cheatsheet`
+- Cheat sheet page at `/teacher/session/[id]/cheatsheet` with flaw assessment deep dives and plausible alternatives
 - Reflection activation button
-- API routes for polling
+- API routes for polling (activity endpoint includes flaw coverage data)
 
 **Notes:**
-- The teacher dashboard and student UI share the same Prisma database but serve different data through different routes. The teacher sees `TeacherEvaluation` (full evaluation including planned, plausible_alternatives, facilitation_guide). Students see only `AIAnnotation` (student-facing subset). This enforcement happens at the route/action level — teacher routes query different tables than student routes.
+- The teacher dashboard and student UI share the same Prisma database but serve different data through different routes. The teacher sees `TeacherEvaluation` (full evaluation including planned, plausible_alternatives, facilitation_guide), `PedagogicalReview` (flaw assessments), and flaw coverage computations. Students see only `AIAnnotation` (student-facing subset). This enforcement happens at the route/action level — teacher routes query different tables than student routes.
+- Flaw coverage computation: for each AI annotation in the evaluation, check if any student in the group has an annotation whose `location.sentences` shares at least one sentence ID. This reuses the same overlap logic as the ComparisonView. The computation runs server-side and is included in the activity polling response — no separate endpoint needed.
 - Test phase advancement end-to-end: create a session, join as a test student, advance through all 4 phases, verify force-submission, snapshots, and reflection activation all work.
 
 ---

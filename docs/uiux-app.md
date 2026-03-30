@@ -258,12 +258,12 @@ Students receive a limited number of **lifelines** per scenario — voluntary hi
 
 | Level | What it reveals | Data source | Example |
 |---|---|---|---|
-| 1: Character | A persona trait relevant to the flaw | Derived from `scenario.yaml` persona weaknesses (rephrased — never shown raw) | "Think about Mia. She's really passionate about this topic. How might that affect what she says?" |
-| 2: Location | Where to look | `facilitation_guide.phase_1[].prompt` (the turn reference) | "Re-read turns 5 through 8. Something interesting happens there." |
+| 1: Character | A persona trait relevant to the flaw | Primary: `facilitation_guide.phase_2[].character_hint` (pre-written by evaluator). Fallback: derived from `scenario.yaml` persona weaknesses via template. Never shown raw. | "Think about Mia. She's really passionate about this topic. How might that affect what she says?" |
+| 2: Location | Where to look | `facilitation_guide.what_to_expect[].turn_ids` (structured turn IDs) | "Re-read turns 5 through 8. Something interesting happens there." |
 | 3: Question | What detection question to ask | `facilitation_guide.phase_1[].prompt` (the detection question) | "As you read those turns, ask yourself: How does Mia know that?" |
 | 4: Pattern | The flaw pattern description | Detection act library `patterns[].plain_language` + `description` | "One pattern to watch for: 'They're saying a lot based on very little.'" |
 
-**Level 1 is optional.** If no natural character hint exists for the target flaw (e.g., for emergent flaws without matching persona weaknesses), the system starts at Level 2. Each lifeline use reveals the next available level.
+**Level 1 is optional.** The evaluator generates `character_hint` per flaw in `facilitation_guide.phase_2[]`. If absent (e.g., for emergent flaws), the app falls back to deriving a hint from `scenario.yaml` persona weaknesses using a template: "Think about [name]. [weakness rephrased as question]." If neither source produces a usable hint, the system starts at Level 2. Each lifeline use reveals the next available level.
 
 **Phase 2 lifelines.** The same lifeline pool extends to Phase 2. A Phase 2 lifeline narrows the thinking behavior options from 8 to 2-3 (using `facilitation_guide.phase_2[].narrowed_options`) or offers the perspective prompt (using `facilitation_guide.phase_2[].perspective_prompt`). Same graduated approach — first narrow, then prompt.
 
@@ -1061,8 +1061,12 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 │  ─────────────────────────────────────────────────────   │
 │  Available Scenarios                                     │
 │                                                          │
-│  • school_garden_v1 — 2 flaws, 2 personas                │
-│  • ocean_pollution_v1 — 2 flaws, 3 personas              │
+│  • school_garden_v1 — 2 flaws, 2 personas  ★4/5         │
+│    Opens with enthusiasm, tension over evidence,          │
+│    resolves with unexamined agreement.                    │
+│  • ocean_pollution_v1 — 2 flaws, 3 personas  ★4/5       │
+│    Starts collaborative, one voice dominates,             │
+│    concern raised then abandoned.                         │
 │  • warmup_four_day_week — 1 flaw, 2 personas (tutorial)  │
 │                                                          │
 │  [Import New Scenario]                                   │
@@ -1070,9 +1074,9 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Available scenarios** lists scenarios that have been imported from the pipeline registry into the database. Each shows the scenario ID, flaw count, and persona count.
+**Available scenarios** lists scenarios that have been imported from the pipeline registry into the database. Each shows the scenario ID, flaw count, persona count, and pedagogical review score (if available). The `discussion_arc` field from `scenario.yaml` is shown as a one-line summary beneath each scenario — giving teachers a quick sense of how the discussion unfolds before selecting it.
 
-**Import New Scenario** opens a file upload or path input for importing a scenario's YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`).
+**Import New Scenario** opens a file upload or path input for importing a scenario's YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and optionally `pedagogical_review.yaml`).
 
 ---
 
@@ -1125,6 +1129,8 @@ This is the teacher's primary screen during class. Two-panel layout:
 ┌──────────────────────────────────────────────────────────┐
 │  School Garden Discussion          Phase 2               │
 │  Session code: ABC123              [Advance to Phase 3]  │
+│  Arc: Opens with enthusiasm, tension builds around       │
+│  evidence quality, resolves with unexamined agreement.   │
 ├──────────────────────────┬───────────────────────────────┤
 │                          │                               │
 │  STUDENT MONITOR         │  DETAIL PANEL                 │
@@ -1133,40 +1139,45 @@ This is the teacher's primary screen during class. Two-panel layout:
 └──────────────────────────┴───────────────────────────────┘
 ```
 
+**Discussion arc.** Below the header, a one-line summary of the `discussion_arc` from `scenario.yaml` gives the teacher a narrative overview — how the discussion opens, where tension builds, and how it resolves. This orients the teacher before class and helps them anticipate the shape of student discussions.
+
 #### Student Monitor (left)
 
 ```
-┌────────────────────────────────┐
-│  All Students    By Group      │
-│                                │
-│  28 of 30 active               │
-│  12 submitted (Phase 2)        │
-│                                │
-│  ┌──────────────────────────┐  │
-│  │ GROUP 1                  │  │
-│  │                          │  │
-│  │ ● Amaya     3 annot.  ✓ │  │
-│  │ ● Darius    2 annot.  ✓ │  │
-│  │ ● Kenji     1 annot.  ⚠ │  │
-│  │ ○ Marcus    —  not started│  │
-│  └──────────────────────────┘  │
-│                                │
-│  ┌──────────────────────────┐  │
-│  │ GROUP 2                  │  │
-│  │                          │  │
-│  │ ● Jayden    2 annot.  ✓ │  │
-│  │ ● Sofia     3 annot.  ✓ │  │
-│  │ ● Taylor    0 annot.  ⚠ │  │
-│  │ ● Zara      2 annot.     │  │
-│  └──────────────────────────┘  │
-│                                │
-│  ... more groups               │
-└────────────────────────────────┘
+┌─────────────────────────────────────┐
+│  All Students    By Group           │
+│                                     │
+│  28 of 30 active                    │
+│  12 submitted (Phase 2)             │
+│  Flaw coverage: 2/2 targets found   │
+│  by at least one group              │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │ GROUP 1           ◆◆○ (2/3)  │  │
+│  │                               │  │
+│  │ ● Amaya     3 annot.  ✓      │  │
+│  │ ● Darius    2 annot.  ✓      │  │
+│  │ ● Kenji     1 annot.  ⚠      │  │
+│  │ ○ Marcus    —  not started    │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│  ┌───────────────────────────────┐  │
+│  │ GROUP 2           ◆○○ (1/3)  │  │
+│  │                               │  │
+│  │ ● Jayden    2 annot.  ✓      │  │
+│  │ ● Sofia     3 annot.  ✓      │  │
+│  │ ● Taylor    0 annot.  ⚠      │  │
+│  │ ● Zara      2 annot.         │  │
+│  └───────────────────────────────┘  │
+│                                     │
+│  ... more groups                    │
+└─────────────────────────────────────┘
 
 ● = active (has opened the transcript)
 ○ = not started (first_opened is null)
 ✓ = submitted
 ⚠ = may need help (active but low/no annotations)
+◆ = target flaw found by group, ○ = not yet found
 ```
 
 **Status indicators per student** (derived from `session_configuration.yaml` → `student_activity` fields and `student_annotations.yaml` → `submitted` field):
@@ -1176,6 +1187,8 @@ This is the teacher's primary screen during class. Two-panel layout:
 - May need help (warning): `student_activity.last_active` is >5 minutes ago with `student_activity.annotation_count` at 0, or >8 minutes with fewer annotations than peers in their group
 
 **Annotation count** displays `student_activity.annotation_count`. Updates via polling (every 5-10 seconds).
+
+**Flaw coverage indicator.** Each group header shows a compact indicator of how many target flaws have been found by at least one student in the group (e.g., "◆◆○ (2/3)"). A flaw is "found" if any student in the group has an annotation whose `location.sentences` overlap with the flaw's annotated sentences from `evaluation.yaml`. The class-level summary shows how many target flaws have been found by at least one group. This helps the teacher decide when to advance phases — "most groups have found at least one target flaw" is a stronger signal than "most students have 2+ annotations." The flaw coverage computation runs server-side (comparing student annotation sentence IDs against AI annotation sentence IDs from `TeacherEvaluation`), updated alongside the activity polling endpoint. **This is teacher-only data** — students never see flaw coverage, which would contradict the "perspectives, not answers" principle.
 
 **Tapping a student name** opens their annotations in the detail panel (read-only view for the teacher).
 
@@ -1219,14 +1232,16 @@ A "View Full Cheat Sheet" link opens `/teacher/session/[id]/cheatsheet` — the 
 
 ### Cheat Sheet Page
 
-A single-page view rendering the `facilitation_guide` from `evaluation.yaml`. The facilitation_guide has a specific nested structure; each field maps to a rendered section:
+A single-page view rendering the `facilitation_guide` from `evaluation.yaml`, supplemented by `pedagogical_review.yaml` (if available) and `annotations[].thinking_behavior.plausible_alternatives` from `evaluation.yaml`. The facilitation_guide has a specific nested structure; each field maps to a rendered section:
 
 | Section on page | Source field | What it renders |
 |----------------|-------------|-----------------|
 | TIMING | `facilitation_guide.timing` | `phase_1_minutes`, `phase_2_minutes`, `phase_3_minutes`, `phase_4_minutes` — displayed as "Phase 1: ~12 min \| Phase 2: ~8 min \| ..." |
 | WHAT TO EXPECT | `facilitation_guide.what_to_expect[]` | Each entry: `flaw` (pattern name), `turns` (where to look), `signal` (what students should notice), `difficulty` ("most will catch it" / "harder to spot" / "easy to miss") |
+| WHY THIS FLAW WORKS | `pedagogical_review.flaw_assessments[]` | Each target flaw's `expression_quality` — a narrative explanation of how the flaw manifests in the transcript and why it's detectable by 6th graders. Helps the teacher understand the reasoning behind each flaw, not just the scaffolding prompts. Collapsible — collapsed by default to keep the cheat sheet scannable, expandable for teachers who want deeper preparation. Only shown if `PedagogicalReview` data is available. |
 | PHASE 1 scaffolds | `facilitation_guide.phase_1[]` | Each entry: `prompt` (ready-to-use teacher prompt) + `targets` (which flaw this helps surface) |
 | PHASE 2 scaffolds | `facilitation_guide.phase_2[]` | Each entry: `flaw` (which flaw), `narrowed_options[]` (2-3 behaviors from `plausible_alternatives` — a subset of the library for the teacher to offer), `perspective_prompt` (empathy-based prompt) |
+| PHASE 2 — VALID ALTERNATIVES | `annotations[].thinking_behavior.plausible_alternatives` from `evaluation.yaml` | For each flaw, the full list of plausible alternative thinking behaviors (resolved to plain-language names). Shown beneath the Phase 2 scaffold for that flaw. Helps the teacher distinguish productive disagreements (student picked a plausible alternative) from confused ones (student picked something not on the list). Formatted as: "Also defensible: [behavior 1], [behavior 2]." |
 | PHASE 3 scaffolds | Hardcoded in cheat sheet template | Generic prompts, same for every scenario: "Did you all mark the same turns? Look at where you differ." / "Someone in your group found something you missed. Take another look." |
 | PHASE 4 scaffolds | `facilitation_guide.phase_4[]` | Each entry: `type` ("challenge" / "student_victory" / "missed_flaw") + `prompt` (ready-to-use or fill-in-the-blank template) |
 
@@ -1234,10 +1249,12 @@ Styled for readability and printability:
 - Large section headers (TIMING, WHAT TO EXPECT, PHASE 1, etc.)
 - Scaffold prompts formatted as quoted text the teacher can read aloud
 - `difficulty` values in WHAT TO EXPECT rendered as visual indicators (green/yellow/red)
+- "WHY THIS FLAW WORKS" sections collapsible (collapsed on print, expandable on screen)
+- "VALID ALTERNATIVES" shown inline beneath each Phase 2 scaffold entry
 - Print-friendly: no navigation chrome, clean margins, fits on 1-2 pages
 - A "Print" button and a "Back to Session" link
 
-Content follows the exact format from design doc lines 867-902.
+Content follows the exact format from design doc lines 867-902, with the additions of flaw assessment detail and plausible alternatives.
 
 ---
 
@@ -1394,21 +1411,22 @@ The following algorithm operates on a uniform annotation shape (student, peer, a
 
 ### StudentActivityTable
 
-**Purpose:** Teacher monitoring view showing per-student status.
+**Purpose:** Teacher monitoring view showing per-student status and per-group flaw coverage.
 
-**Schema:** Consumes `session_configuration.yaml` → `groups[]` (for group membership) and `student_activity[]` (for `first_opened`, `last_active`, `annotation_count`). Also reads `student_annotations.yaml` → `submitted` for submission status.
+**Schema:** Consumes `session_configuration.yaml` → `groups[]` (for group membership) and `student_activity[]` (for `first_opened`, `last_active`, `annotation_count`). Also reads `student_annotations.yaml` → `submitted` for submission status. Flaw coverage data comes from a server-side computation comparing student annotation sentence IDs against AI annotation sentence IDs from `TeacherEvaluation`.
 
 **Props:**
 - `groups`: from `session_configuration.yaml` → `groups[]`, each with `group_id` and `student_ids`
 - `studentActivity`: from `session_configuration.yaml` → `student_activity[]`, each with `student_id`, `first_opened` (timestamp or null), `last_active` (timestamp or null), `annotation_count` (integer)
 - `submissionStatus`: from `student_annotations.yaml` → whether each student has `submitted: true` on all annotations
+- `flawCoverage`: per-group object — for each group, which AI annotation IDs have been "found" (at least one student in the group has an annotation with sentence ID overlap). Computed server-side, returned alongside the activity polling response.
 
-**Display:** Grouped by group. Each student shows:
+**Display:** Grouped by group. Each group header shows flaw coverage indicator (e.g., "◆◆○ (2/3)"). Each student shows:
 - Status indicator (not started / active / submitted / may need help)
 - Annotation count (`student_activity.annotation_count`)
 - Time since first opened (computed from `student_activity.first_opened` — for "may need help" detection)
 
-**Polling:** Refreshes every 5-10 seconds via API call.
+**Polling:** Refreshes every 5-10 seconds via API call. Flaw coverage is included in the same polling response to avoid extra requests.
 
 ---
 
