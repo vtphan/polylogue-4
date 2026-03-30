@@ -1,0 +1,125 @@
+scenario_id: ocean_plastic_campaign
+
+personas:
+  - persona_id: mia
+    name: Mia
+    role: "Lead researcher on ocean plastic pollution"
+
+  - persona_id: jaylen
+    name: Jaylen
+    role: "Campaign planner and organizer"
+
+turns:
+  - turn_id: turn_01
+    speaker: mia
+    sentences:
+      - id: turn_01.s01
+        text: "Okay so I've been doing a ton of research on ocean plastic pollution and you guys, it's really bad."
+      - id: turn_01.s02
+        text: "I watched this documentary about sea turtles getting tangled in plastic bags and it made me want to cry."
+      - id: turn_01.s03
+        text: "I think this is the perfect topic for our campaign because people need to know what's happening."
+
+  - turn_id: turn_02
+    speaker: jaylen
+    sentences:
+      - id: turn_02.s01
+        text: "Yeah that sounds like a really good one honestly."
+      - id: turn_02.s02
+        text: "What kind of stuff did you find that we could use for the campaign, like facts and things?"
+
+  - turn_id: turn_03
+    speaker: mia
+    sentences:
+      - id: turn_03.s01
+        text: "So this one article I found said that eight million tons of plastic end up in the ocean every single year."
+      - id: turn_03.s02
+        text: "Eight million tons — that's so much."
+      - id: turn_03.s03
+        text: "That number really stuck with me because I was like, how is nobody doing anything about this?"
+
+  - turn_id: turn_04
+    speaker: jaylen
+    sentences:
+      - id: turn_04.s01
+        text: "Wait, eight million tons?!"
+      - id: turn_04.s02
+        text: "We could totally make a display showing how much that is, like fill the gym with examples or something."
+      - id: turn_04.s03
+        text: "People would freak out if they could actually see it."
+
+  - turn_id: turn_05
+    speaker: mia
+    sentences:
+      - id: turn_05.s01
+        text: "Yes exactly, and here's the thing — the documentary and the article both prove that when people learn about this stuff, they change what they do."
+      - id: turn_05.s02
+        text: "The documentary showed one town that switched to reusable bags after they found out about the plastic problem, so that proves awareness campaigns work."
+      - id: turn_05.s03
+        text: "It's not even a question anymore — we know they work."
+
+  - turn_id: turn_06
+    speaker: jaylen
+    sentences:
+      - id: turn_06.s01
+        text: "Hmm, do you think we should maybe find a few more sources though?"
+      - id: turn_06.s02
+        text: "Like just to have more stuff to show people?"
+
+  - turn_id: turn_07
+    speaker: mia
+    sentences:
+      - id: turn_07.s01
+        text: "I already have a real article with real statistics and a whole documentary — that's two sources."
+      - id: turn_07.s02
+        text: "That's pretty solid."
+      - id: turn_07.s03
+        text: "I don't think we need to spend more time looking stuff up when we could be planning the actual campaign."
+
+  - turn_id: turn_08
+    speaker: jaylen
+    sentences:
+      - id: turn_08.s01
+        text: "Yeah okay, I guess you're right, we don't want to waste time on that."
+      - id: turn_08.s02
+        text: "Let's talk about the campaign then because I have so many ideas."
+
+  - turn_id: turn_09
+    speaker: jaylen
+    sentences:
+      - id: turn_09.s01
+        text: "Okay so picture this — we do a whole ocean plastic awareness day at school."
+      - id: turn_09.s02
+        text: "We set up stations in the cafeteria where people can see how much plastic they use in a week, and we have a big display wall with all the facts and pictures of animals affected by it."
+      - id: turn_09.s03
+        text: "And then we could do an art project where everyone makes something out of recycled plastic and we hang them up everywhere."
+
+  - turn_id: turn_10
+    speaker: mia
+    sentences:
+      - id: turn_10.s01
+        text: "Oh my gosh yes, that would be so cool!"
+      - id: turn_10.s02
+        text: "We should also hand out pledge cards where people promise to use less plastic, and then we could track how many people signed."
+      - id: turn_10.s03
+        text: "We could even set up a table outside during pickup so parents see it too."
+
+  - turn_id: turn_11
+    speaker: jaylen
+    sentences:
+      - id: turn_11.s01
+        text: "Ooh and what if we also did a social media thing where people post pictures of plastic they find and tag the school?"
+      - id: turn_11.s02
+        text: "And we could get the art teacher to help us build a giant sculpture out of collected plastic bottles, like a life-size sea turtle or something."
+      - id: turn_11.s03
+        text: "This is going to be the best project anyone's ever done in this class."
+
+  - turn_id: turn_12
+    speaker: mia
+    sentences:
+      - id: turn_12.s01
+        text: "I love it — so we've got the awareness day with stations and the display wall, the art project, pledge cards, the parent table, and the social media challenge."
+      - id: turn_12.s02
+        text: "This is going to totally change how people at our school think about plastic."
+      - id: turn_12.s03
+        text: "I feel really good about this — we have the research and a real plan now."

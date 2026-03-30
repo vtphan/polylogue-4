@@ -1,0 +1,91 @@
+scenario_id: ocean_plastic_campaign
+topic: "Whether our school should run an ocean plastic pollution awareness campaign for the community"
+context: "A 6th-grade STEM class is working on the PBL driving question: 'What are the major threats affecting our global environment, and what can our communities do to protect our ecosystems?' This group chose ocean plastic pollution as their environmental issue. They've done some initial research and are now planning what kind of awareness campaign their school could run."
+instructional_goals:
+  - "Practice evaluating whether someone's evidence is strong enough to support their claims"
+  - "Practice noticing when a plan is missing important details"
+
+personas:
+  - persona_id: mia
+    name: Mia
+    role: "Lead researcher on ocean plastic pollution"
+    perspective: "Believes the awareness campaign is urgently needed and will make a big difference — passionate about ocean conservation after watching a documentary"
+    strengths:
+      - "Genuinely cares about the environment and is motivated to do something"
+      - "Found some real statistics about ocean plastic from her research"
+    weaknesses:
+      - "Only read one article and watched one documentary, but treats them as if she's done thorough research"
+      - "When she finds something interesting, she gets carried away explaining why it matters and doesn't always realize she's going further than what the source actually said"
+
+  - persona_id: jaylen
+    name: Jaylen
+    role: "Campaign planner and organizer"
+    perspective: "Excited about the campaign idea and focused on making it creative and fun — wants it to be the best project in class"
+    strengths:
+      - "Good at coming up with creative ideas for events and activities"
+      - "Thinks about what would actually get other students interested"
+    weaknesses:
+      - "So focused on making the campaign exciting that he skips over practical questions like cost, timing, and who would help"
+      - "Tends to assume things will just work out without planning the details"
+
+discussion_arc: "The discussion opens with Mia sharing her research findings enthusiastically and making a case for why the campaign matters. Jaylen builds on her energy with creative campaign ideas. As they go back and forth, Mia leans heavily on her limited research to justify bigger and bigger claims, while Jaylen develops an ambitious campaign plan without addressing any practical details. There's a brief moment where Jaylen wonders if they need more evidence, but Mia's confidence pulls them past it quickly. The discussion wraps with both feeling confident about their plan, even though the evidence base is thin and the logistics are unaddressed."
+
+target_flaws:
+  - flaw_pattern: big_claim_little_evidence
+    thinking_behavior: confirmation_bias
+    surfaces_in: [5, 6, 7]
+    persona: mia
+
+  - flaw_pattern: missing_practical_details
+    thinking_behavior: tunnel_vision
+    surfaces_in: [9, 10, 11]
+    persona: jaylen
+
+turn_outline:
+  - turn: 1
+    speaker: mia
+    accomplishes: "Introduce the topic — share that you picked ocean plastic pollution and explain why you think it's important based on the documentary you watched"
+
+  - turn: 2
+    speaker: jaylen
+    accomplishes: "React to Mia's introduction — say you think it's a great topic and ask what she found in her research that they could use for the campaign"
+
+  - turn: 3
+    speaker: mia
+    accomplishes: "Share the main statistic you found in your article about how much plastic ends up in the ocean each year, and explain why it stood out to you"
+
+  - turn: 4
+    speaker: jaylen
+    accomplishes: "Respond to the statistic with enthusiasm and start brainstorming what kind of campaign event would grab people's attention"
+
+  - turn: 5
+    speaker: mia
+    accomplishes: "Build on Jaylen's enthusiasm by explaining why you think your one article and the documentary prove that awareness campaigns actually change people's behavior — share what you remember from them as if it settles the question"
+
+  - turn: 6
+    speaker: jaylen
+    accomplishes: "Briefly ask if they should look for more evidence, but when Mia says what she found is enough, agree easily and move on to planning — you're more interested in the campaign ideas anyway"
+
+  - turn: 7
+    speaker: mia
+    accomplishes: "Reassure Jaylen that the research you found is solid and explain why you don't think you need more — you're confident in what you've seen"
+
+  - turn: 8
+    speaker: jaylen
+    accomplishes: "Move on from the evidence question and shift to planning — start describing your vision for the campaign event"
+
+  - turn: 9
+    speaker: jaylen
+    accomplishes: "Describe your plan for the awareness campaign — focus on what it would look like, what activities there would be, and what you'd show people, without mentioning cost, timing, or who would help run it"
+
+  - turn: 10
+    speaker: mia
+    accomplishes: "React positively to Jaylen's plan and add your own ideas about what to include, building on the excitement without asking about logistics"
+
+  - turn: 11
+    speaker: jaylen
+    accomplishes: "Expand the plan even further — add more ideas for activities and displays, keeping the focus on how impressive and fun it will be"
+
+  - turn: 12
+    speaker: mia
+    accomplishes: "Summarize what you've agreed on and express confidence that this campaign is going to make a real difference in how people think about ocean plastic"

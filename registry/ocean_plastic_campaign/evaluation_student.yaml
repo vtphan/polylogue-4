@@ -1,0 +1,74 @@
+scenario_id: ocean_plastic_campaign
+
+annotations:
+  - annotation_id: ann_01
+    location:
+      turn: turn_05
+      sentences: [turn_05.s01, turn_05.s02, turn_05.s03]
+    argument_flaw:
+      pattern: big_claim_little_evidence
+      detection_act: not_enough_support
+      explanation: "The AI thinks Mia might be saying a lot more than her sources can back up. She says 'the documentary and the article both prove that when people learn about this stuff, they change what they do' and then says 'it's not even a question anymore.' But she only has one documentary and one article. That's a really big claim from not a lot of evidence."
+    thinking_behavior:
+      pattern: confirmation_bias
+      explanation: "The AI thinks Mia might have only paid attention to things that agreed with what she already believed. She found one article and one documentary that supported her idea, and she stopped looking for anything else. Maybe she was so excited about the campaign that she only noticed the stuff that said it would work."
+
+  - annotation_id: ann_02
+    location:
+      turn: turn_07
+      sentences: [turn_07.s01, turn_07.s02, turn_07.s03]
+    argument_flaw:
+      pattern: weak_source_strong_claim
+      detection_act: not_enough_support
+      explanation: "The AI thinks Mia might be treating her two sources like they're enough to settle the whole question. She says 'I already have a real article with real statistics and a whole documentary — that's two sources. That's pretty solid.' But one article and one documentary isn't really enough to prove something as big as 'awareness campaigns always change people's behavior.'"
+    thinking_behavior:
+      pattern: confirmation_bias
+      explanation: "The AI thinks Mia might believe her sources are stronger than they really are because they say what she already wanted to hear. She found two things that agree with her and decided that was all the proof she needed — maybe because looking for more felt like a waste of time when she was already sure."
+
+  - annotation_id: ann_03
+    location:
+      turn: turn_05
+      sentences: [turn_05.s02]
+    argument_flaw:
+      pattern: one_example_as_proof
+      detection_act: not_enough_support
+      explanation: "The AI thinks Mia might be using one example to prove something really big. She says 'the documentary showed one town that switched to reusable bags' and then says 'so that proves awareness campaigns work.' But one town doing one thing doesn't prove all awareness campaigns work everywhere."
+    thinking_behavior:
+      pattern: confirmation_bias
+      explanation: "The AI thinks Mia might have grabbed onto this one example because it told her exactly what she wanted to believe. One town switching to reusable bags is a cool story, but it might have stuck in her mind because it confirmed what she already felt — that their campaign would make a difference."
+
+  - annotation_id: ann_04
+    location:
+      turn: turn_09
+      sentences: [turn_09.s01, turn_09.s02, turn_09.s03]
+    argument_flaw:
+      pattern: missing_practical_details
+      detection_act: somethings_missing
+      explanation: "The AI thinks Jaylen's plan might be missing some really important details. He talks about setting up stations in the cafeteria, a big display wall, and an art project with recycled plastic — but he never mentions who would set all this up, how much it would cost, how they'd get the materials, or when they'd have time to do it. It sounds fun, but how would it actually work?"
+    thinking_behavior:
+      pattern: tunnel_vision
+      explanation: "The AI thinks Jaylen might be so focused on making the campaign cool and exciting that he's not thinking about the practical side at all. He's picturing what it would look like and how people would react, but he's missing the bigger picture — like whether any of it is actually doable."
+
+  - annotation_id: ann_05
+    location:
+      turn: turn_06
+      sentences: [turn_06.s01, turn_06.s02]
+    argument_flaw:
+      pattern: abandoned_concern
+      detection_act: not_really_resolved
+      explanation: "The AI thinks Jaylen raised a really good question here — 'do you think we should maybe find a few more sources though?' — but then he just let it go. When Mia said they had enough, Jaylen said 'yeah okay, I guess you're right' in turn 8 without ever really getting an answer. That question deserved more discussion."
+    thinking_behavior:
+      pattern: groupthink
+      explanation: "The AI thinks Jaylen might have dropped his good question because he didn't want to push back against Mia. She sounded really confident, and maybe it felt easier to just go along with her than to keep asking. He might have cared more about keeping things moving smoothly than about getting it right."
+
+  - annotation_id: ann_06
+    location:
+      turn: turn_12
+      sentences: [turn_12.s02, turn_12.s03]
+    argument_flaw:
+      pattern: conclusion_exceeds_evidence
+      detection_act: doesnt_fit_together
+      explanation: "The AI thinks Mia might be claiming way more than they've actually shown. She says 'this is going to totally change how people at our school think about plastic' and 'we have the research and a real plan now.' But their research is just one article and one documentary, and their plan doesn't cover any of the practical details. That's a much bigger conclusion than what they've actually put together."
+    thinking_behavior:
+      pattern: emotional_reasoning
+      explanation: "The AI thinks Mia might be feeling so good about the project that her excitement is doing the thinking instead of the evidence. She and Jaylen had a really fun brainstorming session, and that good feeling might have made her believe the plan is more solid than it actually is."

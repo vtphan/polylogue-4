@@ -1,0 +1,96 @@
+# /create_scenario
+
+Design a discussion plan targeting specific argument flaws and thinking behaviors.
+
+## Input
+
+The operator provides:
+- **Topic**: What the group is discussing
+- **Context**: Background — what PBL unit this connects to, what students have been working on
+- **Instructional goals**: What the teacher wants students to practice (1-2 goals)
+- **Target complexity** (optional): Number of personas (2-3, default 2) and flaw-behavior combinations (1-3, default 2)
+
+## Process
+
+### Step 1: Read reference libraries
+
+Read both libraries to ground the plan in the actual taxonomy:
+- `configs/reference/detection_act_library.yaml`
+- `configs/reference/thinking_behavior_library.yaml`
+
+### Step 2: Draft the scenario plan
+
+Based on the operator's input, generate a complete scenario plan:
+
+1. **Choose a scenario_id**: snake_case, descriptive (e.g., `ocean_pollution_awareness`)
+
+2. **Design personas** (2-3):
+   - Each persona needs a distinct perspective on the topic
+   - Strengths should be genuine — they know real things
+   - **Weaknesses must be phrased as natural knowledge gaps or tendencies**, NOT as flaw labels. Write "only researched one source, tends to generalize from limited data" — NOT "will produce a big-claim-little-evidence flaw"
+   - Persona perspectives should create natural tension that drives the discussion
+
+3. **Select target flaw-behavior combinations** (1-3):
+   - Choose combinations that arise naturally from the personas' weaknesses and the topic
+   - Assign each flaw to a specific persona and specific turn(s)
+   - Ensure the combination is detectable by 6th graders — not too subtle, not too obvious
+
+4. **Write the turn outline** (12-16 turns):
+   - Specify speaker and accomplishes for each turn
+   - **The `accomplishes` field is the most important element.** For flaw-surfacing turns, it must steer the dialog writer toward producing the flaw WITHOUT naming the flaw or revealing pedagogical intent.
+     - BAD: "Make a sweeping claim supported by insufficient evidence"
+     - GOOD: "Share what you found from your one article and explain why you think it settles the question"
+   - For non-flaw turns, describe the conversational function: opening, reacting, building tension, wrapping up
+   - Ensure the speaker sequence creates natural back-and-forth
+
+5. **Write the discussion arc**: One paragraph describing the flow — how it opens, where tension builds, how it resolves or fails to resolve
+
+### Step 3: Validate with the learning scientist
+
+Invoke the **learning scientist** agent with the draft plan. The agent will assess:
+- Flaw detectability for 6th graders
+- Natural surfacing from persona character
+- Language/content appropriateness
+- Instructional goal alignment
+
+Read the validation output and its `overall_assessment`:
+- **ready**: Proceed to Step 4
+- **revise**: Address `must_fix` and `should_fix` suggestions, then proceed
+- **rethink**: Significant revision needed. Rework the plan and re-validate
+
+### Step 4: Create registry directory and save
+
+```bash
+mkdir -p registry/{scenario_id}
+```
+
+Save the final plan to `registry/{scenario_id}/scenario.yaml`.
+
+### Step 5: Validate output against schema
+
+If `configs/shared/scripts/validate_schema.py` exists, run it:
+
+```bash
+python configs/shared/scripts/validate_schema.py registry/{scenario_id}/scenario.yaml configs/scenario/schemas/scenario_plan.yaml
+```
+
+If the script is not available, verify manually:
+- All required fields from `configs/scenario/schemas/scenario_plan.yaml` are present
+- Canonical IDs match the reference libraries exactly
+- Turn count is 12-16
+- Each target flaw references a valid persona_id and valid turn numbers
+
+## Output
+
+- `registry/{scenario_id}/scenario.yaml` — the complete scenario plan
+
+## Quality Checklist
+
+Before saving, verify:
+- [ ] Persona weaknesses are natural language, not flaw labels
+- [ ] `accomplishes` fields steer without naming flaws
+- [ ] Target flaws use canonical IDs from the reference libraries
+- [ ] Thinking behaviors use canonical IDs from the reference libraries
+- [ ] Each flaw-surfacing turn's `accomplishes` field creates conditions for a signal moment
+- [ ] Turn count is 12-16
+- [ ] Each persona speaks multiple times with natural back-and-forth

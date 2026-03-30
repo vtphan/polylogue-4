@@ -1,0 +1,80 @@
+scenario_id: ocean_plastic_campaign
+
+personas:
+  - persona_id: mia
+    name: Mia
+    role: "Lead researcher on ocean plastic pollution"
+
+  - persona_id: jaylen
+    name: Jaylen
+    role: "Campaign planner and organizer"
+
+turns:
+  - speaker: mia
+    sentences:
+      - text: "Okay so I've been doing a ton of research on ocean plastic pollution and you guys, it's really bad."
+      - text: "I watched this documentary about sea turtles getting tangled in plastic bags and it made me want to cry."
+      - text: "I think this is the perfect topic for our campaign because people need to know what's happening."
+
+  - speaker: jaylen
+    sentences:
+      - text: "Yeah that sounds like a really good one honestly."
+      - text: "What kind of stuff did you find that we could use for the campaign, like facts and things?"
+
+  - speaker: mia
+    sentences:
+      - text: "So this one article I found said that eight million tons of plastic end up in the ocean every single year."
+      - text: "Eight million tons — that's so much."
+      - text: "That number really stuck with me because I was like, how is nobody doing anything about this?"
+
+  - speaker: jaylen
+    sentences:
+      - text: "Wait, eight million tons?!"
+      - text: "We could totally make a display showing how much that is, like fill the gym with examples or something."
+      - text: "People would freak out if they could actually see it."
+
+  - speaker: mia
+    sentences:
+      - text: "Yes exactly, and here's the thing — the documentary and the article both prove that when people learn about this stuff, they change what they do."
+      - text: "The documentary showed one town that switched to reusable bags after they found out about the plastic problem, so that proves awareness campaigns work."
+      - text: "It's not even a question anymore — we know they work."
+
+  - speaker: jaylen
+    sentences:
+      - text: "Hmm, do you think we should maybe find a few more sources though?"
+      - text: "Like just to have more stuff to show people?"
+
+  - speaker: mia
+    sentences:
+      - text: "I already have a real article with real statistics and a whole documentary — that's two sources."
+      - text: "That's pretty solid."
+      - text: "I don't think we need to spend more time looking stuff up when we could be planning the actual campaign."
+
+  - speaker: jaylen
+    sentences:
+      - text: "Yeah okay, I guess you're right, we don't want to waste time on that."
+      - text: "Let's talk about the campaign then because I have so many ideas."
+
+  - speaker: jaylen
+    sentences:
+      - text: "Okay so picture this — we do a whole ocean plastic awareness day at school."
+      - text: "We set up stations in the cafeteria where people can see how much plastic they use in a week, and we have a big display wall with all the facts and pictures of animals affected by it."
+      - text: "And then we could do an art project where everyone makes something out of recycled plastic and we hang them up everywhere."
+
+  - speaker: mia
+    sentences:
+      - text: "Oh my gosh yes, that would be so cool!"
+      - text: "We should also hand out pledge cards where people promise to use less plastic, and then we could track how many people signed."
+      - text: "We could even set up a table outside during pickup so parents see it too."
+
+  - speaker: jaylen
+    sentences:
+      - text: "Ooh and what if we also did a social media thing where people post pictures of plastic they find and tag the school?"
+      - text: "And we could get the art teacher to help us build a giant sculpture out of collected plastic bottles, like a life-size sea turtle or something."
+      - text: "This is going to be the best project anyone's ever done in this class."
+
+  - speaker: mia
+    sentences:
+      - text: "I love it — so we've got the awareness day with stations and the display wall, the art project, pledge cards, the parent table, and the social media challenge."
+      - text: "This is going to totally change how people at our school think about plastic."
+      - text: "I feel really good about this — we have the research and a real plan now."

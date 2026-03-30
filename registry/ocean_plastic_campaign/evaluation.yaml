@@ -1,0 +1,223 @@
+scenario_id: ocean_plastic_campaign
+
+annotations:
+  - annotation_id: ann_01
+    location:
+      turn: turn_05
+      sentences: [turn_05.s01, turn_05.s02, turn_05.s03]
+    argument_flaw:
+      pattern: big_claim_little_evidence
+      detection_act: not_enough_support
+      explanation: "The AI thinks Mia might be saying a lot more than her sources can back up. She says 'the documentary and the article both prove that when people learn about this stuff, they change what they do' and then says 'it's not even a question anymore.' But she only has one documentary and one article. That's a really big claim from not a lot of evidence."
+    thinking_behavior:
+      pattern: confirmation_bias
+      explanation: "The AI thinks Mia might have only paid attention to things that agreed with what she already believed. She found one article and one documentary that supported her idea, and she stopped looking for anything else. Maybe she was so excited about the campaign that she only noticed the stuff that said it would work."
+      plausible_alternatives:
+        - emotional_reasoning
+        - echo_chamber
+    planned: true
+
+  - annotation_id: ann_02
+    location:
+      turn: turn_07
+      sentences: [turn_07.s01, turn_07.s02, turn_07.s03]
+    argument_flaw:
+      pattern: weak_source_strong_claim
+      detection_act: not_enough_support
+      explanation: "The AI thinks Mia might be treating her two sources like they're enough to settle the whole question. She says 'I already have a real article with real statistics and a whole documentary — that's two sources. That's pretty solid.' But one article and one documentary isn't really enough to prove something as big as 'awareness campaigns always change people's behavior.'"
+    thinking_behavior:
+      pattern: confirmation_bias
+      explanation: "The AI thinks Mia might believe her sources are stronger than they really are because they say what she already wanted to hear. She found two things that agree with her and decided that was all the proof she needed — maybe because looking for more felt like a waste of time when she was already sure."
+      plausible_alternatives:
+        - overreliance_on_authority
+        - emotional_reasoning
+    planned: false
+
+  - annotation_id: ann_03
+    location:
+      turn: turn_05
+      sentences: [turn_05.s02]
+    argument_flaw:
+      pattern: one_example_as_proof
+      detection_act: not_enough_support
+      explanation: "The AI thinks Mia might be using one example to prove something really big. She says 'the documentary showed one town that switched to reusable bags' and then says 'so that proves awareness campaigns work.' But one town doing one thing doesn't prove all awareness campaigns work everywhere."
+    thinking_behavior:
+      pattern: confirmation_bias
+      explanation: "The AI thinks Mia might have grabbed onto this one example because it told her exactly what she wanted to believe. One town switching to reusable bags is a cool story, but it might have stuck in her mind because it confirmed what she already felt — that their campaign would make a difference."
+      plausible_alternatives:
+        - anchoring_bias
+        - emotional_reasoning
+    planned: false
+
+  - annotation_id: ann_04
+    location:
+      turn: turn_09
+      sentences: [turn_09.s01, turn_09.s02, turn_09.s03]
+    argument_flaw:
+      pattern: missing_practical_details
+      detection_act: somethings_missing
+      explanation: "The AI thinks Jaylen's plan might be missing some really important details. He talks about setting up stations in the cafeteria, a big display wall, and an art project with recycled plastic — but he never mentions who would set all this up, how much it would cost, how they'd get the materials, or when they'd have time to do it. It sounds fun, but how would it actually work?"
+    thinking_behavior:
+      pattern: tunnel_vision
+      explanation: "The AI thinks Jaylen might be so focused on making the campaign cool and exciting that he's not thinking about the practical side at all. He's picturing what it would look like and how people would react, but he's missing the bigger picture — like whether any of it is actually doable."
+      plausible_alternatives:
+        - emotional_reasoning
+        - groupthink
+    planned: true
+
+  - annotation_id: ann_05
+    location:
+      turn: turn_06
+      sentences: [turn_06.s01, turn_06.s02]
+    argument_flaw:
+      pattern: abandoned_concern
+      detection_act: not_really_resolved
+      explanation: "The AI thinks Jaylen raised a really good question here — 'do you think we should maybe find a few more sources though?' — but then he just let it go. When Mia said they had enough, Jaylen said 'yeah okay, I guess you're right' in turn 8 without ever really getting an answer. That question deserved more discussion."
+    thinking_behavior:
+      pattern: groupthink
+      explanation: "The AI thinks Jaylen might have dropped his good question because he didn't want to push back against Mia. She sounded really confident, and maybe it felt easier to just go along with her than to keep asking. He might have cared more about keeping things moving smoothly than about getting it right."
+      plausible_alternatives:
+        - overreliance_on_authority
+        - tunnel_vision
+    planned: false
+
+  - annotation_id: ann_06
+    location:
+      turn: turn_12
+      sentences: [turn_12.s02, turn_12.s03]
+    argument_flaw:
+      pattern: conclusion_exceeds_evidence
+      detection_act: doesnt_fit_together
+      explanation: "The AI thinks Mia might be claiming way more than they've actually shown. She says 'this is going to totally change how people at our school think about plastic' and 'we have the research and a real plan now.' But their research is just one article and one documentary, and their plan doesn't cover any of the practical details. That's a much bigger conclusion than what they've actually put together."
+    thinking_behavior:
+      pattern: emotional_reasoning
+      explanation: "The AI thinks Mia might be feeling so good about the project that her excitement is doing the thinking instead of the evidence. She and Jaylen had a really fun brainstorming session, and that good feeling might have made her believe the plan is more solid than it actually is."
+      plausible_alternatives:
+        - confirmation_bias
+        - tunnel_vision
+    planned: false
+
+summary:
+  total_annotations: 6
+  target_flaws_surfaced: 2
+  target_flaws_planned: 2
+
+quality_assessment:
+  all_targets_surfaced: true
+  issues: []
+
+facilitation_guide:
+  timing:
+    phase_1_minutes: 10
+    phase_2_minutes: 10
+    phase_3_minutes: 15
+    phase_4_minutes: 15
+
+  what_to_expect:
+    - flaw: big_claim_little_evidence
+      turns: "turn 5 (Mia)"
+      signal: "Mia says 'the documentary and the article both prove' and 'it's not even a question anymore' based on just two sources"
+      difficulty: most_will_catch
+
+    - flaw: weak_source_strong_claim
+      turns: "turn 7 (Mia)"
+      signal: "Mia says 'I already have a real article with real statistics and a whole documentary — that's pretty solid'"
+      difficulty: harder_to_spot
+
+    - flaw: one_example_as_proof
+      turns: "turn 5 (Mia)"
+      signal: "Mia says one town switching to reusable bags 'proves awareness campaigns work'"
+      difficulty: harder_to_spot
+
+    - flaw: missing_practical_details
+      turns: "turns 9-11 (Jaylen, with Mia adding on)"
+      signal: "Jaylen describes stations, displays, art projects, social media, and a sculpture — but never mentions cost, time, materials, or who would help"
+      difficulty: most_will_catch
+
+    - flaw: abandoned_concern
+      turns: "turns 6-8 (Jaylen raises it, Mia dismisses it)"
+      signal: "Jaylen asks 'should we find a few more sources?' but gives up after Mia says they have enough"
+      difficulty: easy_to_miss
+
+    - flaw: conclusion_exceeds_evidence
+      turns: "turn 12 (Mia)"
+      signal: "Mia says the campaign will 'totally change how people think about plastic' and that they have 'the research and a real plan'"
+      difficulty: harder_to_spot
+
+  phase_1:
+    - prompt: "Re-read turn 5. Mia says something 'proves' that awareness campaigns work. How many examples does she give? Is that enough to prove it?"
+      targets: big_claim_little_evidence
+
+    - prompt: "Re-read turn 5 again — Mia mentions one town that switched to reusable bags. Does one town prove something works everywhere?"
+      targets: one_example_as_proof
+
+    - prompt: "Look at turns 9 through 11. Jaylen is describing a lot of cool activities. Now ask yourself: could they actually pull all of this off? What would they need?"
+      targets: missing_practical_details
+
+    - prompt: "Follow Jaylen's turns in order. In turn 6, he asks a question. What happens to that question? Does it ever get answered?"
+      targets: abandoned_concern
+
+    - prompt: "Read the last turn — turn 12. Mia says they have 'the research and a real plan.' Go back and count: how many sources did they actually find? And does their plan cover how they'd actually do everything?"
+      targets: conclusion_exceeds_evidence
+
+  phase_2:
+    - flaw: big_claim_little_evidence
+      narrowed_options:
+        - confirmation_bias
+        - emotional_reasoning
+        - echo_chamber
+      perspective_prompt: "Imagine you're Mia. You watched a documentary about sea turtles that made you almost cry, and then you found an article with a huge number — eight million tons. You feel really strongly that this matters. Why might you say those two sources 'prove' something?"
+
+    - flaw: missing_practical_details
+      narrowed_options:
+        - tunnel_vision
+        - emotional_reasoning
+        - groupthink
+      perspective_prompt: "Imagine you're Jaylen. You just came up with this awesome idea for an awareness day with stations and art projects and a giant sea turtle sculpture. You're so excited picturing it. Why might you skip over questions like 'how much would this cost' or 'who's going to help?'"
+
+    - flaw: abandoned_concern
+      narrowed_options:
+        - groupthink
+        - overreliance_on_authority
+        - tunnel_vision
+      perspective_prompt: "Imagine you're Jaylen. You think maybe they should find more sources, but Mia sounds really confident and says two is enough. You also really want to get to the fun part — planning the campaign. Why might you just say 'yeah okay' and move on?"
+
+    - flaw: one_example_as_proof
+      narrowed_options:
+        - confirmation_bias
+        - anchoring_bias
+        - emotional_reasoning
+      perspective_prompt: "Imagine you're Mia. You watched this documentary and there was this one story about a town that switched to reusable bags, and it was really inspiring. Why might you take that one story and say it proves the whole idea works?"
+
+    - flaw: conclusion_exceeds_evidence
+      narrowed_options:
+        - emotional_reasoning
+        - confirmation_bias
+        - tunnel_vision
+      perspective_prompt: "Imagine you're Mia at the end of the discussion. You and Jaylen just had this really exciting brainstorm and you're feeling great about the project. Why might you say it's going to 'totally change' how people think, even though you haven't figured out all the details yet?"
+
+    - flaw: weak_source_strong_claim
+      narrowed_options:
+        - confirmation_bias
+        - overreliance_on_authority
+        - emotional_reasoning
+      perspective_prompt: "Imagine you're Mia. Someone asks if you need more sources, and you think, 'I have a real article with real statistics AND a documentary — that's two whole sources.' Why might you feel like that's solid enough?"
+
+  phase_4:
+    - type: missed_flaw
+      prompt: "Nobody mentioned this yet — in turn 6, Jaylen asks if they should find more sources. What happens to that question? Did it ever get a real answer, or did it just disappear?"
+
+    - type: missed_flaw
+      prompt: "Let's look at the very end — turn 12. Mia says this plan is going to 'totally change' how people think about plastic. Based on everything they actually have — one article, one documentary, and a plan with no details about cost or timing — is that a fair thing to say?"
+
+    - type: student_victory
+      prompt: "Some of you noticed that Mia only has two sources but talks like she has a mountain of proof. Nice catch. Let's dig into that — why do you think she felt so confident with just two sources?"
+
+    - type: student_victory
+      prompt: "A lot of you spotted that Jaylen's plan sounds really cool but is missing some big practical details. Great work. What specific details would they need to figure out before this plan could actually happen?"
+
+    - type: challenge
+      prompt: "The AI says Mia might be showing 'confirmation bias' — only paying attention to things that agree with her. But some of you might think she's just really passionate and excited. Both sides — make your case. Can someone be passionate AND still be thinking clearly?"
+
+    - type: challenge
+      prompt: "The AI says Jaylen dropped a good question in turn 6 because of 'groupthink' — just going along with Mia. But maybe he just decided it wasn't worth arguing about. What do you think — was he going along to get along, or did he make a reasonable choice to move on?"
