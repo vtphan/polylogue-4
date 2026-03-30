@@ -679,7 +679,6 @@ Created by the teacher through the dashboard. Controls grouping, phase advanceme
 ```yaml
 session_id: string
 scenario_id: string
-is_warmup: boolean                    # true for the tutorial micro-scenario
 created_at: timestamp
 groups:
   - group_id: string
@@ -696,7 +695,7 @@ student_activity:                     # for teacher monitoring — distinguishes
     annotation_count: integer         # current number of annotations
 ```
 
-**Runtime vs. configuration fields.** The session configuration schema contains both teacher-authored fields (`session_id`, `scenario_id`, `groups`, `is_warmup`) and app-runtime fields (`active_phase`, `phase_transitions`, `student_activity`). Teacher-authored fields are set at session creation and imported from the teacher's input. Runtime fields are initialized by the app (`active_phase` defaults to 1, `student_activity` entries created with null timestamps and zero counts) and updated during the session. The schema defines the structure for both, but the app owns the runtime fields — they are never imported from YAML.
+**Runtime vs. configuration fields.** The session configuration schema contains both teacher-authored fields (`session_id`, `scenario_id`, `groups`) and app-runtime fields (`active_phase`, `phase_transitions`, `student_activity`). Teacher-authored fields are set at session creation and imported from the teacher's input. Runtime fields are initialized by the app (`active_phase` defaults to 1, `student_activity` entries created with null timestamps and zero counts) and updated during the session. The schema defines the structure for both, but the app owns the runtime fields — they are never imported from YAML.
 
 ### Phase Transition Rules
 
@@ -719,14 +718,6 @@ student_activity:                     # for teacher monitoring — distinguishes
 Perspectives is the student-facing app for Polylogue 4. It presents AI-generated discussions and guides students through a four-phase structured activity for recognizing and evaluating critical thinking flaws.
 
 **Core principle:** The app frames critical thinking evaluation as examining perspectives — not finding right answers. Students identify what they notice, explain their reasoning to peers, and consider the AI's perspective alongside their own. No perspective is treated as ground truth.
-
-### First-Session Onboarding
-
-6th graders encountering Perspectives for the first time will need to learn the workflow before they can focus on critical thinking. Without onboarding, the first 5-10 minutes of the first session will be spent on "what am I supposed to do?" rather than "what's wrong with this argument?"
-
-**Solution: A warm-up micro-scenario.** A short, hand-crafted discussion (5-6 turns, 2 personas, 1 obvious flaw) used solely to teach the four-phase workflow. The flaw is intentionally easy — the point isn't critical thinking practice, it's learning how to annotate, categorize, compare, and discuss. The teacher walks the class through each phase with the micro-scenario before students work independently on a real scenario.
-
-**This is a hand-crafted artifact, not a pipeline product.** It doesn't need `create_scenario` or `create_script` — it's written once by hand, tested, and reused for every new class. It lives in `configs/reference/` alongside the flaw and behavior libraries. **It follows the same schemas as pipeline-produced scenarios** (scenario plan, discussion transcript, evaluation annotations) so the app handles one format, not two. The only difference is that it's hand-written to those schemas rather than generated.
 
 ### Four Phases
 

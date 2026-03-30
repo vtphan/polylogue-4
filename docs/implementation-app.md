@@ -5,7 +5,7 @@
 This plan covers implementation of the Perspectives app: the student-facing web application for Polylogue 4. It is a companion to `implementation-pipeline.md` and references the design specification in `design.md`.
 
 **Prerequisites:**
-- The pipeline implementation must be complete before app development begins. The first step of app implementation is to align this plan to any spec or design changes that occurred during pipeline development. Pipeline outputs (schemas, generated scenarios in `registry/`, and the scenario sequence in `docs/scenario-sequence.md`) serve as the app's input contracts and test data.
+- The pipeline implementation must be complete before app development begins. The first step of app implementation is to align this plan to any spec or design changes that occurred during pipeline development. Pipeline outputs (generated scenario artifacts and reference libraries) serve as the app's input data. The app reads these from researcher-configured paths, not from any hardcoded project directory.
 - Node.js 24 LTS and npm must be installed on all development machines via `nvm install --lts`. All other dependencies (Next.js, TypeScript, Prisma, Tailwind CSS) are project-level and installed by Claude Code via npm during Phase 2 (project scaffolding). No manual dependency installation is required beyond Node.js. See Multi-Machine Development below for version pinning details.
 
 ### Multi-Machine Development
@@ -168,9 +168,9 @@ PRAGMA journal_mode=WAL;
 
 Pipeline artifacts (YAML) are imported into the app in two distinct ways:
 
-**One-time: Reference libraries.** The detection act library and thinking behavior library (`configs/reference/detection_act_library.yaml`, `configs/reference/thinking_behavior_library.yaml`) are seeded into the database once — at initial setup or at build time. These are the same for every scenario and every session. They populate the Phase 1 detection act selector and Phase 2 thinking behavior browser.
+**One-time: Reference libraries.** The detection act library and thinking behavior library (`detection_act_library.yaml`, `thinking_behavior_library.yaml`) are seeded into the database once — at initial setup or at build time. These are the same for every scenario and every session. They populate the Phase 1 detection act selector and Phase 2 thinking behavior browser. The app reads them from the researcher-configured `REFERENCE_LIBRARIES_PATH`.
 
-**Per-scenario: Scenario data.** When a teacher sets up a session, the scenario's artifacts are imported from the registry:
+**Per-scenario: Scenario data.** When a teacher sets up a session, the scenario's artifacts are imported from `REGISTRY_PATH`:
 
 | File | What it contains | Where it goes in the app |
 |------|-----------------|-------------------------|
@@ -202,7 +202,7 @@ The app does not read YAML at runtime. YAML is the pipeline-to-app interface; SQ
 - The evaluation split (student vs. teacher) is enforced at import time — student-facing routes query only the student-visible annotation data
 - Research data access is a database query, not file parsing
 
-**Runtime data in the Prisma schema.** The pipeline's session configuration schema (design.md) defines both teacher-authored fields and app-runtime fields (`active_phase`, `phase_transitions`, `student_activity`) in one logical structure. In the Prisma schema, `student_activity` should map to a separate database table (e.g., `StudentActivity`) with a foreign key to `Session`, not embedded in a JSON column. This gives proper indexing for the teacher dashboard polling queries. The pipeline schema describes the logical structure; the Prisma schema describes the physical storage.
+**Runtime data in the Prisma schema.** The design document (`design.md`) describes session configuration as a single logical structure with both teacher-authored fields and app-runtime fields (`active_phase`, `phase_transitions`, `student_activity`). In the Prisma schema, `student_activity` should map to a separate database table (`StudentActivity`) with a foreign key to `ClassSession`, not embedded in a JSON column. This gives proper indexing for the teacher dashboard polling queries.
 
 ### Project Structure (Preliminary)
 
@@ -238,35 +238,39 @@ This structure will be refined during implementation. It is included here to sho
 ### Phase Map
 
 ```
-Phase 1 → Phase 2 → Phase 3 → Phase 4 → REVIEW A → Phase 5 → Phase 6 → Phase 7 → REVIEW B → Phase 8 → Phase 9
+Phase 1 → Phase 2 → Phase 3a → Phase 3b → (spot-check) → Phase 4a → Phase 4b → REVIEW A → Phase 5 → Phase 6 → Phase 7 → REVIEW B → Phase 8 → Phase 9
 ```
 
-All phases are sequential. Each phase is scoped to one Claude Code working session. Review A validates the core annotation flow (Phases 1-2) before adding peer/teacher complexity. Review B validates the full app with all phases and roles before session management and deployment.
+All phases are sequential. Each phase is scoped to one Claude Code working session. Phases 3 and 4 are each split into two sub-phases to reduce per-session complexity and isolate risk:
+- **3a** (core interaction) and **3b** (scaffolds + responsive) separate the foundational UI from the portrait/tablet layout, so responsive bugs don't infect the core.
+- **4a** (Phase 2 core + submission) and **4b** (scaffolds: lifelines, guided detection, prompts) give the lifeline targeting algorithm — the most complex single feature — a dedicated session.
+
+After Phase 3b, the operator does a lightweight **spot-check** (not a formal review) of portrait mode, touch targets, and layout integrity before Phase 4a builds on top. Review A validates the complete annotation flow (Phases 1-2 + all scaffolds) before adding peer/teacher complexity. Review B validates the full app with all phases and roles before session management and deployment.
 
 ---
 
 ### Phase 1: Spec Alignment + Schema Updates
 
-**Objective:** Reconcile this plan with changes from pipeline implementation. Update pipeline schemas with app-required fields. Resolve design decisions deferred from the sketch phase.
+**Objective:** Reconcile this plan with changes from pipeline implementation. Define app-owned fields for the Prisma schema. Resolve design decisions deferred from the sketch phase.
 
 **Inputs:**
-- All pipeline schemas in `configs/*/schemas/`
-- Generated scenario outputs in `registry/` (two completed scenarios)
+- Generated scenario artifacts (four completed scenarios available for testing) — the actual data the app will consume
+- Reference libraries (`detection_act_library.yaml`, `thinking_behavior_library.yaml`)
 - `uiux-app.md > Data Contracts` (schema-to-component mapping)
 - `uiux-app.md > Scaffolds > Lifelines` (schema additions)
 - `uiux-app.md > Scaffolds > Reflection` (storage needs)
 
 **Tasks:**
 
-1. **Verify pipeline schema alignment.** Read every schema in `configs/*/schemas/` and confirm they match the data contracts in `uiux-app.md > Data Contracts`. Check:
-   - `discussion_transcript.yaml` — fields consumed by TranscriptView
-   - `evaluation_student.yaml` — fields consumed by Phase 4 AI reveal
-   - `evaluation_full.yaml` — fields consumed by teacher dashboard, cheat sheet, lifeline data, guided detection data
-   - `scenario_plan.yaml` — fields consumed by topic context scaffold and teacher dashboard
+1. **Verify artifact-to-UI alignment.** Read the actual scenario artifacts and reference libraries and confirm they provide the data the UI needs per `uiux-app.md > Data Contracts`. Check:
+   - `script.yaml` — fields consumed by TranscriptView (turns, sentences, persona names, sentence IDs)
+   - `evaluation_student.yaml` — fields consumed by Phase 4 AI reveal (annotation locations, argument_flaw, thinking_behavior)
+   - `evaluation.yaml` — fields consumed by teacher dashboard, cheat sheet, lifeline data, guided detection data (facilitation_guide with timing, what_to_expect, phase_1, phase_2, phase_4 scaffolds)
+   - `scenario.yaml` — fields consumed by topic context scaffold and teacher dashboard (topic, context, personas with weaknesses)
    - `detection_act_library.yaml` and `thinking_behavior_library.yaml` — fields consumed by DetectionActPicker and ThinkingBehaviorBrowser
-   - Flag any field present in the UI spec but absent from the schema, or vice versa
+   - Flag any field the UI spec expects but the artifacts don't provide, or vice versa
 
-2. **Update `student_annotations.yaml` schema.** Add `hints_used` field:
+2. **Define app-owned annotation field.** The Prisma `Annotation` model (Phase 2) will need a `hints_used` field not present in the pipeline artifacts:
    ```yaml
    hints_used:
      type: integer
@@ -275,7 +279,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    ```
    This tracks per-annotation lifeline usage. When a student uses a lifeline targeting flaw A, then creates an annotation at the location the lifeline pointed to, `hints_used` records how many levels were consumed. Annotations created at locations unrelated to any lifeline get `hints_used: 0`.
 
-3. **Update `session_configuration.yaml` schema.** Add three fields:
+3. **Define app-owned session fields.** The Prisma `ClassSession` model (Phase 2) will need these fields not present in the pipeline artifacts:
    ```yaml
    lifelines_per_student:
      type: integer
@@ -321,11 +325,11 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    ```
    The Phase 3 comparison view queries `AnnotationSnapshot` where `snapshot_phase = 3`, not the live `Annotation` table. This keeps comparisons stable while the "My Annotations" tab edits the live records. At the Phase 3→4 transition, a second snapshot is taken with `snapshot_phase = 4` (including Phase 3 revisions). The Phase 4 comparison view uses `snapshot_phase = 4`.
 
-7. **Define teacher authentication model.** Borrowed from CrossCheck's pattern:
+7. **Define teacher authentication model.** Adapted from CrossCheck's pattern, using BetterAuth:
    - A seed YAML file (`app/seed.yaml`) defines teacher and researcher credentials (display name + password).
    - A seed script (`app/scripts/seed-users.ts`) hashes passwords with bcrypt and upserts into a `User` table with `role` field (`teacher`, `researcher`, `student`).
-   - Authentication via NextAuth v5 with Credentials provider: teachers/researchers log in with name + password; students log in with session code + name (no password).
-   - JWT stored as httpOnly cookie. Session includes `id`, `name`, `role`.
+   - Authentication via BetterAuth with email+password plugin for teachers/researchers and a custom session-code plugin for students (session code + name, no password).
+   - Database-backed cookie sessions (BetterAuth default). Session includes `id`, `name`, `role`.
    - Middleware protects `/teacher/*` routes — only `teacher` and `researcher` roles can access. Student routes require a valid session membership.
    - Define the Prisma model:
      ```
@@ -337,22 +341,21 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    - Students are created as `User` records with `role: "student"` and `passwordHash: null` when the teacher creates a session and assigns student names to groups.
 
 8. **Document resolved design decisions.** Update the Open Decisions section:
-   - Teacher authentication: seeded credentials with NextAuth, JWT cookies
+   - Teacher authentication: seeded credentials with BetterAuth, database-backed cookie sessions
    - Guided first detection toggle: session-level boolean set by teacher at creation
    - Reflection storage: app-only Prisma model, not a pipeline schema
    - Lifeline tracking: per-student-per-session records, with per-annotation `hints_used` for research data
    - Snapshot strategy: copied rows in a snapshot table, not JSON blobs
 
 **Outputs:**
-- Updated `configs/app/schemas/student_annotations.yaml` (added `hints_used`)
-- Updated `configs/app/schemas/session_configuration.yaml` (added `lifelines_per_student`, `guided_first_detection`, `reflection_active`)
+- App-owned field definitions documented (hints_used, lifelines_per_student, guided_first_detection, reflection_active) — ready for Prisma schema in Phase 2
 - This document updated with resolved decisions
-- Verified schema alignment — all data contracts confirmed
+- Verified artifact-to-UI alignment — all data contracts confirmed against actual artifacts
 
 **Notes:**
-- The pipeline schemas (`evaluation_full.yaml`, `evaluation_student.yaml`, etc.) are not modified. The app consumes them as-is. Only the app-owned schemas (`student_annotations.yaml`, `session_configuration.yaml`) are updated.
-- The pipeline's `validate_schema.py` should still pass on all pipeline artifacts. Run it to confirm no regressions.
-- The Prisma schema (Phase 2) will include the `User` table (with auth fields), all four app-only models (`StudentReflection`, `StudentLifeline`, `AnnotationSnapshot`, `PhaseTransition`), and the core tables mapped from pipeline schemas.
+- The app does not modify pipeline artifacts or pipeline schemas. It reads the actual artifacts from `REGISTRY_PATH` and `REFERENCE_LIBRARIES_PATH` as-is.
+- App-owned fields (`hints_used`, `lifelines_per_student`, etc.) exist only in the Prisma schema — they are runtime concepts, not pipeline outputs.
+- The Prisma schema (Phase 2) will include the `User` table (with auth fields), all four app-only models (`StudentReflection`, `StudentLifeline`, `AnnotationSnapshot`, `PhaseTransition`), and the core tables mapped from the actual artifact structures.
 
 ---
 
@@ -362,8 +365,8 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
 **Inputs:**
 - Updated schemas from Phase 1
-- Pipeline artifacts in `registry/` (test data for import)
-- Reference libraries in `configs/reference/`
+- Pipeline artifacts in `REGISTRY_PATH` (test data for import)
+- Reference libraries in `REFERENCE_LIBRARIES_PATH`
 - `uiux-app.md > Data Contracts` (schema-to-component mapping, import timing)
 - `uiux-app.md > Design Language` (student vs. teacher visual direction)
 
@@ -373,16 +376,19 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    - `npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir`
    - Add `.nvmrc` with content `24`
    - Add `"engines": { "node": ">=24.0.0 <25.0.0" }` to `package.json`
-   - Add `.env.example` with template for `DATABASE_URL` (SQLite path)
-   - Create `.env.local` with actual local path (gitignored)
+   - Add `.env.example` with template for:
+     - `DATABASE_URL` — SQLite path (e.g., `file:./perspectives.db`)
+     - `REFERENCE_LIBRARIES_PATH` — path to reference libraries directory (researcher-configured)
+     - `REGISTRY_PATH` — path to scenario registry directory (researcher-configured)
+   - Create `.env.local` with actual local paths (gitignored)
 
 2. **Install dependencies.**
    - `npm install prisma @prisma/client`
    - `npm install js-yaml @types/js-yaml` (for YAML import)
-   - `npm install next-auth@beta @auth/prisma-adapter bcryptjs @types/bcryptjs` (for teacher auth)
+   - `npm install better-auth bcryptjs @types/bcryptjs` (for auth)
    - `npx prisma init --datasource-provider sqlite`
 
-3. **Design Prisma schema.** Map pipeline schemas + app-only models to database tables:
+3. **Design Prisma schema.** Map artifact structures + app-only models to database tables:
 
    **From pipeline (imported from YAML):**
 
@@ -402,12 +408,12 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    | Table | Notes |
    |-------|-------|
    | `User` | id, displayName, username (auto-derived), passwordHash (nullable — null for students), role (teacher/researcher/student), createdAt. Teachers and researchers seeded from `seed.yaml`; students created when teacher assigns them to a session. |
-   | `Session` | session_id, scenario_id (FK), teacher_id (FK to User), lifelines_per_student, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), status (`active`/`archived`, default `active`), created_at. Auto-archives 2 hours after `created_at` (checked on dashboard load and via a periodic server check). |
+   | `ClassSession` | session_id, scenario_id (FK), teacher_id (FK to User), lifelines_per_student, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), status (`active`/`archived`, default `active`), created_at. Auto-archives 2 hours after `created_at` (checked on dashboard load and via a periodic server check). Named `ClassSession` to avoid collision with BetterAuth's `session` table (auth sessions). |
    | `Group` | group_id, session_id (FK) |
    | `GroupMember` | user_id (FK to User, role=student), group_id (FK) |
    | `StudentActivity` | user_id (FK), session_id (FK), first_opened, last_active, annotation_count |
    | `PhaseTransition` | session_id (FK), from_phase, to_phase, transitioned_at |
-   | `Annotation` | All fields from student_annotations.yaml, including hints_used. FK to User (student), Session. location stored as JSON. revision_history stored as JSON array. |
+   | `Annotation` | annotation_id, phase_created, location (JSON), detection_act, description, thinking_behavior, behavior_source, behavior_own_words, behavior_explanation, submitted, hints_used, revision_history (JSON array). FK to User (student), ClassSession. |
    | `AnnotationSnapshot` | annotation_id (FK), session_id (FK), snapshot_phase, snapshot_data (JSON) |
    | `StudentLifeline` | user_id (FK), session_id (FK), target_flaw, levels_revealed, created_at |
    | `StudentReflection` | user_id (FK), session_id (FK), missed_insight, next_strategy, submitted_at |
@@ -419,17 +425,49 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
 4. **Create Prisma client singleton.** `src/lib/db.ts` using the pattern from the Tech Stack section (globalForPrisma pattern for dev hot-reload).
 
-5. **Set up NextAuth.** Borrowed from CrossCheck's pattern:
-   - `src/lib/auth.ts` — NextAuth configuration with Credentials provider:
-     - Teachers/researchers: authenticate with displayName + password (bcrypt compare against `User.passwordHash`)
-     - Students: authenticate with session code + full name (look up `User` with `role: "student"` who is a `GroupMember` in a session matching the code)
-     - JWT callbacks include `id`, `name`, `role` in the session
+5. **Set up BetterAuth.** Two-tier authentication using BetterAuth with the Prisma adapter:
+   - `src/lib/auth.ts` — BetterAuth server configuration:
+     ```typescript
+     import { betterAuth } from "better-auth";
+     import { prismaAdapter } from "better-auth/adapters/prisma";
+     import { prisma } from "./db";
+
+     export const auth = betterAuth({
+       database: prismaAdapter(prisma, { provider: "sqlite" }),
+       emailAndPassword: { enabled: true },  // teachers/researchers
+       // Student auth: custom session-code strategy (see below)
+       user: {
+         additionalFields: {
+           role: { type: "string", required: true },       // teacher, researcher, student
+           displayName: { type: "string", required: true },
+         },
+       },
+       session: {
+         // Database-backed cookie sessions (BetterAuth default)
+         // Session object includes id, name, role
+       },
+     });
+     ```
+   - **Teacher/researcher auth:** Email+password (BetterAuth built-in). Teachers authenticate with displayName + password (bcrypt compare against stored hash). The `role` field on the user record gates route access.
+   - **Student auth:** Custom credential strategy. Students authenticate with session code + full name (look up `User` with `role: "student"` who is a `GroupMember` in a session matching the code). Implemented as a custom BetterAuth plugin or a thin Server Action that calls `auth.api` after validation.
+   - `src/lib/auth-client.ts` — BetterAuth client for React components:
+     ```typescript
+     import { createAuthClient } from "better-auth/react";
+     export const authClient = createAuthClient();
+     ```
+   - `src/app/api/auth/[...all]/route.ts` — Mount BetterAuth API handler:
+     ```typescript
+     import { auth } from "@/lib/auth";
+     import { toNextJsHandler } from "better-auth/next-js";
+     export const { GET, POST } = toNextJsHandler(auth);
+     ```
    - `src/middleware.ts` — Route protection:
      - `/teacher/*` requires `role` = `teacher` or `researcher`
      - `/student/session/*` requires `role` = `student` with valid session membership
      - `/student` (join page) and `/auth/login` are public
-     - Students with a valid JWT cookie for an active session are redirected from `/student` (join page) directly to their active session — no re-entry of credentials needed
+     - Students with a valid session cookie for an active session are redirected from `/student` (join page) directly to their active session — no re-entry of credentials needed
    - `src/app/auth/login/page.tsx` — Teacher/researcher login form (name + password)
+   - Run `npx @better-auth/cli generate` to generate BetterAuth's required database tables (session, account, verification), then merge with the app's Prisma schema. **Naming collision:** BetterAuth creates a `session` table (auth sessions); the app needs a `Session` table (classroom sessions). Rename the app's model to `ClassSession` in the Prisma schema to avoid conflict. BetterAuth's `user` table maps to the app's `User` model — extend it with `role`, `displayName`, and other app-specific fields via BetterAuth's `additionalFields` configuration.
 
 6. **Write seed YAML and seed script.**
    - `app/seed.yaml` — defines teacher and researcher credentials:
@@ -444,15 +482,15 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
      ```
    - `app/scripts/seed-users.ts` — reads `seed.yaml`, hashes passwords with bcrypt (10 rounds), auto-derives usernames (lowercase, spaces→dots), upserts into `User` table. Idempotent.
 
-7. **Write YAML import logic.** `src/lib/import.ts`:
-   - `importReferenceLibraries(detectionActPath, thinkingBehaviorPath)` — one-time seed. Parses YAML, upserts `DetectionAct`, `FlawPattern`, `ThinkingBehavior` records.
-   - `importScenario(scenarioDir)` — per-scenario import. Reads `scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and `pedagogical_review.yaml` from a directory. Creates `Scenario`, `Transcript`, `AIAnnotation`, `TeacherEvaluation`, `PedagogicalReview` records. `pedagogical_review.yaml` is optional — if absent, no `PedagogicalReview` record is created. Validates file existence before import (except optional files). Returns structured validation errors (missing files, malformed YAML, schema violations) rather than throwing, so the UI can display them inline. Returns the scenario_id on success.
-   - `listUnimportedScenarios(registryPath)` — scans the `registry/` directory for scenario directories not yet imported into the database (comparing directory names against existing `Scenario.scenario_id` values). Returns a list of importable directories.
+7. **Write YAML import logic.** `src/lib/import.ts`. All paths are resolved from environment variables (`REFERENCE_LIBRARIES_PATH`, `REGISTRY_PATH`):
+   - `importReferenceLibraries()` — one-time seed. Reads `detection_act_library.yaml` and `thinking_behavior_library.yaml` from `REFERENCE_LIBRARIES_PATH`. Parses YAML, upserts `DetectionAct`, `FlawPattern`, `ThinkingBehavior` records.
+   - `importScenario(scenarioId)` — per-scenario import. Reads `scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and `pedagogical_review.yaml` from `REGISTRY_PATH/{scenarioId}/`. Creates `Scenario`, `Transcript`, `AIAnnotation`, `TeacherEvaluation`, `PedagogicalReview` records. `pedagogical_review.yaml` is optional — if absent, no `PedagogicalReview` record is created. Validates file existence before import (except optional files). Returns structured validation errors (missing files, malformed YAML, schema violations) rather than throwing, so the UI can display them inline. Returns the scenario_id on success.
+   - `listUnimportedScenarios()` — scans `REGISTRY_PATH` for scenario directories not yet imported into the database (comparing directory names against existing `Scenario.scenario_id` values). Returns a list of importable directories.
    - Both import functions are idempotent — re-importing overwrites existing records (upsert by primary key).
 
 8. **Write database seed script.** `prisma/seed.ts`:
-   - Seeds reference libraries from `configs/reference/`
-   - Imports the two existing scenarios from `registry/ocean_plastic_campaign/` and `registry/deforestation_reforestation/`
+   - Seeds reference libraries from `REFERENCE_LIBRARIES_PATH`
+   - Auto-discovers and imports all scenario directories found in `REGISTRY_PATH`
    - Runs `seed-users.ts` to seed teacher/researcher credentials
    - Configured as Prisma's seed command in `package.json`
 
@@ -480,7 +518,8 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    │   ├── scaffolds/         # Lifelines, guided detection, topic context, reflection
    │   └── dashboard/         # Teacher monitoring components
    ├── lib/
-   │   ├── auth.ts            # NextAuth configuration
+   │   ├── auth.ts            # BetterAuth server configuration
+   │   ├── auth-client.ts     # BetterAuth client
    │   ├── db.ts              # Prisma client singleton
    │   ├── import.ts          # YAML import logic
    │   └── utils.ts           # Display name derivation, sentence ID parsing
@@ -496,27 +535,27 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    - Query the database to verify data integrity
 
 **Outputs:**
-- Next.js project in `app/` with TypeScript, Tailwind, Prisma, NextAuth configured
+- Next.js project in `app/` with TypeScript, Tailwind, Prisma, BetterAuth configured
 - `prisma/schema.prisma` with all tables (including `User` with auth fields)
-- `src/lib/auth.ts`, `src/lib/db.ts`, `src/lib/import.ts`
+- `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/lib/db.ts`, `src/lib/import.ts`
 - `src/middleware.ts` (route protection)
 - `src/app/auth/login/page.tsx` (teacher/researcher login)
 - `app/seed.yaml` + `app/scripts/seed-users.ts` (credential seeding)
 - `prisma/seed.ts` (reference libraries + scenarios + users)
 - Tailwind theme with student/teacher design language
-- `.nvmrc`, `.env.example`, `engines` field in `package.json`
-- Two scenarios, reference libraries, and teacher/researcher credentials seeded in local database
+- `.nvmrc`, `.env.example` (with `DATABASE_URL`, `REFERENCE_LIBRARIES_PATH`, `REGISTRY_PATH`), `engines` field in `package.json`
+- All discovered scenarios, reference libraries, and teacher/researcher credentials seeded in local database
 
 **Notes:**
 - The `Transcript` table stores the full turns array as JSON rather than normalizing turns/sentences into separate tables. This avoids complex joins for transcript display — the TranscriptView component receives the entire turns array and renders it. Sentence IDs are parsed client-side for annotation matching.
 - The `TeacherEvaluation` table stores the full evaluation as JSON because the teacher dashboard reads it as a single object for the cheat sheet and detail panel. No need to query individual annotations from it.
-- `student_activity` from the pipeline schema maps to a separate `StudentActivity` table (not a JSON column on Session) for efficient polling queries from the teacher dashboard.
+- `student_activity` maps to a separate `StudentActivity` table (not a JSON column on `ClassSession`) for efficient polling queries from the teacher dashboard.
 
 ---
 
-### Phase 3: Transcript Display + Annotation (Phase 1 Core)
+### Phase 3a: Core Interaction (Phase 1 — Landscape)
 
-**Objective:** Build the core student interaction — reading a transcript and creating annotations. This is the foundational UI that all subsequent phases build upon.
+**Objective:** Build the foundational student interaction — reading a transcript and creating annotations — in landscape/desktop layout only. Portrait/tablet mode is deferred to Phase 3b to keep this phase focused on getting the core interaction model right.
 
 **Inputs:**
 - Prisma schema and seeded database from Phase 2
@@ -527,19 +566,17 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 - `uiux-app.md > Component > AnnotationPanel` (modes, fields)
 - `uiux-app.md > Component > DetectionActPicker` (schema fields, display, reading strategy hints)
 - `uiux-app.md > Interactions > Sentence Selection` (tap mechanics, multi-select, cross-turn)
-- `uiux-app.md > Tablet` (touch targets, keyboard, portrait mode)
-- `uiux-app.md > Design Language > Student` (spacious layout, micro-animations, copy tone)
+- `uiux-app.md > Design Language > Student` (spacious layout, copy tone)
 - `uiux-app.md > Component > PhaseIndicator` (display)
 
 **Tasks:**
 
-1. **Student activity view layout.** Build the persistent two-panel structure at `/student/session/[id]`:
+1. **Student activity view layout (landscape).** Build the persistent two-panel structure at `/student/session/[id]`:
    - Phase indicator (top): four numbered circles, current phase highlighted, not clickable
    - Transcript panel (left, ~60%): scrollable, always visible
    - Work panel (right, ~40%): content changes per phase
    - Status bar (bottom): one sentence describing current phase task
-   - Portrait/narrow mode (<1200px): single-panel with Read/Work tab bar at bottom (reference: `uiux-app.md > Tablet`)
-   - Auto-switch from Read to Work when sentences are selected in portrait mode (200ms slide transition animation for spatial continuity)
+   - Landscape only (>=1200px) for now — portrait mode added in Phase 3b
 
 2. **TranscriptView component.** Implement per `uiux-app.md > Component > TranscriptView`:
    - Render turns as distinct blocks with persona header (name + role), left-border accent color per persona
@@ -567,57 +604,104 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
    c. **Annotation creation (sentences selected):** Form with selected sentences display, DetectionActPicker, description free-text field (min 10 chars, placeholder: "What did you notice? Describe it in your own words."), Save/Cancel buttons. Reference: `uiux-app.md > Student > Phase 1 > Work Panel` annotation creation wireframe.
 
-5. **Guided first annotation.** On the first annotation creation (first time form is shown), display inline guide above form: "Nice! You found something. Now: (1) Pick which type of problem it is, (2) Describe what you noticed in your own words." Disappears after first save, does not reappear. Reference: `uiux-app.md > Student > Phase 1 > Work Panel` guided first annotation.
-
-6. **Server Actions for annotation CRUD.** In `src/actions/`:
+5. **Server Actions for annotation CRUD.** In `src/actions/`:
    - `createAnnotation(studentId, sessionId, data)` — creates with `phase_created: 1`, `submitted: false`, `hints_used: 0`, empty `revision_history`
    - `updateAnnotation(annotationId, data)` — updates fields, appends to `revision_history`
    - `getAnnotations(studentId, sessionId)` — returns student's annotations
    - Optimistic updates: the UI reflects saves immediately, with a subtle "Saved" indicator. Retry on failure (up to 2 retries with 1-second delay), then show "Couldn't save — check your connection" error.
 
-7. **Student activity tracking.** Server Action `updateActivity(studentId, sessionId)`:
+6. **Student activity tracking.** Server Action `updateActivity(studentId, sessionId)`:
    - Sets `first_opened` on first call (if null)
    - Updates `last_active` on every annotation save and periodically (every 30 seconds via client heartbeat)
    - Updates `annotation_count`
 
-8. **Topic context scaffold.** Before the transcript, show the scenario context card (reference: `uiux-app.md > Scaffolds` topic context):
-   - "About this discussion" header
-   - Scenario `topic` and `context` fields (from Scenario table, not sensitive)
-   - "Start Reading" button that dismisses the card and shows the transcript
-
-9. **Re-reading nudge.** Client-side timer: if 3+ minutes in Phase 1 with 0 annotations, show a dismissible nudge at the top of the work panel. Disappears on dismiss or on first annotation save. Reference: `uiux-app.md > Scaffolds` re-reading nudge. This uses a client-side timer — no server call needed.
-
-10. **Annotation marker micro-animation.** When an annotation is saved, the corresponding sentences show a brief scale-up + checkmark animation on the annotation marker. Reference: `uiux-app.md > Design Language > Student` micro-animations.
-
 **Outputs:**
-- Student activity view at `/student/session/[id]` with two-panel layout + portrait mode
+- Student activity view at `/student/session/[id]` with two-panel landscape layout
 - TranscriptView component with sentence selection and annotation markers
 - DetectionActPicker component with reading strategy hints
 - Work panel with empty/active/creation states
 - Server Actions for annotation CRUD and activity tracking
-- Topic context card, re-reading nudge, guided first annotation
 - Tailwind styling following student design language
 
 **Notes:**
-- Phase 1 is built without session join flow or teacher controls — use a hardcoded test student and session for development. Session management is Phase 8.
-- The lifeline system and guided first detection scaffold are deferred to Phase 4 (scaffolds phase) to keep this phase focused on the core annotation flow.
+- Built without session join flow or teacher controls — use a hardcoded test student and session for development. Session management is Phase 8.
+- The lifeline system and guided first detection scaffold are deferred to Phase 4b (scaffolds phase).
 - Test with the `ocean_plastic_campaign` transcript (12 turns, 2 personas) — a good baseline for layout and interaction testing.
+- Keep component structure responsive-ready (avoid hardcoded widths, use flex/grid that can be adapted), but do not implement the portrait mode layout or tab switcher yet.
 
 ---
 
-### Phase 4: Thinking Behaviors (Phase 2) + Submission + Scaffolds
+### Phase 3b: Scaffolds + Portrait/Tablet Mode
 
-**Objective:** Build Phase 2 (thinking behavior assignment and submission) and all learning scaffolds (lifelines, guided first detection, inline perspective prompts). Scaffolds are built here because they span Phases 1-2 and share data sources.
+**Objective:** Layer scaffolds and portrait/tablet responsive layout onto the working Phase 1 core from Phase 3a. Scaffolds are lightweight additions; portrait mode is a fundamentally different layout that requires dedicated attention.
 
 **Inputs:**
-- Phase 3 output (Phase 1 core UI)
+- Phase 3a output (working landscape Phase 1)
+- `uiux-app.md > Tablet` (touch targets, keyboard, portrait mode)
+- `uiux-app.md > Scaffolds` (topic context, re-reading nudge)
+- `uiux-app.md > Design Language > Student` (micro-animations)
+- `uiux-app.md > Student > Phase 1 > Work Panel` (guided first annotation)
+
+**Tasks:**
+
+1. **Topic context scaffold.** Before the transcript, show the scenario context card (reference: `uiux-app.md > Scaffolds` topic context):
+   - "About this discussion" header
+   - Scenario `topic` and `context` fields (from Scenario table, not sensitive)
+   - "Start Reading" button that dismisses the card and shows the transcript
+
+2. **Guided first annotation.** On the first annotation creation (first time form is shown), display inline guide above form: "Nice! You found something. Now: (1) Pick which type of problem it is, (2) Describe what you noticed in your own words." Disappears after first save, does not reappear. Reference: `uiux-app.md > Student > Phase 1 > Work Panel` guided first annotation.
+
+3. **Re-reading nudge.** Client-side timer: if 3+ minutes in Phase 1 with 0 annotations, show a dismissible nudge at the top of the work panel. Disappears on dismiss or on first annotation save. Reference: `uiux-app.md > Scaffolds` re-reading nudge. This uses a client-side timer — no server call needed.
+
+4. **Annotation marker micro-animation.** When an annotation is saved, the corresponding sentences show a brief scale-up + checkmark animation on the annotation marker. Reference: `uiux-app.md > Design Language > Student` micro-animations.
+
+5. **Portrait/narrow mode layout.** Implement per `uiux-app.md > Tablet`:
+   - Breakpoint: <1200px switches to single-panel mode
+   - Floating tab bar at bottom: "Read" and "Work" tabs
+   - Auto-switch from Read to Work when sentences are selected (200ms slide transition animation for spatial continuity)
+   - Auto-switch back to Read on save/cancel (if desired — follow uiux-app.md spec)
+   - Scroll containment: panels scroll independently, inactive panel preserves scroll position
+   - Phase indicator and status bar adapt to narrower layout
+
+6. **Keyboard management (tablet).** Implement per `uiux-app.md > Tablet`:
+   - Text input fields scroll into view above iOS keyboard
+   - At least 3 lines of the input field remain visible above the keyboard
+   - Detection act radio buttons may scroll out of view — this is acceptable if act is already selected
+
+7. **Orientation change handling.** State preservation across orientation changes:
+   - Selected sentences persist
+   - Work panel form content persists
+   - Scroll positions preserved per panel
+
+8. **Pinch-to-zoom disabled.** Add `user-scalable=no` to viewport meta tag.
+
+**Outputs:**
+- Topic context card, re-reading nudge, guided first annotation layered onto Phase 1
+- Annotation marker micro-animation
+- Portrait/tablet mode with tab switcher, auto-switching, scroll containment
+- Keyboard management for iOS/tablet
+- Orientation change resilience
+
+**Operator spot-check after Phase 3b:** Before proceeding to Phase 4a, the operator should spend ~10 minutes verifying: (1) portrait mode tab switching works, (2) touch targets feel right on a tablet-sized viewport, (3) the two-panel landscape layout holds with real transcript data. If something is off, flag it at the start of Phase 4a. This is not a formal review — no separate agent session or PASS/ISSUE report needed.
+
+**Notes:**
+- Test portrait mode with the `ocean_plastic_campaign` transcript at iPad viewport sizes (1024×768 portrait, 1366×1024 landscape).
+- The auto-switch behavior is the trickiest interaction — verify that selecting sentences in Read tab → auto-switch to Work tab → saving annotation → returning to Read tab feels natural and doesn't lose selection state.
+- All scaffolds added here are Phase 1-only. Phase 2 scaffolds (lifelines, guided first detection, inline prompts) are in Phase 4b.
+
+---
+
+### Phase 4a: Thinking Behaviors (Phase 2 Core) + Submission
+
+**Objective:** Build the Phase 2 student experience — thinking behavior assignment, submission with undo, and force-submission. No scaffolds in this phase; those are isolated in Phase 4b.
+
+**Inputs:**
+- Phase 3b output (complete Phase 1 with scaffolds and portrait mode)
 - `uiux-app.md > Student > Phase 2` (full Phase 2 spec)
 - `uiux-app.md > Student > Phase 2 > Work Panel` (checklist, behavior assignment, progressive disclosure, submit)
 - `uiux-app.md > Component > ThinkingBehaviorBrowser` (schema fields, library-first design)
-- `uiux-app.md > Scaffolds > Lifelines` (full lifeline system spec)
-- `uiux-app.md > Scaffolds > Guided First` (guided first detection)
-- `uiux-app.md > Scaffolds` (inline perspective prompts, flaw pattern library)
 - `uiux-app.md > Interactions > Annotation Lifecycle` (draft → submitted states)
+- `uiux-app.md > Interactions > Phase Transitions` (transition UI)
 - `uiux-app.md > Engagement` (submission celebration, progress satisfaction)
 
 **Tasks:**
@@ -648,24 +732,57 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
    d. **Submit button:** "Submit My Work" at bottom. Disabled until all annotations have a thinking behavior. Disabled text: "Assign all thinking behaviors to submit." On tap: confirmation dialog ("Once you submit, you can't change your answers until Phase 3. Ready?"). On confirm: all annotations set to `submitted: true`, work panel transitions to "Submitted!" state with checkmark animation and summary. A prominent "Undo" button appears for 30 seconds — tapping it reverts `submitted` to false and returns to the checklist. After 30 seconds, the undo button disappears and submission is final.
 
-4. **Force-submission at Phase 2→3 transition.** When the teacher advances to Phase 3:
+4. **Force-submission and snapshot at Phase 2→3 transition.** When the teacher advances to Phase 3:
    - All unsubmitted annotations are auto-submitted (`submitted: true`) regardless of completion state
    - `thinking_behavior` may be null for incomplete annotations — these display "No thinking behavior assigned" in Phase 3
    - Brief notification: "Your teacher moved to the next phase. Your work has been submitted."
    - Server Action: `forceSubmitAll(sessionId)` — bulk update
+   - Server Action: `takeSnapshot(sessionId, snapshotPhase)` — for every submitted annotation in the session, create an `AnnotationSnapshot` record with `snapshot_phase` and `snapshot_data` containing the full annotation state. Called after force-submit.
    - **Late-arriving students** who are still in Phase 1 are also force-submitted and snapshotted. Their annotations may have no thinking behaviors — this is expected and handled the same as any incomplete submission.
 
 5. **New annotations in Phase 2.** Students can still create new annotations after Phase 2 opens (sentence selection still works). New annotations require both detection act and thinking behavior before they can be included in the submission.
 
-6. **Lifeline system.** Implement per `uiux-app.md > Scaffolds > Lifelines`:
+6. **Progress satisfaction mechanics.** Reference: `uiux-app.md > Engagement`:
+   - Phase indicator animation on phase complete (circle fills, checkmark appears)
+   - "Your Annotations (N)" count grows as student works
+   - Submission celebration: smooth checkmark + satisfying color change (not confetti)
+
+**Outputs:**
+- Phase 2 work panel with annotation checklist, ThinkingBehaviorBrowser, submission flow
+- Phase transition detection via polling
+- Force-submission and snapshot logic (`forceSubmitAll`, `takeSnapshot`)
+- New annotation creation in Phase 2
+- Engagement mechanics (progress, submission celebration)
+
+**Notes:**
+- Built without lifelines, guided first detection, or inline prompts — those are Phase 4b. The Phase 2 work panel should have a placeholder slot where the lifeline button will be inserted, but no implementation yet.
+- Test the full Phase 1→2 transition: create annotations in Phase 1, advance to Phase 2, assign behaviors, submit. Then test force-submission with incomplete annotations.
+- The 30-second undo window is time-sensitive UI — verify the timer, button visibility, and revert logic carefully.
+
+---
+
+### Phase 4b: Learning Scaffolds (Lifelines, Guided Detection, Prompts)
+
+**Objective:** Build all learning scaffolds that span Phases 1-2: the lifeline system, guided first detection, and inline perspective prompts. These are isolated here because the lifeline targeting algorithm is the most complex single feature in the app, requiring cross-table data resolution and multi-level fallback logic.
+
+**Inputs:**
+- Phase 4a output (working Phase 2 with submission)
+- `uiux-app.md > Scaffolds > Lifelines` (full lifeline system spec)
+- `uiux-app.md > Scaffolds > Guided First` (guided first detection)
+- `uiux-app.md > Scaffolds` (inline perspective prompts)
+- Scenario artifacts in `REGISTRY_PATH` — specifically `evaluation.yaml` (facilitation_guide with what_to_expect, phase_1, phase_2 scaffolds) and `scenario.yaml` (persona weaknesses for Level 1 hint fallback). Read the actual artifacts to understand the data shape.
+
+**Tasks:**
+
+1. **Lifeline system.** Implement per `uiux-app.md > Scaffolds > Lifelines`:
 
    a. **Lifeline button:** Persistent in Phase 1 and Phase 2 work panels. Shows: "Lifelines: N remaining." Disabled when 0 remaining ("No lifelines remaining" + supportive message).
 
-   b. **Targeting logic (student-directed):** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system then targets the nearest unfound flaw in the selected region (by sentence ID overlap with `facilitation_guide.what_to_expect[].turn_ids`). If no unfound flaw exists in that region, the system suggests trying a different region. Data source: `TeacherEvaluation` → `facilitation_guide` fields.
+   b. **Targeting logic (student-directed):** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system targets the nearest unfound flaw in the selected region. To determine flaw locations, match each `what_to_expect[].flaw` against the evaluation's `annotations[]` by `argument_flaw.pattern`, then use the annotation's `location.turn` and `location.sentences` for region mapping and overlap checking. If no unfound flaw exists in that region, the system suggests trying a different region. Data source: `TeacherEvaluation` (facilitation_guide + annotations, both stored from `evaluation.yaml` at import time).
 
    c. **Graduated hint levels:** Each tap reveals the next level for the target flaw:
-   - Level 1 (Character): Primary source: `facilitation_guide.phase_2[].character_hint` — a pre-written, 6th-grade-friendly prompt about the persona's character trait relevant to this flaw (e.g., "Think about Mia. She's really passionate about this topic. How might that affect what she says?"). Fallback: if `character_hint` is absent (e.g., for emergent flaws the evaluator didn't generate a hint for), derive one from `scenario.yaml` persona weaknesses using a template: "Think about [name]. [weakness rephrased as question]." If neither source produces a usable hint, skip Level 1 and start at Level 2.
-   - Level 2 (Location): turn reference from `facilitation_guide.what_to_expect[].turn_ids` (structured) — rendered as "Re-read turns N through M."
+   - Level 1 (Character): Derived from `scenario.yaml` persona weaknesses using a template: "Think about [name]. [weakness rephrased as question]." (e.g., "Think about Mia. She's really passionate about this topic. How might that affect what she says?"). If `facilitation_guide.phase_2[].character_hint` is present in the evaluation, use it instead (pre-written by evaluator, more tailored). If neither source produces a usable hint, skip Level 1 and start at Level 2.
+   - Level 2 (Location): Flaw location resolved via evaluation annotations (matched by `what_to_expect[].flaw` → `annotations[].argument_flaw.pattern` → `annotations[].location.turn`) — rendered as "Re-read turns N through M."
    - Level 3 (Question): detection question from `facilitation_guide.phase_1[].prompt`
    - Level 4 (Pattern): `plain_language` + `description` from detection act library
 
@@ -675,7 +792,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
    f. **Zero lifelines:** If `lifelines_per_student: 0`, lifeline button is hidden.
 
-7. **Guided first detection.** Implement per `uiux-app.md > Scaffolds > Guided First`:
+2. **Guided first detection.** Implement per `uiux-app.md > Scaffolds > Guided First`:
    - Activates when `session.guided_first_detection` is true AND student has 0 annotations after dismissing the topic context
    - Selects `most_will_catch` flaw from facilitation guide
    - Shows prompt: "Let's start with turn [N]. Read what [persona] says. Does anything stand out to you?"
@@ -684,43 +801,36 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    - After save: "Great catch! Now read the rest of the discussion and see if you notice anything else on your own."
    - Does NOT consume a lifeline (separate from lifeline system)
 
-8. **Inline perspective prompts (Phase 2).** Implement per `uiux-app.md > Scaffolds` inline perspective prompts:
+3. **Inline perspective prompts (Phase 2).** Implement per `uiux-app.md > Scaffolds` inline perspective prompts:
    - When a student hasn't typed in the explanation field for 30+ seconds: show "Need a hint?" link
    - On expand: "Need a starting point? Try this: Imagine you're [persona name]. [perspective_prompt]"
    - Data source: `facilitation_guide.phase_2[]` matched by flaw pattern
    - One per annotation. Does not consume a lifeline.
    - Client-side timer — no server call.
 
-9. **Progress satisfaction mechanics.** Reference: `uiux-app.md > Engagement`:
-   - Phase indicator animation on phase complete (circle fills, checkmark appears)
-   - "Your Annotations (N)" count grows as student works
-   - Submission celebration: smooth checkmark + satisfying color change (not confetti)
-
 **Outputs:**
-- Phase 2 work panel with annotation checklist, ThinkingBehaviorBrowser, submission flow
-- Phase transition detection via polling
-- Force-submission logic
 - Lifeline system (button, targeting, graduated hints, server actions)
 - Guided first detection scaffold
 - Inline perspective prompts
-- Engagement mechanics (progress, submission celebration)
 
 **Notes:**
 - Lifeline hints require reading from `TeacherEvaluation` (facilitation_guide) and `Scenario` (persona weaknesses). These are teacher-only data accessed server-side — the hints are rendered server-side and sent as text to the client. No sensitive data reaches the student's browser.
-- The lifeline targeting logic is the most complex piece. Implement targeting as a server-side function that takes (studentId, sessionId, currentAnnotations) and returns the next hint. Test with both scenarios.
+- The lifeline targeting logic is the most complex piece. Implement targeting as a server-side function that takes (studentId, sessionId, currentAnnotations) and returns the next hint. Test with all four scenarios to exercise different flaw counts and transcript lengths.
+- The "unfound flaw" computation (comparing student annotation sentence IDs against evaluation annotation locations, matched via `what_to_expect[].flaw` → `annotations[].argument_flaw.pattern`) is the same overlap logic that Phase 5 (ComparisonView) and Phase 7 (teacher flaw coverage) will reuse. Factor it into a shared utility in `src/lib/overlap.ts` so it can be imported by those later phases.
 - The 30-second timer for inline perspective prompts is client-side (no server call), similar to the re-reading nudge.
 
 ---
 
 ### REVIEW A: Core Annotation Flow
 
-**Why here:** Phases 1-2 (transcript display, annotation, thinking behaviors, submission) are the foundation. Every subsequent phase builds on this. Catching issues here prevents compounding errors.
+**Why here:** Phases 1-2 (transcript display, annotation, thinking behaviors, submission) and all learning scaffolds are the foundation. Every subsequent phase builds on this. Catching issues here prevents compounding errors. Phases 3a-4b split the work into four focused sessions; this review validates the integrated result.
 
 **Files to review:**
 - All components in `src/components/transcript/`, `src/components/annotation/`, `src/components/scaffolds/`
 - All server actions in `src/actions/`
 - Prisma schema (`prisma/schema.prisma`)
 - Student activity view (`src/app/student/session/[id]/`)
+- Overlap utility (`src/lib/overlap.ts`)
 
 **Review prompt:**
 
@@ -740,16 +850,19 @@ PART 1: FUNCTIONAL CORRECTNESS
    - revision_history is populated correctly on edits
 
 2. SCHEMA FIDELITY
-   Compare the Prisma schema against:
-   - configs/app/schemas/student_annotations.yaml (all fields present?)
-   - configs/app/schemas/session_configuration.yaml (all fields present?)
-   - configs/evaluation/schemas/evaluation_full.yaml (import preserves all fields?)
+   Verify the Prisma schema captures all data from the artifacts:
+   - Import a scenario from REGISTRY_PATH and query all tables — are all fields populated?
+   - Import reference libraries from REFERENCE_LIBRARIES_PATH — correct counts? (5 acts, 19 patterns, 8 behaviors)
+   - Check that evaluation.yaml's facilitation_guide (timing, what_to_expect, phase_1, phase_2, phase_4) imports into TeacherEvaluation correctly
+   - Check that evaluation_student.yaml annotations import into AIAnnotation correctly
    Verify the YAML import correctly populates all tables.
 
 3. SCAFFOLD DATA FLOW
-   Verify lifeline hints read the correct fields:
+   Verify lifeline hints read the correct fields from the imported artifacts:
+   - Flaw locations: resolved via evaluation.yaml annotations[].location (matched by flaw pattern), NOT from a turn_ids field
    - Level 1: scenario.yaml persona weaknesses (rephrased, not raw)
-   - Level 2-3: evaluation.yaml facilitation_guide.phase_1[].prompt
+   - Level 2: flaw location from annotations (rendered as "Re-read turns N through M")
+   - Level 3: evaluation.yaml facilitation_guide.phase_1[].prompt
    - Level 4: detection_act_library patterns
    - Phase 2: facilitation_guide.phase_2[].narrowed_options and perspective_prompt
    Verify guided first detection reads facilitation_guide.what_to_expect correctly.
@@ -819,10 +932,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 **Tasks:**
 
-1. **Phase 2→3 snapshot.** Server Action `takeSnapshot(sessionId, snapshotPhase)`:
-   - Called by the teacher's "Advance to Phase 3" action
-   - For every submitted annotation in the session: create an `AnnotationSnapshot` record with `snapshot_phase: 3` and `snapshot_data` containing the full annotation state (location, detection_act, description, thinking_behavior, behavior_source, behavior_own_words, behavior_explanation)
-   - Force-submit any unsubmitted annotations first, then snapshot
+1. **Phase 2→3 snapshot.** Uses `forceSubmitAll` + `takeSnapshot` from Phase 4a (already implemented). Called by the teacher's "Advance to Phase 3" action with `snapshotPhase: 3`. Verify end-to-end: force-submit incomplete annotations, then snapshot all, then confirm Phase 3 comparison view reads from snapshots.
 
 2. **Transcript panel — three-layer annotation markers.** Extend TranscriptView:
    - Student's own annotations: solid colored dots (student's assigned color)
@@ -972,7 +1082,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - Past sessions: collapsed "Past Sessions" section showing sessions with `status: "archived"`. Sessions auto-archive 2 hours after `created_at`. Auto-archive is checked on dashboard load and via a periodic server-side check (e.g., a Next.js API route called by a cron or on each dashboard poll).
    - Available scenarios list: each shows scenario_id, flaw count, persona count, pedagogical review score (if available), and `discussion_arc` as a one-line summary beneath each scenario
    - "Create New Session" button (routes to session creation — Phase 8)
-   - "Import Scenario" dropdown: lists unimported scenario directories from the registry (via `listUnimportedScenarios()`). Selecting a directory imports it using `importScenario()`. A "Upload Files" fallback allows file upload for scenarios not in the registry. Validation errors (missing required files, malformed YAML, schema violations) are shown inline with specific messages per file.
+   - "Import Scenario" dropdown: lists unimported scenario directories from `REGISTRY_PATH` (via `listUnimportedScenarios()`). Selecting a directory imports it using `importScenario()`. A "Upload Files" fallback allows file upload for scenarios not in the registry. Validation errors (missing required files, malformed YAML) are shown inline with specific messages per file.
    - Teacher design language: compact layout, smaller type, professional aesthetic
 
 2. **Active session view** (`/teacher/session/[id]`). Two-panel layout:
@@ -1183,7 +1293,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - "Create Session" button:
      - Auto-generates 6-character alphanumeric session code (uppercase, no ambiguous characters like O/0, I/1)
      - Creates `User` records for each student (role=student, no password) if they don't already exist (upsert by displayName — same student can appear in multiple sessions)
-     - Creates `Session` (with teacher_id FK), `Group`, `GroupMember`, `StudentActivity` records
+     - Creates `ClassSession` (with teacher_id FK), `Group`, `GroupMember`, `StudentActivity` records
      - `active_phase` initialized to 1, `reflection_active` to false
      - Redirects to active session view, displays session code prominently
 
@@ -1193,9 +1303,9 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - Session code exists and session is active
      - Student name matches a `User` record that is a `GroupMember` in this session (case-insensitive, whitespace-trimmed)
      - Error: "We don't see that name in this session. Check with your teacher."
-   - On success: authenticate as student via NextAuth (session code + name credentials), redirect to `/student/session/[id]`
+   - On success: authenticate as student via BetterAuth (session code + name credentials), redirect to `/student/session/[id]`
    - **Late-arriving students** always enter Phase 1 regardless of the session's current `active_phase`. They work through Phase 1 at their own pace. At the next teacher phase advance, they are force-submitted and snapshotted like everyone else — their annotations may be incomplete (no thinking behaviors) and this is handled gracefully.
-   - **Reconnection:** Re-entering the same session code + name re-authenticates into the existing session state (all annotations preserved). If the student's browser has a valid JWT cookie, navigating to `/student` redirects directly to their active session without re-entering credentials.
+   - **Reconnection:** Re-entering the same session code + name re-authenticates into the existing session state (all annotations preserved). If the student's browser has a valid session cookie, navigating to `/student` redirects directly to their active session without re-entering credentials.
    - Display names: full name stored, first name + last initial displayed everywhere (derived by `src/lib/utils.ts`)
 
 3. **Session code display.** After creation, the session code is shown prominently on the active session page header. The teacher reads it aloud or writes it on the board.
@@ -1256,14 +1366,14 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - Build: `npm run build` → `next start` on a port
    - Reverse proxy: nginx configuration (HTTPS if cert available, HTTP on private network otherwise)
    - Database: SQLite file on server filesystem, backed up daily
-   - Environment: `.env` with production `DATABASE_URL`
+   - Environment: `.env` with production `DATABASE_URL`, `REFERENCE_LIBRARIES_PATH`, `REGISTRY_PATH`
    - Process manager: pm2 or systemd to keep the Node.js process running
    - Verify: access from campus network on iPad and Chromebook browsers
 
 5. **Seed production database.**
    - Seed teacher/researcher credentials from `seed.yaml`
    - Import reference libraries
-   - Import all scenarios from `registry/` that will be used in the pilot
+   - Import all scenarios from `REGISTRY_PATH` that will be used in the pilot
    - Verify import integrity and login
 
 6. **Final walkthrough.** Run through the complete flow as both teacher and student:
@@ -1274,7 +1384,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 7. **Documentation for operator.**
    - How to seed teacher/researcher credentials
-   - How to import new scenarios from `registry/`
+   - How to import new scenarios from `REGISTRY_PATH`
    - How to create sessions and share codes
    - How to back up the SQLite database
    - Troubleshooting: server restart, database reset, re-import
@@ -1292,15 +1402,18 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 | Phase | What | Depends on | Key risk mitigated |
 |-------|------|------------|-------------------|
 | 1 | Spec alignment + schema updates | Pipeline complete | Schema gaps, unresolved design decisions |
-| 2 | Project scaffolding + database | Phase 1 | Prisma schema correctness, import pipeline |
-| 3 | Transcript + annotation (Phase 1) | Phase 2 | Core interaction: reading and marking up |
-| 4 | Thinking behaviors (Phase 2) + scaffolds | Phase 3 | Submission flow, lifeline system, guided detection |
-| **REVIEW A** | **Core annotation flow** | **Phase 4** | **Annotation lifecycle, scaffold data flow, tablet behavior** |
+| 2 | Project scaffolding + database | Phase 1 | Prisma schema correctness, import pipeline, BetterAuth setup |
+| 3a | Core interaction (Phase 1 — landscape) | Phase 2 | Foundational UI: transcript, sentence selection, annotation CRUD |
+| 3b | Scaffolds + portrait/tablet mode | Phase 3a | Responsive layout isolated from core; tablet interactions verified |
+| *(spot-check)* | *Operator verifies portrait mode, touch targets* | *Phase 3b* | *Layout issues caught before Phase 2 builds on top* |
+| 4a | Thinking behaviors (Phase 2) + submission | Phase 3b | Submission flow, force-submission, undo window |
+| 4b | Learning scaffolds (lifelines, guided detection, prompts) | Phase 4a | Lifeline targeting algorithm gets dedicated focus; overlap utility shared |
+| **REVIEW A** | **Core annotation flow** | **Phase 4b** | **Annotation lifecycle, scaffold data flow, tablet behavior** |
 | 5 | Peer comparison (Phase 3) | Review A | Snapshot strategy, three-level comparison algorithm |
 | 6 | AI reveal (Phase 4) + reflection | Phase 5 | Overlap framing, AI normalization, reflection storage |
 | 7 | Teacher dashboard | Phase 6 | Phase controls, monitoring, cheat sheet rendering |
 | **REVIEW B** | **Full app flow** | **Phase 7** | **End-to-end student + teacher flow, data integrity** |
-| 8 | Session management + auth + onboarding | Review B | Teacher auth, session creation, student join flow |
+| 8 | Session management + auth + onboarding | Review B | Session creation, student join flow |
 | 9 | Polish + deployment | Phase 8 | Tablet testing, server deployment, performance |
 
 ---
@@ -1309,12 +1422,12 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 Decisions resolved during Phase 1 (spec alignment) and pipeline implementation:
 
-1. ~~**Authentication approach.**~~ **Decided.** Two-tier authentication:
-   - **Teachers:** Seeded credentials (name + password) loaded by the researcher via a seed YAML file, hashed with bcrypt, authenticated via NextAuth with Credentials provider (JWT stored as httpOnly cookie). This prevents students from accessing the teacher dashboard. Borrowed from CrossCheck's `seed.yaml` → `seed-users.ts` → NextAuth pattern.
-   - **Students:** Session code + full student name (no password). Teacher pre-assigns student names to groups during session creation. Students enter the code + their full name to join (case-insensitive, whitespace-trimmed match). The app displays first name + last initial everywhere. Simple enough for 6th graders.
+1. ~~**Authentication approach.**~~ **Decided.** Two-tier authentication using BetterAuth:
+   - **Teachers:** Seeded credentials (name + password) loaded by the researcher via a seed YAML file, hashed with bcrypt, authenticated via BetterAuth's email+password plugin (database-backed cookie sessions). This prevents students from accessing the teacher dashboard. Adapted from CrossCheck's `seed.yaml` → `seed-users.ts` pattern.
+   - **Students:** Session code + full student name (no password). Teacher pre-assigns student names to groups during session creation. Students enter the code + their full name to join (case-insensitive, whitespace-trimmed match). The app displays first name + last initial everywhere. Simple enough for 6th graders. Implemented as a custom BetterAuth plugin or Server Action.
    - **Researcher:** Same credentials mechanism as teacher, with `role: "researcher"`. The researcher seeds their own credentials alongside teacher credentials. For MVP, the researcher uses the teacher dashboard — no separate researcher routes.
 
-2. ~~**YAML import workflow.**~~ **Decided.** Teacher imports scenarios through the dashboard UI, as specified in `uiux-app.md > Teacher > Dashboard`. Primary mechanism: a dropdown listing unimported scenario directories from the `registry/` folder on the server. Fallback: file upload for scenarios not in the registry. Validation errors are shown inline. This keeps the workflow self-contained in the app.
+2. ~~**YAML import workflow.**~~ **Decided.** Teacher imports scenarios through the dashboard UI, as specified in `uiux-app.md > Teacher > Dashboard`. Primary mechanism: a dropdown listing unimported scenario directories from `REGISTRY_PATH` on the server. Fallback: file upload for scenarios not in the registry. Validation errors are shown inline. This keeps the workflow self-contained in the app. The `REGISTRY_PATH` and `REFERENCE_LIBRARIES_PATH` environment variables are configured in `.env.local`.
 
 3. ~~**Phase 3 real-time needs.**~~ **Decided.** Snapshot at Phase 2→3 transition. The comparison view operates on a frozen snapshot of submitted annotations; revisions during Phase 3 update only the student's own "My Annotations" tab. A fresh snapshot is taken at the Phase 3→4 transition to include Phase 3 revisions. See `design.md` Phase 3 comparison logic. **Implementation:** `AnnotationSnapshot` table with `snapshot_phase` (3 or 4) and `snapshot_data` (JSON). See Phase 1 task 6.
 

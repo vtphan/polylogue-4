@@ -248,18 +248,18 @@ Students receive a limited number of **lifelines** per scenario — voluntary hi
 
 **Lifeline button:** A persistent button in the Phase 1 and Phase 2 work panels, showing remaining count: "Lifelines: 2 remaining."
 
-**Targeting logic — student-directed:** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with three options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system then targets the nearest unfound flaw in the selected region (by comparing the flaw's `turn_ids` from `facilitation_guide.what_to_expect[]` against the region boundaries). If no unfound flaw exists in that region, the app suggests trying a different region: "Nothing new to find there — try another section."
+**Targeting logic — student-directed:** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with three options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system targets the nearest unfound flaw in the selected region by matching each `what_to_expect[].flaw` against the evaluation's `annotations[]` by `argument_flaw.pattern`, then using the annotation's `location.turn` to determine which region it falls in. If no unfound flaw exists in that region, the app suggests trying a different region: "Nothing new to find there — try another section."
 
 **Graduated hint levels:**
 
 | Level | What it reveals | Data source | Example |
 |---|---|---|---|
-| 1: Character | A persona trait relevant to the flaw | Primary: `facilitation_guide.phase_2[].character_hint` (pre-written by evaluator). Fallback: derived from `scenario.yaml` persona weaknesses via template. Never shown raw. | "Think about Mia. She's really passionate about this topic. How might that affect what she says?" |
-| 2: Location | Where to look | `facilitation_guide.what_to_expect[].turn_ids` (structured turn IDs) | "Re-read turns 5 through 8. Something interesting happens there." |
+| 1: Character | A persona trait relevant to the flaw | Derived from `scenario.yaml` persona weaknesses via template. If `facilitation_guide.phase_2[].character_hint` is present in the evaluation, use it instead (pre-written, more tailored). Never shown raw. | "Think about Mia. She's really passionate about this topic. How might that affect what she says?" |
+| 2: Location | Where to look | Flaw location resolved via `evaluation.yaml` annotations (matched by `what_to_expect[].flaw` → `annotations[].argument_flaw.pattern` → `annotations[].location.turn`) | "Re-read turns 5 through 8. Something interesting happens there." |
 | 3: Question | What detection question to ask | `facilitation_guide.phase_1[].prompt` (the detection question) | "As you read those turns, ask yourself: How does Mia know that?" |
 | 4: Pattern | The flaw pattern description | Detection act library `patterns[].plain_language` + `description` | "One pattern to watch for: 'They're saying a lot based on very little.'" |
 
-**Level 1 is optional.** The evaluator generates `character_hint` per flaw in `facilitation_guide.phase_2[]`. If absent (e.g., for emergent flaws), the app falls back to deriving a hint from `scenario.yaml` persona weaknesses using a template: "Think about [name]. [weakness rephrased as question]." If neither source produces a usable hint, the system starts at Level 2. Each lifeline use reveals the next available level.
+**Level 1 is optional.** The app derives a character hint from `scenario.yaml` persona weaknesses using a template: "Think about [name]. [weakness rephrased as question]." If `character_hint` is present in `facilitation_guide.phase_2[]` for this flaw, it takes precedence (pre-written by the evaluator, more tailored). If neither source produces a usable hint, the system starts at Level 2. Each lifeline use reveals the next available level.
 
 **Phase 2 lifelines.** The same lifeline pool extends to Phase 2. A Phase 2 lifeline narrows the thinking behavior options from 8 to 2-3 (using `facilitation_guide.phase_2[].narrowed_options`) or offers the perspective prompt (using `facilitation_guide.phase_2[].perspective_prompt`). Same graduated approach — first narrow, then prompt.
 
@@ -337,25 +337,26 @@ After Phase 4 discussion time, before the session ends, a reflection prompt appe
 
 ## Data Contracts
 
-Every UI component consumes data produced by the pipeline. This section maps UI elements to their source schemas and specifies which fields render where. Schema files are defined in `implementation-pipeline.md` Phase 2 and stored in `configs/*/schemas/`.
+Every UI component consumes data produced by the pipeline. This section maps UI elements to their source artifacts and specifies which fields render where. The app reads artifacts from researcher-configured paths (`REFERENCE_LIBRARIES_PATH` and `REGISTRY_PATH`) and imports them into SQLite at setup or per-scenario import time. The app never reads from pipeline config directories.
 
 ### Pipeline Artifacts Consumed by the App
 
-| Artifact | Schema | Consumed by | Import timing |
-|----------|--------|-------------|---------------|
-| Detection act library | `configs/reference/schemas/detection_act_library.yaml` | DetectionActPicker, Phase 1 reference panel | One-time seed at setup |
-| Thinking behavior library | `configs/reference/schemas/thinking_behavior_library.yaml` | ThinkingBehaviorBrowser, Phase 2 assignment | One-time seed at setup |
-| Discussion transcript | `configs/script/schemas/discussion_transcript.yaml` | TranscriptView | Per-scenario import |
-| Evaluation (student-facing) | `configs/evaluation/schemas/evaluation_student.yaml` | Phase 4 AI Perspective tab | Per-scenario import |
-| Evaluation (full) | `configs/evaluation/schemas/evaluation_full.yaml` | Teacher dashboard, cheat sheet, detail panel | Per-scenario import |
-| Scenario plan | `configs/scenario/schemas/scenario_plan.yaml` | Teacher dashboard context (not student-visible) | Per-scenario import |
+| Artifact | File | Consumed by | Import timing |
+|----------|------|-------------|---------------|
+| Detection act library | `detection_act_library.yaml` (from `REFERENCE_LIBRARIES_PATH`) | DetectionActPicker, Phase 1 reference panel | One-time seed at setup |
+| Thinking behavior library | `thinking_behavior_library.yaml` (from `REFERENCE_LIBRARIES_PATH`) | ThinkingBehaviorBrowser, Phase 2 assignment | One-time seed at setup |
+| Discussion transcript | `script.yaml` (from scenario directory in `REGISTRY_PATH`) | TranscriptView | Per-scenario import |
+| Evaluation (student-facing) | `evaluation_student.yaml` (from scenario directory) | Phase 4 AI Perspective tab | Per-scenario import |
+| Evaluation (full) | `evaluation.yaml` (from scenario directory) | Teacher dashboard, cheat sheet, detail panel | Per-scenario import |
+| Scenario plan | `scenario.yaml` (from scenario directory) | Teacher dashboard context (not student-visible) | Per-scenario import |
+| Pedagogical review | `pedagogical_review.yaml` (from scenario directory, optional) | Teacher dashboard quality score | Per-scenario import |
 
-### App-Produced Data
+### App-Produced Data (Runtime)
 
-| Artifact | Schema | Produced by | Consumed by |
-|----------|--------|-------------|-------------|
-| Student annotations | `configs/app/schemas/student_annotations.yaml` | Student annotation flow (Phases 1-4) | ComparisonView, teacher detail panel |
-| Session configuration | `configs/app/schemas/session_configuration.yaml` | Teacher session creation + runtime updates | Phase controls, student monitor, phase transitions |
+| Data | Prisma model | Produced by | Consumed by |
+|------|-------------|-------------|-------------|
+| Student annotations | `Annotation` | Student annotation flow (Phases 1-4) | ComparisonView, teacher detail panel |
+| Session configuration | `ClassSession` | Teacher session creation + runtime updates | Phase controls, student monitor, phase transitions |
 
 ### Sentence ID Format
 
@@ -762,7 +763,7 @@ This is the same expand-on-select pattern used in the DetectionActPicker — con
 - Work panel transitions to a "Submitted!" state with a satisfying visual moment: a smooth checkmark animation and a brief summary: "You marked [N] moments and explained the thinking behind each one. Your teacher will let you know when it's time to see what your group found."
 - **30-second undo window:** A prominent "Undo" button appears in the submitted state. Tapping it reverts `submitted` to false on all annotations and returns to the checklist. After 30 seconds, the undo button disappears and submission is final. This prevents regret from accidental or premature submission without undermining the submission mechanic.
 
-**Students who haven't submitted by Phase 2→3 transition** are force-submitted. The app sets `submitted: true` on all their annotations and records the transition in `session_configuration.yaml` → `phase_transitions[]`. Annotations are auto-submitted with whatever state they're in — `thinking_behavior` may be null for annotations where the student hadn't assigned one yet, and `behavior_explanation` may be null. These incomplete annotations display normally in Phase 3 peer comparison, with "No thinking behavior assigned" shown where the behavior would appear. A brief notification appears: "Your teacher moved to the next phase. Your work has been submitted."
+**Students who haven't submitted by Phase 2→3 transition** are force-submitted. The app sets `submitted: true` on all their annotations and records the transition in `PhaseTransition` table. Annotations are auto-submitted with whatever state they're in — `thinking_behavior` may be null for annotations where the student hadn't assigned one yet, and `behavior_explanation` may be null. These incomplete annotations display normally in Phase 3 peer comparison, with "No thinking behavior assigned" shown where the behavior would appear. A brief notification appears: "Your teacher moved to the next phase. Your work has been submitted."
 
 #### Status Bar
 
@@ -1073,7 +1074,7 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 
 **Available scenarios** lists scenarios that have been imported from the pipeline registry into the database. Each shows the scenario ID, flaw count, persona count, and pedagogical review score (if available). The `discussion_arc` field from `scenario.yaml` is shown as a one-line summary beneath each scenario — giving teachers a quick sense of how the discussion unfolds before selecting it.
 
-**Import Scenario** dropdown lists unimported scenario directories from the `registry/` folder on the server. Selecting a directory imports its YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and optionally `pedagogical_review.yaml`). A "Upload Files" fallback option allows file upload for scenarios not in the registry. Validation errors (missing required files, malformed YAML, schema violations) are shown inline with specific messages per file.
+**Import Scenario** dropdown lists unimported scenario directories from `REGISTRY_PATH` (researcher-configured). Selecting a directory imports its YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and optionally `pedagogical_review.yaml`). A "Upload Files" fallback option allows file upload for scenarios not in the registry. Validation errors (missing required files, malformed YAML) are shown inline with specific messages per file.
 
 ---
 
@@ -1176,7 +1177,7 @@ This is the teacher's primary screen during class. Two-panel layout:
 ◆ = target flaw found by group, ○ = not yet found
 ```
 
-**Status indicators per student** (derived from `session_configuration.yaml` → `student_activity` fields and `student_annotations.yaml` → `submitted` field):
+**Status indicators per student** (derived from `StudentActivity` records and `Annotation` → `submitted` field):
 - Not started (circle outline): `student_activity.first_opened` is null — student hasn't opened the transcript
 - Active (solid circle): `student_activity.first_opened` is non-null — student has opened the transcript
 - Submitted (checkmark): annotation's `submitted` field is true
@@ -1267,7 +1268,7 @@ Content follows the exact format from design doc lines 867-902, with the additio
 **Props:**
 - `turns`: array of turn objects from transcript schema — each has `turn_id` (e.g., `turn_01`), `speaker`, and `sentences[]` where each sentence has `id` (e.g., `turn_01.s01`) and `text`
 - `personas`: array from transcript schema — each has `persona_id`, `name`, `role` (no perspective/strengths/weaknesses — those are in scenario plan only)
-- `annotations`: array of annotation objects to display as markers (own from `student_annotations.yaml`, peer from same, AI from `evaluation_student.yaml`)
+- `annotations`: array of annotation objects to display as markers (own from `Annotation` table, peer from same, AI from `AIAnnotation` table)
 - `selectedSentences`: currently selected sentence IDs (using the `turn_NN.sNN` format)
 - `onSentenceSelect`: callback when sentence is tapped
 - `activePhase`: determines which annotation layers are visible
@@ -1288,7 +1289,7 @@ Content follows the exact format from design doc lines 867-902, with the additio
 
 **Purpose:** Create, edit, and view annotations. Content adapts per phase.
 
-**Schema:** Reads/writes `student_annotations.yaml`. Consumes `detection_act_library.yaml` for the act picker and `thinking_behavior_library.yaml` for the behavior browser.
+**Data:** Reads/writes `Annotation` records. Consumes `DetectionAct`/`FlawPattern` for the act picker and `ThinkingBehavior` for the behavior browser.
 
 **Modes:**
 - `create`: sentence selection active, form fields empty — produces a new annotation with `phase_created`, `location.sentences`, `detection_act`, `description`, `submitted: false`
@@ -1296,7 +1297,7 @@ Content follows the exact format from design doc lines 867-902, with the additio
 - `view`: read-only display (used in teacher's student detail view)
 - `phase2-assign`: shows thinking behavior assignment for existing Phase 1 annotations — sets `thinking_behavior`, `behavior_source`, `behavior_explanation`
 
-**Fields (mapped to student_annotations.yaml):**
+**Fields (mapped to `Annotation` model):**
 - Detection act selector → `detection_act` (stores `act_id` from detection act library)
 - Description → `description` (free text, required)
 - Thinking behavior selector → `thinking_behavior` (stores `behavior_id` from thinking behavior library, or null for own-words) + `behavior_source` (`"library"` or `"own_words"`) + `behavior_own_words` (free-text behavior description when own-words is used, null otherwise)
@@ -1337,17 +1338,17 @@ Content follows the exact format from design doc lines 867-902, with the additio
 
 **Purpose:** Phase 3 comparison display showing agreement/disagreement across the group.
 
-**Schema:** Consumes `student_annotations.yaml` for all group members. Group membership comes from `session_configuration.yaml` → `groups[].student_ids`. In Phase 4, also consumes `evaluation_student.yaml` for AI annotations.
+**Data:** Consumes `Annotation` records for all group members. Group membership from `GroupMember` table. In Phase 4, also consumes `AIAnnotation` records.
 
 **Props:**
-- `studentAnnotations`: this student's annotations (from `student_annotations.yaml`)
-- `peerAnnotations`: grouped by peer, each peer's annotations (same schema)
-- `aiAnnotations`: AI annotations from `evaluation_student.yaml`, **normalized to the student annotation shape** (Phase 4 only — see normalization below)
+- `studentAnnotations`: this student's annotations (from `Annotation` table)
+- `peerAnnotations`: grouped by peer, each peer's annotations (same model)
+- `aiAnnotations`: AI annotations from `AIAnnotation` table, **normalized to the student annotation shape** (Phase 4 only — see normalization below)
 - `studentColors`: color assignment per group member
 
-**AI annotation normalization.** AI annotations (`evaluation_student.yaml`) use a different schema structure than student annotations (`student_annotations.yaml`). The ComparisonView uses a single comparison algorithm, not parallel logic. AI annotations must be normalized to the student annotation shape before being passed as a prop:
+**AI annotation normalization.** AI annotations (`AIAnnotation` records, imported from `evaluation_student.yaml`) use a different data structure than student annotations (`Annotation` records). The ComparisonView uses a single comparison algorithm, not parallel logic. AI annotations must be normalized to the student annotation shape before being passed as a prop:
 
-| `evaluation_student.yaml` field | Normalized to |
+| `AIAnnotation` field | Normalized to |
 |--------------------------------|---------------|
 | `annotation.location.sentences` | `location.sentences` (same) |
 | `annotation.argument_flaw.detection_act` | `detection_act` |
@@ -1389,12 +1390,12 @@ The following algorithm operates on a uniform annotation shape (student, peer, a
 
 **Purpose:** Teacher monitoring view showing per-student status and per-group flaw coverage.
 
-**Schema:** Consumes `session_configuration.yaml` → `groups[]` (for group membership) and `student_activity[]` (for `first_opened`, `last_active`, `annotation_count`). Also reads `student_annotations.yaml` → `submitted` for submission status. Flaw coverage data comes from a server-side computation comparing student annotation sentence IDs against AI annotation sentence IDs from `TeacherEvaluation`.
+**Data:** Consumes `Group`/`GroupMember` (for group membership) and `StudentActivity` (for `first_opened`, `last_active`, `annotation_count`). Also reads `Annotation` → `submitted` for submission status. Flaw coverage data comes from a server-side computation comparing student annotation sentence IDs against AI annotation sentence IDs from `TeacherEvaluation`.
 
 **Props:**
-- `groups`: from `session_configuration.yaml` → `groups[]`, each with `group_id` and `student_ids`
-- `studentActivity`: from `session_configuration.yaml` → `student_activity[]`, each with `student_id`, `first_opened` (timestamp or null), `last_active` (timestamp or null), `annotation_count` (integer)
-- `submissionStatus`: from `student_annotations.yaml` → whether each student has `submitted: true` on all annotations
+- `groups`: from `Group`/`GroupMember` tables, each with `group_id` and member list
+- `studentActivity`: from `StudentActivity` table, each with `student_id`, `first_opened` (timestamp or null), `last_active` (timestamp or null), `annotation_count` (integer)
+- `submissionStatus`: from `Annotation` table → whether each student has `submitted: true` on all annotations
 - `flawCoverage`: per-group object — for each group, which AI annotation IDs have been "found" (at least one student in the group has an annotation with sentence ID overlap). Computed server-side, returned alongside the activity polling response.
 
 **Display:** Grouped by group. Each group header shows flaw coverage indicator (e.g., "◆◆○ (2/3)"). Each student shows:

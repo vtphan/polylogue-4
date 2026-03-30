@@ -22,11 +22,6 @@ fields:
     required: true
     description: "Which scenario this session uses."
 
-  is_warmup:
-    type: boolean
-    required: true
-    description: "true for the tutorial micro-scenario, false for real scenarios."
-
   created_at:
     type: timestamp
     required: true
