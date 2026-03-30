@@ -90,6 +90,159 @@ See `docs/scenario-sequence.md` for a curated sequence of 7 scenarios with ready
 
 ---
 
+## For Operators
+
+The operator runs the pipeline inside Claude Code to generate scenarios. For the UMS pilot, the operator is the researcher. Post-MVP, teachers may operate the pipeline directly.
+
+### Prerequisites
+
+- [Claude Code](https://claude.com/claude-code) installed and authenticated
+- This repository cloned locally
+- Python 3 with PyYAML installed (`pip install pyyaml`)
+
+### Getting started
+
+Open Claude Code in the project directory:
+
+```bash
+cd polylogue-4
+claude
+```
+
+### First-time setup
+
+Copy the bootstrap command and run it:
+
+```bash
+cp configs/system/commands/initialize_polylogue.md .claude/commands/
+```
+
+Then inside Claude Code:
+
+```
+/initialize_polylogue
+```
+
+This syncs all slash commands and agent definitions from `configs/` to `.claude/`. Re-run whenever commands or agents are added or changed.
+
+### Generating a scenario (step by step)
+
+The pipeline has three commands, run in sequence. Each command outputs the next command with the actual scenario_id — you can copy-paste it directly.
+
+**Step 1: Design the plan**
+
+```
+/create_scenario
+```
+
+When prompted, provide:
+- **Topic** — what the group is discussing
+- **Context** — what PBL unit this connects to, what students have been working on
+- **Instructional goals** — 1-2 things you want students to practice
+- **Target flaws** — which flaw-behavior combinations to target (see `docs/scenario-sequence.md` for ready-to-use prompts)
+
+Example — paste this as your input:
+
+```
+Topic: Whether Memphis should plant more trees along the Wolf River Greenway
+to help with summer heat
+
+Context: A 6th-grade STEM class is working on the PBL driving question:
+"What are the major threats affecting our global environment, and what can
+our communities do to protect our ecosystems?" This group is researching
+urban heat.
+
+Instructional goals:
+- Practice recognizing when someone states something confidently that isn't
+  actually correct
+
+Target complexity: 2 personas, 1 flaw-behavior combination
+Target flaw: Act 1 — misapplied_idea + anchoring_bias
+```
+
+The command designs the plan, validates it with the learning scientist, and saves it. At the end, it outputs:
+
+```
+Next step — copy and paste this command:
+/create_script wolf_river_greenway
+```
+
+**Step 2: Generate the transcript**
+
+Copy-paste the command from Step 1's output:
+
+```
+/create_script wolf_river_greenway
+```
+
+This invokes the dialog writer, runs structural checks, polishes with the instructional designer, and assesses pedagogical quality with the pedagogical reviewer.
+
+- **If the reviewer scores 4-5:** The transcript is enumerated and saved. The command outputs the next step.
+- **If the reviewer scores 1-3:** The command halts and displays an explanation and revision strategy. Read the strategy — it tells you what to change (plan, prompt, or flaw selection). Then either revise the plan (`/create_scenario`) or re-run `/create_script` if the strategy suggests a prompt-level fix.
+
+On success, the command outputs:
+
+```
+Next step — copy and paste this command:
+/evaluate_script wolf_river_greenway
+```
+
+**Step 3: Evaluate and produce facilitation materials**
+
+```
+/evaluate_script wolf_river_greenway
+```
+
+The evaluator annotates all flaws, produces a quality assessment, generates a facilitation guide, and exports the student-facing evaluation and printable cheat sheet.
+
+On completion, it displays a summary:
+
+```
+Scenario complete: wolf_river_greenway
+
+Artifacts saved to registry/wolf_river_greenway/:
+  scenario.yaml           — plan
+  script.yaml             — transcript
+  evaluation.yaml         — full evaluation
+  evaluation_student.yaml — student-facing annotations
+  cheat_sheet.md          — facilitation reference
+
+Quality: All target flaws surfaced
+```
+
+**The scenario is now ready for classroom use.**
+
+### What to do if something goes wrong
+
+| Problem | What to do |
+|---|---|
+| Pedagogical reviewer scores ≤ 3 | Read the `revision_strategy`. It points to the level of intervention: plan structure, flaw selection, or prompt wording. Revise accordingly. |
+| Evaluator flags `missing_flaw` | A planned flaw didn't surface. Re-run `/create_script` (same plan, fresh generation). If it fails again, the plan needs revision. |
+| Evaluator flags `too_subtle` | The flaw is analytically present but hard to spot. The transcript may still be usable — check the cheat sheet scaffolds. If too weak, regenerate. |
+| Evaluator flags `too_obvious` | The flaw is cartoonish. Regenerate — the dialog writer produces different language each time. |
+| Structural failure (wrong turn count, mismatched speakers) | The command automatically retries up to 3 times. If all 3 fail, the plan is the problem — revise via `/create_scenario`. |
+
+### Using the scenario sequence
+
+`docs/scenario-sequence.md` contains 7 scenarios in a designed progression for the UMS pilot. Each entry has a ready-to-use operator prompt you can paste directly into `/create_scenario`. Work through them in order — the progression builds students' skills from easy (Acts 1-2) to hard (Acts 4-5).
+
+### Where artifacts live
+
+```
+registry/
+└── {scenario_id}/
+    ├── scenario.yaml              — the plan (operator reviews)
+    ├── script_raw.yaml            — dialog writer's raw output (intermediate)
+    ├── script_pre.yaml            — instructional designer's polished version (intermediate)
+    ├── pedagogical_review.yaml    — quality assessment (operator reviews)
+    ├── script.yaml                — final enumerated transcript (app consumes)
+    ├── evaluation.yaml            — full evaluation (teacher + operator)
+    ├── evaluation_student.yaml    — student-visible annotations only (app consumes)
+    └── cheat_sheet.md             — printable facilitation reference (teacher uses)
+```
+
+---
+
 ## For Teachers
 
 ### What Perspectives does
