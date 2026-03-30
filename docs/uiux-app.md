@@ -44,7 +44,7 @@ This document is a **reference specification** for the Perspectives app. It desc
 | `Component > PhaseIndicator` | Component Specifications > PhaseIndicator | Display, animation |
 | `Component > StudentActivityTable` | Component Specifications > StudentActivityTable | Schema fields, polling, status indicators |
 | `Scaffolds` | Learning Scaffolds | Topic context, reading hints, guided first detection, lifelines, reflection |
-| `Scaffolds > Lifelines` | Learning Scaffolds > Lifeline System | Graduated hints, targeting logic, lifeline count, schema |
+| `Scaffolds > Lifelines` | Learning Scaffolds > Lifeline System | Four hint types (location, character, perspective, narrowed behaviors), unified budget, per-type caps, targeting logic |
 | `Scaffolds > Guided First` | Learning Scaffolds > Guided First Detection | Onboarding mechanic for first 2-3 scenarios |
 | `Scaffolds > Reflection` | Learning Scaffolds > Reflection Step | Post-Phase 4 metacognitive prompts |
 | `Interactions > Sentence Selection` | Interaction Patterns > Sentence Selection | Tap mechanics, multi-select, cross-turn |
@@ -242,40 +242,107 @@ This nudges re-reading — essential for Acts 3-5, which often require a second 
 
 ### Lifeline System
 
-Students receive a limited number of **lifelines** per scenario — voluntary hints they can request when stuck. Lifelines provide graduated scaffolding: each level reveals more specific guidance without giving the answer.
+Students receive a limited number of **lifelines** per scenario — voluntary hints they can request when stuck. Each hint request costs one lifeline regardless of hint type. Four hint types are available, each suited to different phases and different kinds of stuckness.
 
-**Lifeline count:** Configurable per session by the teacher (default: 3). Stored in the session configuration as `lifelines_per_student: integer`. Resets each scenario.
+**Why four hint types.** Phase 1 (detection) and Phase 2 (explanation) require different kinds of help. A student stuck in Phase 1 needs help *noticing* — where to look and what question to ask. A student stuck in Phase 2 needs help *reasoning* — understanding the persona's thinking and narrowing the behavior options. The four hint types match these needs:
 
-**Lifeline button:** A persistent button in the Phase 1 and Phase 2 work panels, showing remaining count: "Lifelines: 2 remaining."
+- **Location** helps detection: it narrows the search space and provides a detection question.
+- **Character** helps both detection and explanation: it reveals who to watch and why their thinking might be off.
+- **Perspective** helps explanation: it walks the student through the persona's internal reasoning via empathy.
+- **Narrowed behaviors** helps explanation: it reduces the behavior library from 8 to 2-3 plausible options.
 
-**Targeting logic — student-directed:** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with three options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system targets the nearest unfound flaw in the selected region by matching each `what_to_expect[].flaw` against the evaluation's `annotations[]` by `argument_flaw.pattern`, then using the annotation's `location.turn` to determine which region it falls in. If no unfound flaw exists in that region, the app suggests trying a different region: "Nothing new to find there — try another section."
+**Hint types:**
 
-**Graduated hint levels:**
+| Hint type | What it provides | Phase 1 | Phase 2 | Per-type cap |
+|---|---|---|---|---|
+| Location | Target turns + detection question | Yes | No | flaw_count |
+| Character | Persona strengths + weaknesses in labeled list format | Yes | Yes (persists if already revealed) | persona_count |
+| Perspective | "Imagine you're [persona]..." empathy prompt | No | Yes | persona_count |
+| Narrowed behaviors | 2-3 plausible thinking behavior definitions (includes the target) | No | Yes | flaw_count |
 
-| Level | What it reveals | Data source | Example |
-|---|---|---|---|
-| 1: Character | A persona's strengths and weaknesses relevant to the flaw | Derived from `scenario.yaml` persona `strengths[]` and `weaknesses[]` via template. The persona is identified by resolving the flaw's `annotation.location.turn` → `script.yaml` turn speaker → `scenario.yaml` persona. Never shown raw. | "Think about Mia. She found real statistics and genuinely cares about the environment — but she gets carried away and goes further than what her sources actually said. How might that affect what she says?" |
-| 2: Location | Where to look | Flaw location resolved via `evaluation.yaml` annotations (matched by `what_to_expect[].flaw` → `annotations[].argument_flaw.pattern` → `annotations[].location.turn`) | "Re-read turns 5 through 8. Something interesting happens there." |
-| 3: Question | What detection question to ask | `facilitation_guide.phase_1[].prompt` (the detection question) | "As you read those turns, ask yourself: How does Mia know that?" |
-| 4: Pattern | The flaw pattern description | Detection act library `patterns[].plain_language` + `description` | "One pattern to watch for: 'They're saying a lot based on very little.'" |
+**Lifeline budget:** Total lifelines per student = `flaw_count + persona_count`, with a configurable max cap. The teacher can override the budget at session creation. The budget is computed and stored when the session is created.
 
-**Level 1 derivation.** The app derives a character hint from `scenario.yaml` persona `strengths[]` and `weaknesses[]` using a template: "Think about [name]. [strength] — but [weakness rephrased as question]. How might that affect what [they] say?" The strength-first framing models nuanced evaluation — a person can be knowledgeable *and* still make flawed arguments — and prevents students from dismissing everything a persona says once the hint flags them. The persona is identified by resolving the flaw's annotation location to a turn speaker: `evaluation.yaml` → `annotations[].location.turn` → `script.yaml` → `turns[].speaker` → `scenario.yaml` → `personas[]`. This works for both planned and emergent flaws — any flaw has a location, every location has a speaker, and every speaker has strengths and weaknesses. Each lifeline use reveals the next available level.
+**Lifeline button:** A persistent button in the Phase 1 and Phase 2 work panels, showing remaining count: "Hints: 3 remaining." When tapped, the available hint types for the current phase are shown as options. Disabled when 0 remaining or all per-type caps are exhausted for the current phase.
 
-**Phase 2 lifelines.** The same lifeline pool extends to Phase 2. A Phase 2 lifeline narrows the thinking behavior options from 8 to 2-3 (using `facilitation_guide.phase_2[].narrowed_options`) or offers the perspective prompt (using `facilitation_guide.phase_2[].perspective_prompt`). Same graduated approach — first narrow, then prompt.
+**No levels, no region selection.** Each tap gives one complete hint. The student chooses which *type* of help they need — not which region of the transcript or which level of detail.
 
-**Lifeline exhaustion.** When all lifelines are used, the button shows "No lifelines remaining" (disabled). A supportive message appears: "You've used all your lifelines. Keep reading and trying — your teacher can help too." The teacher dashboard flags students who have exhausted lifelines with 0 or few annotations as needing direct intervention.
+#### Location Hints (Phase 1)
 
-**Schema addition.** Each student annotation tracks hint usage: `hints_used: integer` (how many lifeline levels were revealed for this annotation, 0 if none). This is research-valuable data — which flaws need the most hints across students and scenarios.
+Combines a turn range with a detection question: "Re-read turns 5 through 8. Ask yourself: how does Mia know that?"
 
-### Inline Perspective Prompts (Phase 2)
+**Targeting:** The system picks the most accessible unfound flaw, ordered by `facilitation_guide.what_to_expect[].difficulty` (`most_will_catch` first, then `harder_to_spot`, then `easy_to_miss`). A flaw is "unfound" if the student has no annotation with sentence ID overlap against the AI annotation for that flaw — the same overlap logic used by ComparisonView and teacher flaw coverage.
 
-When a student is assigning a thinking behavior in Phase 2 and hasn't written anything in the explanation field for 30+ seconds, an optional hint appears below the explanation prompt:
+**Data source:** Flaw location from `evaluation.yaml` → `annotations[].location` (matched by `what_to_expect[].flaw` → `annotations[].argument_flaw.pattern`). Detection question from `facilitation_guide.phase_1[].prompt`.
 
-"Need a starting point? Try this: Imagine you're [persona name]. [perspective_prompt from facilitation guide]."
+**Why location + question together:** A turn range alone ("re-read turns 5-8") leaves the student without a lens. A detection question alone ("ask yourself: how do they know that?") leaves the student scanning the entire transcript. Together, they narrow both *where* and *what* — matching how a teacher scaffolds: "Re-read this part with this specific question."
 
-**Data source:** `evaluation.yaml` → `facilitation_guide.phase_2[]` — matched to the student's annotation by flaw pattern overlap. The `perspective_prompt` field provides the empathy-based prompt.
+#### Character Hints (Phase 1 and Phase 2)
 
-**Presentation:** Collapsible, appears as a subtle "Need a hint?" link. Only one per annotation. Does not consume a lifeline (it's Phase 2-specific scaffolding, not the lifeline system).
+Reveals a persona's strengths and weaknesses in a labeled format, presented as-is from `scenario.yaml` (no template stitching — the pipeline already writes these as natural sentences):
+
+```
+About Mia:
+
+What she's good at:
+• Genuinely cares about the environment and is motivated to do something
+• Found some real statistics about ocean plastic from her research
+
+What to watch for:
+• Only read one article and watched one documentary, but treats
+  them as if she's done thorough research
+
+How might this affect what she says in the discussion?
+```
+
+**Why strengths + weaknesses together:** The strength-first framing models nuanced evaluation — a person can be knowledgeable *and* still make flawed arguments. It prevents students from dismissing everything a persona says once the hint flags them. "Mia is smart but has a tendency" keeps them evaluating the *argument*, not the *person*.
+
+**Persistence:** Once a character hint is revealed, it stays visible as a reference card for the rest of the session. The student doesn't spend another lifeline to re-read it in Phase 2. But requesting a *different* persona's character costs a new lifeline.
+
+**In Phase 1:** Helps the student re-read with suspicion toward a specific persona. "Mia gets carried away" primes the student to notice where Mia's confidence outstrips her evidence.
+
+**In Phase 2:** Helps the student connect the persona's traits to a thinking behavior. Knowing that Mia "treats one article as thorough research" points toward behaviors like confirmation bias without naming it.
+
+**Data source:** `scenario.yaml` → `personas[].strengths` and `personas[].weaknesses`. Persona identified by resolving the annotation's turn speaker: `evaluation.yaml` → `annotations[].location.turn` → `script.yaml` → `turns[].speaker` → `scenario.yaml` → `personas[]`.
+
+**Persona selection:** When the student requests a character hint, the app shows the available personas as options (e.g., "Who do you want to know more about? Mia / Jaylen"). This is a meaningful choice — the student is choosing whose thinking to examine.
+
+#### Perspective Hints (Phase 2)
+
+An empathy-based prompt that walks the student through the persona's internal reasoning: "Imagine you're Mia. You watched a documentary about sea turtles that made you almost cry, and then you found an article with a huge number — eight million tons. You feel strongly that this matters. Why might you say those two sources 'prove' something?"
+
+**Why this helps in Phase 2:** The task is to identify *why* the persona reasoned this way. The perspective prompt puts the student inside the persona's emotional and cognitive state, making it easier to connect the flaw to a thinking behavior. It goes deeper than character traits (which describe the persona from outside) by reconstructing the reasoning from inside.
+
+**Data source:** `facilitation_guide.phase_2[].perspective_prompt`, matched to the student's annotation by flaw pattern.
+
+#### Narrowed Behavior Hints (Phase 2)
+
+Shows 2-3 plausible thinking behavior definitions without indicating which is correct:
+
+```
+Here are some thinking habits that could explain what you noticed.
+Which one fits best?
+
+• Only seeing what you want to see — "They only paid attention
+  to things that agreed with them"
+• Feelings instead of evidence — "They believed it because they
+  felt strongly, not because they had proof"
+• Only looking at sources that agree — "They only looked at
+  sources and opinions that agreed with them"
+```
+
+**Why narrowing helps:** The full library of 8 behaviors is overwhelming for a stuck student. Narrowing to 2-3 options that *all could be right* turns the task from "scan 8 things and pick one" into "compare these 2-3 and reason about the differences." The student still has to choose and explain the connection — the hint makes the comparison more focused, not easier.
+
+**Data source:** `facilitation_guide.phase_2[].narrowed_options` — 2-3 behavior IDs chosen by the evaluator as plausible alternatives for this specific flaw in this specific transcript. The app resolves the IDs to definitions from the thinking behavior library.
+
+#### Lifeline Exhaustion
+
+When all lifelines are used, the button shows "No hints remaining" (disabled). A supportive message appears: "You've used all your hints. Keep reading and trying — your teacher can help too." The teacher dashboard flags students who have exhausted lifelines with 0 or few annotations as needing direct intervention.
+
+When all per-type caps for the current phase are exhausted but the student still has lifelines remaining (available for the other phase), the button shows which hint types are still available.
+
+#### Hint Usage Tracking
+
+Each hint use is recorded as a `StudentHintUsage` record: `user_id`, `session_id`, `hint_type` ("location" | "character" | "perspective" | "narrowed"), `target` (flaw pattern for location/narrowed, persona_id for character/perspective), `used_at`. This is research-valuable data — which hint types are used most, which flaws and personas need the most hints across students and scenarios.
 
 ### Phase 4: Overlap Framing
 

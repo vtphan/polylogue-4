@@ -243,7 +243,7 @@ Phase 1 → Phase 2 → Phase 3a → Phase 3b → (spot-check) → Phase 4a → 
 
 All phases are sequential. Each phase is scoped to one Claude Code working session. Phases 3 and 4 are each split into two sub-phases to reduce per-session complexity and isolate risk:
 - **3a** (core interaction) and **3b** (scaffolds + responsive) separate the foundational UI from the portrait/tablet layout, so responsive bugs don't infect the core.
-- **4a** (Phase 2 core + submission) and **4b** (scaffolds: lifelines, guided detection, prompts) give the lifeline targeting algorithm — the most complex single feature — a dedicated session.
+- **4a** (Phase 2 core + submission) and **4b** (scaffolds: hint system, guided detection) give the four-type hint system — the most complex single feature — a dedicated session.
 
 After Phase 3b, the operator does a lightweight **spot-check** (not a formal review) of portrait mode, touch targets, and layout integrity before Phase 4a builds on top. Review A validates the complete annotation flow (Phases 1-2 + all scaffolds) before adding peer/teacher complexity. Review B validates the full app with all phases and roles before session management and deployment.
 
@@ -270,24 +270,37 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    - `detection_act_library.yaml` and `thinking_behavior_library.yaml` — fields consumed by DetectionActPicker and ThinkingBehaviorBrowser
    - Flag any field the UI spec expects but the artifacts don't provide, or vice versa
 
-2. **Define app-owned annotation field.** The Prisma `Annotation` model (Phase 2) will need a `hints_used` field not present in the pipeline artifacts:
+2. **Define app-owned session fields.** The Prisma `ClassSession` model (Phase 2) will need these fields not present in the pipeline artifacts:
    ```yaml
-   hints_used:
+   lifeline_budget:
      type: integer
      required: true
-     description: "How many lifeline hint levels were revealed that led to this annotation. 0 if no lifeline was used."
-   ```
-   This tracks per-annotation lifeline usage. When a student uses a lifeline targeting flaw A, then creates an annotation at the location the lifeline pointed to, `hints_used` records how many levels were consumed. Annotations created at locations unrelated to any lifeline get `hints_used: 0`.
+     description: "Total lifelines per student for this session. Default: flaw_count + persona_count, capped at max_lifeline_budget. Teacher-overridable at session creation."
 
-3. **Define app-owned session fields.** The Prisma `ClassSession` model (Phase 2) will need these fields not present in the pipeline artifacts:
-   ```yaml
-   lifelines_per_student:
+   max_lifeline_budget:
      type: integer
      required: true
-     description: "Number of lifelines each student receives per scenario. Teacher-configurable at session creation. Default: 3."
-     constraints:
-       min: 0
-       max: 10
+     description: "Maximum lifeline budget. Default: 6."
+
+   location_hint_cap:
+     type: integer
+     required: true
+     description: "Max location hints per student. Computed: flaw_count."
+
+   character_hint_cap:
+     type: integer
+     required: true
+     description: "Max character hints per student. Computed: persona_count."
+
+   perspective_hint_cap:
+     type: integer
+     required: true
+     description: "Max perspective hints per student. Computed: persona_count."
+
+   narrowed_hint_cap:
+     type: integer
+     required: true
+     description: "Max narrowed behavior hints per student. Computed: flaw_count."
 
    guided_first_detection:
      type: boolean
@@ -308,14 +321,15 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    ```
    Both fields are optional — students are encouraged but not required to reflect. The teacher's "activate reflection" button sets `session_configuration.reflection_active` to true; the student sees the reflection form in their work panel.
 
-5. **Define lifeline state storage.** Lifeline state is per-student-per-session, not per-annotation. Define the Prisma model:
+5. **Define hint usage storage.** Each hint use is recorded individually. Define the Prisma model:
    ```
-   StudentLifeline:
-     id, student_id, session_id, target_flaw (string — the flaw pattern being hinted),
-     levels_revealed (integer — how many of the 4 levels have been shown),
-     created_at (timestamp)
+   StudentHintUsage:
+     id, user_id (FK), session_id (FK),
+     hint_type (string — "location" | "character" | "perspective" | "narrowed"),
+     target (string — flaw pattern for location/narrowed, persona_id for character/perspective),
+     used_at (timestamp)
    ```
-   Each lifeline use creates or updates a `StudentLifeline` record. When the student creates an annotation at a location overlapping with the lifeline's target, the annotation's `hints_used` is set to the lifeline's `levels_revealed`. A student's remaining lifeline count = `lifelines_per_student` minus the number of distinct `StudentLifeline` records for that session.
+   Remaining lifelines = `lifeline_budget` minus count of `StudentHintUsage` records for that student+session. Each hint type is additionally capped by its per-type max (`location_hint_cap`, etc.).
 
 6. **Define Phase 2→3 snapshot strategy.** At the Phase 2→3 transition, the app copies all submitted annotations into an `AnnotationSnapshot` table:
    ```
@@ -344,18 +358,18 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    - Teacher authentication: seeded credentials with BetterAuth, database-backed cookie sessions
    - Guided first detection toggle: session-level boolean set by teacher at creation
    - Reflection storage: app-only Prisma model, not a pipeline schema
-   - Lifeline tracking: per-student-per-session records, with per-annotation `hints_used` for research data
+   - Hint tracking: per-use `StudentHintUsage` records with hint type and target
    - Snapshot strategy: copied rows in a snapshot table, not JSON blobs
 
 **Outputs:**
-- App-owned field definitions documented (hints_used, lifelines_per_student, guided_first_detection, reflection_active) — ready for Prisma schema in Phase 2
+- App-owned field definitions documented (lifeline_budget, hint caps, guided_first_detection, reflection_active) — ready for Prisma schema in Phase 2
 - This document updated with resolved decisions
 - Verified artifact-to-UI alignment — all data contracts confirmed against actual artifacts
 
 **Notes:**
 - The app does not modify pipeline artifacts or pipeline schemas. It reads the actual artifacts from `REGISTRY_PATH` and `REFERENCE_LIBRARIES_PATH` as-is.
-- App-owned fields (`hints_used`, `lifelines_per_student`, etc.) exist only in the Prisma schema — they are runtime concepts, not pipeline outputs.
-- The Prisma schema (Phase 2) will include the `User` table (with auth fields), all four app-only models (`StudentReflection`, `StudentLifeline`, `AnnotationSnapshot`, `PhaseTransition`), and the core tables mapped from the actual artifact structures.
+- App-owned fields (`lifeline_budget`, hint caps, etc.) exist only in the Prisma schema — they are runtime concepts, not pipeline outputs.
+- The Prisma schema (Phase 2) will include the `User` table (with auth fields), all four app-only models (`StudentReflection`, `StudentHintUsage`, `AnnotationSnapshot`, `PhaseTransition`), and the core tables mapped from the actual artifact structures.
 
 ---
 
@@ -408,14 +422,14 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    | Table | Notes |
    |-------|-------|
    | `User` | id, displayName, username (auto-derived), passwordHash (nullable — null for students), role (teacher/researcher/student), createdAt. Teachers and researchers seeded from `seed.yaml`; students created when teacher assigns them to a session. |
-   | `ClassSession` | session_id, scenario_id (FK), teacher_id (FK to User), lifelines_per_student, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), status (`active`/`archived`, default `active`), created_at. Auto-archives 2 hours after `created_at` (checked on dashboard load and via a periodic server check). Named `ClassSession` to avoid collision with BetterAuth's `session` table (auth sessions). |
+   | `ClassSession` | session_id, scenario_id (FK), teacher_id (FK to User), lifeline_budget, location_hint_cap, character_hint_cap, perspective_hint_cap, narrowed_hint_cap, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), status (`active`/`archived`, default `active`), created_at. Hint caps computed at session creation from scenario flaw/persona counts. Auto-archives 2 hours after `created_at` (checked on dashboard load and via a periodic server check). Named `ClassSession` to avoid collision with BetterAuth's `session` table (auth sessions). |
    | `Group` | group_id, session_id (FK) |
    | `GroupMember` | user_id (FK to User, role=student), group_id (FK) |
    | `StudentActivity` | user_id (FK), session_id (FK), first_opened, last_active, annotation_count |
    | `PhaseTransition` | session_id (FK), from_phase, to_phase, transitioned_at |
-   | `Annotation` | annotation_id, phase_created, location (JSON), detection_act, description, thinking_behavior, behavior_source, behavior_own_words, behavior_explanation, submitted, hints_used, revision_history (JSON array). FK to User (student), ClassSession. |
+   | `Annotation` | annotation_id, phase_created, location (JSON), detection_act, description, thinking_behavior, behavior_source, behavior_own_words, behavior_explanation, submitted, revision_history (JSON array). FK to User (student), ClassSession. |
    | `AnnotationSnapshot` | annotation_id (FK), session_id (FK), snapshot_phase, snapshot_data (JSON) |
-   | `StudentLifeline` | user_id (FK), session_id (FK), target_flaw, levels_revealed, created_at |
+   | `StudentHintUsage` | user_id (FK), session_id (FK), hint_type (string), target (string), used_at |
    | `StudentReflection` | user_id (FK), session_id (FK), missed_insight, next_strategy, submitted_at |
 
    Enable WAL mode in a Prisma seed script or migration:
@@ -605,7 +619,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    c. **Annotation creation (sentences selected):** Form with selected sentences display, DetectionActPicker, description free-text field (min 10 chars, placeholder: "What did you notice? Describe it in your own words."), Save/Cancel buttons. Reference: `uiux-app.md > Student > Phase 1 > Work Panel` annotation creation wireframe.
 
 5. **Server Actions for annotation CRUD.** In `src/actions/`:
-   - `createAnnotation(studentId, sessionId, data)` — creates with `phase_created: 1`, `submitted: false`, `hints_used: 0`, empty `revision_history`
+   - `createAnnotation(studentId, sessionId, data)` — creates with `phase_created: 1`, `submitted: false`, empty `revision_history`
    - `updateAnnotation(annotationId, data)` — updates fields, appends to `revision_history`
    - `getAnnotations(studentId, sessionId)` — returns student's annotations
    - Optimistic updates: the UI reflects saves immediately, with a subtle "Saved" indicator. Retry on failure (up to 2 retries with 1-second delay), then show "Couldn't save — check your connection" error.
@@ -687,7 +701,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 **Notes:**
 - Test portrait mode with the `ocean_plastic_campaign` transcript at iPad viewport sizes (1024×768 portrait, 1366×1024 landscape).
 - The auto-switch behavior is the trickiest interaction — verify that selecting sentences in Read tab → auto-switch to Work tab → saving annotation → returning to Read tab feels natural and doesn't lose selection state.
-- All scaffolds added here are Phase 1-only. Phase 2 scaffolds (lifelines, guided first detection, inline prompts) are in Phase 4b.
+- All scaffolds added here are Phase 1-only. Phase 2 scaffolds (hint system, guided first detection) are in Phase 4b.
 
 ---
 
@@ -755,42 +769,42 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 - Engagement mechanics (progress, submission celebration)
 
 **Notes:**
-- Built without lifelines, guided first detection, or inline prompts — those are Phase 4b. The Phase 2 work panel should have a placeholder slot where the lifeline button will be inserted, but no implementation yet.
+- Built without the hint system or guided first detection — those are Phase 4b. The Phase 2 work panel should have a placeholder slot where the hint button will be inserted, but no implementation yet.
 - Test the full Phase 1→2 transition: create annotations in Phase 1, advance to Phase 2, assign behaviors, submit. Then test force-submission with incomplete annotations.
 - The 30-second undo window is time-sensitive UI — verify the timer, button visibility, and revert logic carefully.
 
 ---
 
-### Phase 4b: Learning Scaffolds (Lifelines, Guided Detection, Prompts)
+### Phase 4b: Learning Scaffolds (Lifelines, Guided Detection)
 
-**Objective:** Build all learning scaffolds that span Phases 1-2: the lifeline system, guided first detection, and inline perspective prompts. These are isolated here because the lifeline targeting algorithm is the most complex single feature in the app, requiring cross-table data resolution and multi-level fallback logic.
+**Objective:** Build all learning scaffolds that span Phases 1-2: the lifeline hint system and guided first detection. The hint system has four hint types with a unified budget and per-type caps, requiring cross-table data resolution from evaluation, scenario, transcript, and reference library data.
 
 **Inputs:**
 - Phase 4a output (working Phase 2 with submission)
-- `uiux-app.md > Scaffolds > Lifelines` (full lifeline system spec)
+- `uiux-app.md > Scaffolds > Lifelines` (full hint system spec)
 - `uiux-app.md > Scaffolds > Guided First` (guided first detection)
-- `uiux-app.md > Scaffolds` (inline perspective prompts)
-- Scenario artifacts in `REGISTRY_PATH` — specifically `evaluation.yaml` (facilitation_guide with what_to_expect, phase_1, phase_2 scaffolds), `scenario.yaml` (persona strengths and weaknesses for Level 1 hints), and `script.yaml` (turn speakers for resolving flaw-to-persona mapping). Read the actual artifacts to understand the data shape.
+- Scenario artifacts in `REGISTRY_PATH` — specifically `evaluation.yaml` (facilitation_guide with what_to_expect, phase_1, phase_2 scaffolds), `scenario.yaml` (persona strengths, weaknesses, and target_flaws), and `script.yaml` (turn speakers for resolving flaw-to-persona mapping). Read the actual artifacts to understand the data shape.
 
 **Tasks:**
 
-1. **Lifeline system.** Implement per `uiux-app.md > Scaffolds > Lifelines`:
+1. **Hint system.** Implement per `uiux-app.md > Scaffolds > Lifelines`:
 
-   a. **Lifeline button:** Persistent in Phase 1 and Phase 2 work panels. Shows: "Lifelines: N remaining." Disabled when 0 remaining ("No lifelines remaining" + supportive message).
+   a. **Hint button:** Persistent in Phase 1 and Phase 2 work panels. Shows: "Hints: N remaining." When tapped, shows available hint types for the current phase as options. Disabled when 0 remaining ("No hints remaining" + supportive message). Hidden if `lifeline_budget: 0`.
 
-   b. **Targeting logic (student-directed):** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system targets the nearest unfound flaw in the selected region. To determine flaw locations, match each `what_to_expect[].flaw` against the evaluation's `annotations[]` by `argument_flaw.pattern`, then use the annotation's `location.turn` and `location.sentences` for region mapping and overlap checking. If no unfound flaw exists in that region, the system suggests trying a different region. Data source: `TeacherEvaluation` (facilitation_guide + annotations, both stored from `evaluation.yaml` at import time).
+   b. **Hint type availability by phase:**
+   - Phase 1: Location, Character
+   - Phase 2: Character, Perspective, Narrowed behaviors
+   - When all per-type caps for the current phase are exhausted but the student still has lifelines remaining (available for the other phase), show which hint types are still available.
 
-   c. **Graduated hint levels:** Each tap reveals the next level for the target flaw:
-   - Level 1 (Character): Derived from `scenario.yaml` persona `strengths[]` and `weaknesses[]` using a template: "Think about [name]. [strength] — but [weakness rephrased as question]. How might that affect what [they] say?" (e.g., "Think about Mia. She found real statistics and genuinely cares about the environment — but she gets carried away and goes further than what her sources actually said. How might that affect what she says?"). The persona is identified by resolving the flaw's annotation location to a turn speaker: `evaluation.yaml` → `annotations[].location.turn` → `script.yaml` → `turns[].speaker` → `scenario.yaml` → `personas[]`. This works for both planned and emergent flaws.
-   - Level 2 (Location): Flaw location resolved via evaluation annotations (matched by `what_to_expect[].flaw` → `annotations[].argument_flaw.pattern` → `annotations[].location.turn`) — rendered as "Re-read turns N through M."
-   - Level 3 (Question): detection question from `facilitation_guide.phase_1[].prompt`
-   - Level 4 (Pattern): `plain_language` + `description` from detection act library
+   c. **Location hints (Phase 1):** Combines turn range + detection question. System picks the most accessible unfound flaw, ordered by `facilitation_guide.what_to_expect[].difficulty` (`most_will_catch` first). "Unfound" = no student annotation with sentence ID overlap against the AI annotation for that flaw. Data: `evaluation.yaml` → `annotations[].location` + `facilitation_guide.phase_1[].prompt`, matched by flaw pattern.
 
-   d. **Phase 2 lifelines:** Same pool. Hints narrow thinking behavior options (from `facilitation_guide.phase_2[].narrowed_options`) or offer perspective prompt (from `facilitation_guide.phase_2[].perspective_prompt`).
+   d. **Character hints (Phase 1 and 2):** Renders persona `strengths[]` and `weaknesses[]` from `scenario.yaml` in a labeled list: "About [name]:" / "What she's good at:" / "What to watch for:" / "How might this affect what she says?" Persona identified by resolving annotation turn speaker: `evaluation.yaml` → `annotations[].location.turn` → `script.yaml` → `turns[].speaker` → `scenario.yaml` → `personas[]`. Student picks which persona to learn about (if multiple). Once revealed, persists as a reference card — no re-cost to re-read.
 
-   e. **Server Actions:** `useLifeline(studentId, sessionId, region)` — accepts the student's chosen region (beginning/middle/end), creates/updates `StudentLifeline` record, returns the hint text for the targeted flaw. `getLifelineState(studentId, sessionId)` — returns remaining count and current hint states.
+   e. **Perspective hints (Phase 2):** Empathy prompt from `facilitation_guide.phase_2[].perspective_prompt`, matched to the student's annotation by flaw pattern. Rendered as: "Imagine you're [persona]. [perspective_prompt]"
 
-   f. **Zero lifelines:** If `lifelines_per_student: 0`, lifeline button is hidden.
+   f. **Narrowed behavior hints (Phase 2):** 2-3 behavior definitions from `facilitation_guide.phase_2[].narrowed_options`, resolved to `name` + `description` from thinking behavior library. Rendered as: "Here are some thinking habits that could explain what you noticed. Which one fits best?" followed by the 2-3 options. The target behavior is included but not indicated.
+
+   g. **Server Actions:** `useHint(studentId, sessionId, hintType, target)` — validates budget and per-type cap, creates `StudentHintUsage` record, returns the hint content. `getHintState(studentId, sessionId)` — returns remaining budget, per-type remaining counts, and any persisted character hints.
 
 2. **Guided first detection.** Implement per `uiux-app.md > Scaffolds > Guided First`:
    - Activates when `session.guided_first_detection` is true AND student has 0 annotations after dismissing the topic context
@@ -799,25 +813,16 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    - Transcript scrolls to or highlights the target turn
    - Detection act picker may show subtle suggestion
    - After save: "Great catch! Now read the rest of the discussion and see if you notice anything else on your own."
-   - Does NOT consume a lifeline (separate from lifeline system)
-
-3. **Inline perspective prompts (Phase 2).** Implement per `uiux-app.md > Scaffolds` inline perspective prompts:
-   - When a student hasn't typed in the explanation field for 30+ seconds: show "Need a hint?" link
-   - On expand: "Need a starting point? Try this: Imagine you're [persona name]. [perspective_prompt]"
-   - Data source: `facilitation_guide.phase_2[]` matched by flaw pattern
-   - One per annotation. Does not consume a lifeline.
-   - Client-side timer — no server call.
+   - Does NOT consume a lifeline (separate from hint system)
 
 **Outputs:**
-- Lifeline system (button, targeting, graduated hints, server actions)
+- Hint system (button, four hint types, server actions, character persistence)
 - Guided first detection scaffold
-- Inline perspective prompts
 
 **Notes:**
-- Lifeline hints require reading from `TeacherEvaluation` (facilitation_guide) and `Scenario` (persona weaknesses). These are teacher-only data accessed server-side — the hints are rendered server-side and sent as text to the client. No sensitive data reaches the student's browser.
-- The lifeline targeting logic is the most complex piece. Implement targeting as a server-side function that takes (studentId, sessionId, currentAnnotations) and returns the next hint. Test with all four scenarios to exercise different flaw counts and transcript lengths.
-- The "unfound flaw" computation (comparing student annotation sentence IDs against evaluation annotation locations, matched via `what_to_expect[].flaw` → `annotations[].argument_flaw.pattern`) is the same overlap logic that Phase 5 (ComparisonView) and Phase 7 (teacher flaw coverage) will reuse. Factor it into a shared utility in `src/lib/overlap.ts` so it can be imported by those later phases.
-- The 30-second timer for inline perspective prompts is client-side (no server call), similar to the re-reading nudge.
+- Hint content requires reading from `TeacherEvaluation` (facilitation_guide), `Scenario` (persona strengths/weaknesses), and `Transcript` (turn speakers). These are teacher-only data accessed server-side — hints are rendered server-side and sent as text to the client. No sensitive data reaches the student's browser.
+- The "unfound flaw" computation (comparing student annotation sentence IDs against evaluation annotation locations) is the same overlap logic that Phase 5 (ComparisonView) and Phase 7 (teacher flaw coverage) will reuse. Factor it into a shared utility in `src/lib/overlap.ts` so it can be imported by those later phases.
+- Test with all four scenarios to exercise different flaw counts, persona counts, and transcript lengths. Verify per-type caps are computed correctly from scenario data.
 
 ---
 
@@ -858,13 +863,12 @@ PART 1: FUNCTIONAL CORRECTNESS
    Verify the YAML import correctly populates all tables.
 
 3. SCAFFOLD DATA FLOW
-   Verify lifeline hints read the correct fields from the imported artifacts:
-   - Flaw locations: resolved via evaluation.yaml annotations[].location (matched by flaw pattern), NOT from a turn_ids field
-   - Level 1: scenario.yaml persona strengths + weaknesses (rephrased via template, not raw). Persona resolved via annotation location → turn speaker → scenario persona.
-   - Level 2: flaw location from annotations (rendered as "Re-read turns N through M")
-   - Level 3: evaluation.yaml facilitation_guide.phase_1[].prompt
-   - Level 4: detection_act_library patterns
-   - Phase 2: facilitation_guide.phase_2[].narrowed_options and perspective_prompt
+   Verify each hint type reads the correct fields from imported artifacts:
+   - Location hints: turn range from evaluation.yaml annotations[].location (matched by flaw pattern) + detection question from facilitation_guide.phase_1[].prompt
+   - Character hints: scenario.yaml persona strengths[] + weaknesses[] (rendered as labeled list, not raw). Persona resolved via annotation location → turn speaker → scenario persona.
+   - Perspective hints: facilitation_guide.phase_2[].perspective_prompt matched by flaw pattern
+   - Narrowed behavior hints: facilitation_guide.phase_2[].narrowed_options resolved to thinking behavior library definitions
+   Verify hint budget and per-type caps are computed correctly from scenario flaw/persona counts.
    Verify guided first detection reads facilitation_guide.what_to_expect correctly.
 
 PART 2: UI/UX COMPLIANCE
@@ -905,11 +909,13 @@ PART 3: EDGE CASES
    - Network failure on save: retry logic, error message shown
    - Late-arriving student: enters Phase 1 regardless of class phase, works at own pace, gets force-submitted/snapshotted at next teacher phase advance
 
-9. LIFELINE EDGE CASES
+9. HINT SYSTEM EDGE CASES
    - All lifelines exhausted: button disabled, supportive message shown
-   - Student has found all flaws: lifeline has nothing to hint (graceful handling)
-   - Zero lifelines: button hidden when lifelines_per_student is 0
-   - Level 1 works for both planned and emergent flaws (persona resolved via turn speaker, not target_flaws)
+   - All per-type caps exhausted for current phase but budget remains: show which types are available in other phase
+   - Student has found all flaws: location hint has nothing to target (graceful handling)
+   - Zero budget: hint button hidden when lifeline_budget is 0
+   - Character hint persistence: revealed in Phase 1, still visible in Phase 2 without re-cost
+   - Persona resolution works for both planned and emergent flaws (via turn speaker)
 
 Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVISION.
 ```
@@ -1100,7 +1106,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - Active (●): `first_opened` is non-null
      - Submitted (✓): all annotations have `submitted: true`
      - May need help (⚠): active for >80% of `facilitation_guide.timing.phase_1_minutes` with 0 annotations, or >100% of phase time with fewer annotations than group average (thresholds are derived from the scenario's facilitation guide timing, not hardcoded)
-     - Lifelines exhausted (flag): student has used all lifelines AND has 0-1 annotations
+     - Hints exhausted (flag): student has used all lifelines AND has 0-1 annotations
    - Class-level summary: total active, submitted count, and how many target flaws have been found by at least one group
    - Tapping student name opens their annotations in detail panel (read-only)
    - Tapping group name opens group comparison in detail panel (Phase 3+)
@@ -1235,18 +1241,19 @@ PART 2: TEACHER FLOW
 
 PART 3: SCAFFOLDS
 
-10. LIFELINE SYSTEM: Verify:
-    - Targeting logic selects correct flaw
-    - Graduated hints reveal correct content at each level
-    - Level 1 uses strengths + weaknesses from scenario.yaml (not raw), works for both planned and emergent flaws
-    - Remaining count decrements correctly
+10. HINT SYSTEM: Verify:
+    - Location hints: targeting picks most accessible unfound flaw, renders turn range + question
+    - Character hints: renders strengths + weaknesses as labeled list, persists once revealed
+    - Perspective hints: renders empathy prompt matched by flaw pattern
+    - Narrowed behavior hints: renders 2-3 behavior definitions from narrowed_options
+    - Budget decrements correctly, per-type caps enforced
     - Exhaustion state shows supportive message
-    - Phase 2 lifelines narrow options correctly
+    - Persona resolution works for both planned and emergent flaws (via turn speaker)
 
 11. GUIDED FIRST DETECTION: Verify:
     - Activates when guided_first_detection is true and 0 annotations
     - Scrolls to correct turn, shows correct prompt
-    - Does not consume a lifeline
+    - Does not consume a hint
     - Celebration after first save
 
 PART 4: CROSS-CUTTING
@@ -1288,7 +1295,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - Requires teacher/researcher login (enforced by middleware from Phase 2)
    - Scenario dropdown: lists imported scenarios from `Scenario` table
    - "Show guided first detection" checkbox (default checked) → sets `guided_first_detection`
-   - Lifeline count input (default 3) → sets `lifelines_per_student`
+   - Lifeline budget input (default: computed from scenario flaw_count + persona_count, teacher-overridable) → sets `lifeline_budget`
    - Group assignment: teacher types full student names into groups. Groups of 4-5. Add/remove groups and students. **Duplicate name validation:** no two students in the same session can have the same full name — inline error if a duplicate is entered (if two students genuinely share a name, the teacher adds a middle initial to distinguish them). Optional "Auto-assign" button to randomly distribute unassigned students across groups (borrowed from CrossCheck's pattern — useful when the teacher has many students to assign quickly).
    - "Create Session" button:
      - Auto-generates 6-character alphanumeric session code (uppercase, no ambiguous characters like O/0, I/1)
@@ -1378,7 +1385,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 6. **Final walkthrough.** Run through the complete flow as both teacher and student:
    - Teacher: log in → create session → share code → monitor → advance phases → activate reflection → view cheat sheet
-   - Student: join with code + name → Phase 1 (annotate with lifeline) → Phase 2 (assign, submit) → Phase 3 (compare, revise) → Phase 4 (AI reveal) → reflection
+   - Student: join with code + name → Phase 1 (annotate, use hints) → Phase 2 (assign, use hints, submit) → Phase 3 (compare, revise) → Phase 4 (AI reveal) → reflection
    - Verify: student cannot access `/teacher` routes; unauthenticated users redirected to login
    - Verify all engagement mechanics fire (discovery moments, submission celebration, progress indicators, overlap framing)
 
@@ -1407,7 +1414,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 | 3b | Scaffolds + portrait/tablet mode | Phase 3a | Responsive layout isolated from core; tablet interactions verified |
 | *(spot-check)* | *Operator verifies portrait mode, touch targets* | *Phase 3b* | *Layout issues caught before Phase 2 builds on top* |
 | 4a | Thinking behaviors (Phase 2) + submission | Phase 3b | Submission flow, force-submission, undo window |
-| 4b | Learning scaffolds (lifelines, guided detection, prompts) | Phase 4a | Lifeline targeting algorithm gets dedicated focus; overlap utility shared |
+| 4b | Learning scaffolds (hint system, guided detection) | Phase 4a | Four-type hint system gets dedicated focus; overlap utility shared |
 | **REVIEW A** | **Core annotation flow** | **Phase 4b** | **Annotation lifecycle, scaffold data flow, tablet behavior** |
 | 5 | Peer comparison (Phase 3) | Review A | Snapshot strategy, three-level comparison algorithm |
 | 6 | AI reveal (Phase 4) + reflection | Phase 5 | Overlap framing, AI normalization, reflection storage |
@@ -1433,7 +1440,7 @@ Decisions resolved during Phase 1 (spec alignment) and pipeline implementation:
 
 4. ~~**Guided first detection toggle.**~~ **Decided.** Session-level boolean (`guided_first_detection`) set by teacher at session creation. No persistent per-student tracking (no user accounts). Teacher knows if this is the class's first or third scenario. See Phase 1 task 3.
 
-5. ~~**Lifeline tracking model.**~~ **Decided.** Per-student-per-session `StudentLifeline` records track which flaws have been hinted and how many levels revealed. Per-annotation `hints_used` field tracks whether a lifeline contributed to each annotation. See Phase 1 task 5.
+5. ~~**Lifeline tracking model.**~~ **Decided.** Per-use `StudentHintUsage` records track each hint request with hint type and target. Unified lifeline budget with per-type caps derived from scenario content. See Phase 1 task 5.
 
 6. ~~**Reflection storage.**~~ **Decided.** App-only `StudentReflection` Prisma model (not a pipeline schema). Two optional text fields per student per session. Teacher activates via `reflection_active` boolean on session. See Phase 1 task 4.
 
