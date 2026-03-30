@@ -44,6 +44,10 @@ This document is a **reference specification** for the Perspectives app. It desc
 | `Component > ComparisonView` | Component Specifications > ComparisonView | Three-level comparison logic, free-text handling |
 | `Component > PhaseIndicator` | Component Specifications > PhaseIndicator | Display, animation |
 | `Component > StudentActivityTable` | Component Specifications > StudentActivityTable | Schema fields, polling, status indicators |
+| `Scaffolds` | Learning Scaffolds | Topic context, reading hints, guided first detection, lifelines, reflection |
+| `Scaffolds > Lifelines` | Learning Scaffolds > Lifeline System | Graduated hints, targeting logic, lifeline count, schema |
+| `Scaffolds > Guided First` | Learning Scaffolds > Guided First Detection | Onboarding mechanic for first 2-3 scenarios |
+| `Scaffolds > Reflection` | Learning Scaffolds > Reflection Step | Post-Phase 4 metacognitive prompts |
 | `Interactions > Sentence Selection` | Interaction Patterns > Sentence Selection | Tap mechanics, multi-select, cross-turn |
 | `Interactions > Annotation Lifecycle` | Interaction Patterns > Annotation Lifecycle | Draft → submitted → revised states |
 | `Interactions > Phase Transitions` | Interaction Patterns > Phase Transitions | Transition behavior, polling detection |
@@ -160,6 +164,180 @@ Students see evidence that their peers are engaged, creating social motivation:
 - **Group member colors.** Each group member has a distinct, vibrant color. Seeing your color and your peers' colors on the transcript creates ownership and social presence.
 - **Comparison as conversation fuel.** The comparison view's prompts ("Talk about it!", "Ask them about it!") push toward verbal interaction. The app creates reasons to talk, not reasons to compete.
 - **Peer annotation count in Phase 3.** "Your group marked 9 moments" (aggregate, not per-student) creates collective engagement without individual comparison.
+
+---
+
+## Learning Scaffolds
+
+Learning scaffolds help students succeed at the critical thinking task without giving away answers. They are progressive — available when needed, invisible when not — and they produce research-valuable data about where students struggle.
+
+### Topic Context
+
+Before reading the transcript, students see a brief introduction pulled from the scenario plan's `topic` and `context` fields:
+
+```
+┌─────────────────────────────────┐
+│  About this discussion          │
+│                                 │
+│  A group of 6th graders is      │
+│  researching ocean plastic      │
+│  pollution for their            │
+│  environmental science project. │
+│  They're planning an awareness  │
+│  campaign for their school.     │
+│                                 │
+│  [Start Reading]                │
+└─────────────────────────────────┘
+```
+
+This gives students the same background the personas have. Without it, students are evaluating a conversation they walked into mid-stream. The `topic` and `context` fields are not sensitive — they don't reveal flaw design.
+
+### Reading Strategy Hints
+
+Each detection act in the picker includes a one-line reading strategy hint — not just the question, but *how to read* for it:
+
+| Detection act | Question | Reading strategy hint |
+|---|---|---|
+| Something's wrong | "That's not right" | Read each turn and ask: is that actually true? |
+| Not enough support | "How do they know that?" | When someone sounds really sure, check: how much evidence do they have? |
+| Something's missing | "They didn't think about ___" | After reading the plan, ask: what would you need to know to actually do this? |
+| Doesn't fit together | "That doesn't match" | Compare what they said at the beginning to what they concluded at the end |
+| Not really resolved | "They agreed but didn't solve it" | Follow one person's turns in order — did anyone change their mind? Why? |
+
+Hints appear as secondary text below each detection act option in both the empty state reference list and the annotation form's detection act picker. They are static text derived from the detection act library, not generated per scenario.
+
+### Guided First Detection
+
+For the first 2-3 scenarios a student encounters (controlled by the teacher or by session count), the app provides a guided path to the first annotation. This teaches the detection process by example.
+
+**Trigger:** Student finishes reading and has 0 annotations. The work panel transitions from the empty state to a guided prompt.
+
+**Flow:**
+1. The app selects the most detectable flaw from the evaluation's `facilitation_guide.what_to_expect` — the entry rated `most_will_catch`.
+2. A prompt appears: "Let's start with turn [N]. Read what [persona] says. Does anything stand out to you?" The transcript scrolls to or highlights the target turn.
+3. The student reads the narrowed section, selects sentences, and fills in the annotation form. The detection act picker may show a subtle suggestion: "Think about this question: [act's student_question]."
+4. After saving, the app celebrates: "Great catch! Now read the rest of the discussion and see if you notice anything else on your own."
+5. From here, no more guided prompts — the student annotates independently.
+
+**The guided detection does NOT consume a lifeline.** It is an onboarding mechanic, separate from the lifeline system. It teaches the process; lifelines help when students are stuck after learning the process.
+
+**Data source:** `evaluation.yaml` → `facilitation_guide.what_to_expect[]` — the entry with `difficulty: most_will_catch`. The turn reference and detection act are derived from this entry's `turns` and `flaw` fields.
+
+### Flaw Pattern Library (On-Demand)
+
+After a student creates at least one annotation, the flaw pattern library for each detection act becomes accessible as an optional reference. This gives students vocabulary for what they're finding without turning detection into a matching exercise.
+
+**Presentation:** In the Phase 1 work panel's active state, each detection act in the reference list has a collapsible "What kinds of problems are in this category?" section. Tapping expands it to show the act's patterns — each pattern's `plain_language` name and `description` from the detection act library.
+
+**Not shown by default.** The library is collapsed and only opens when the student actively chooses to look. This preserves intuition-first reading — students notice something first, then optionally check whether it matches a known pattern.
+
+**This is already partially implemented** in the detection act picker's expand behavior (line 381, 425). The enhancement is making the pattern descriptions available in the reference list (not just the annotation form) and framing them as an optional vocabulary resource.
+
+### Re-Reading Nudge
+
+After a student saves their first annotation, a prompt appears at the top of the work panel:
+
+"Nice work! Now try reading the discussion again with a different question in mind."
+
+This nudges re-reading — essential for Acts 3-5, which often require a second pass with a different detection question. The nudge appears once, is dismissible, and does not reappear.
+
+### Lifeline System
+
+Students receive a limited number of **lifelines** per scenario — voluntary hints they can request when stuck. Lifelines provide graduated scaffolding: each level reveals more specific guidance without giving the answer.
+
+**Lifeline count:** Configurable per session by the teacher (default: 3). Stored in the session configuration as `lifelines_per_student: integer`. Resets each scenario.
+
+**Lifeline button:** A persistent button in the Phase 1 and Phase 2 work panels, showing remaining count: "Lifelines: 2 remaining." Tapping opens the next hint level for the current target flaw.
+
+**Targeting logic — which flaw gets hinted:**
+- If the student has 0 annotations → hint toward the `most_will_catch` flaw (from `facilitation_guide.what_to_expect`)
+- If the student has 1+ annotations → hint toward the next most detectable *unfound* flaw (by difficulty rating, skipping flaws where the student already has an overlapping annotation)
+- If the student has selected sentences and is mid-annotation → hint relates to the nearest annotated flaw at that location
+
+**Graduated hint levels:**
+
+| Level | What it reveals | Data source | Example |
+|---|---|---|---|
+| 1: Character | A persona trait relevant to the flaw | Derived from `scenario.yaml` persona weaknesses (rephrased — never shown raw) | "Think about Mia. She's really passionate about this topic. How might that affect what she says?" |
+| 2: Location | Where to look | `facilitation_guide.phase_1[].prompt` (the turn reference) | "Re-read turns 5 through 8. Something interesting happens there." |
+| 3: Question | What detection question to ask | `facilitation_guide.phase_1[].prompt` (the detection question) | "As you read those turns, ask yourself: How does Mia know that?" |
+| 4: Pattern | The flaw pattern description | Detection act library `patterns[].plain_language` + `description` | "One pattern to watch for: 'They're saying a lot based on very little.'" |
+
+**Level 1 is optional.** If no natural character hint exists for the target flaw (e.g., for emergent flaws without matching persona weaknesses), the system starts at Level 2. Each lifeline use reveals the next available level.
+
+**Phase 2 lifelines.** The same lifeline pool extends to Phase 2. A Phase 2 lifeline narrows the thinking behavior options from 8 to 2-3 (using `facilitation_guide.phase_2[].narrowed_options`) or offers the perspective prompt (using `facilitation_guide.phase_2[].perspective_prompt`). Same graduated approach — first narrow, then prompt.
+
+**Lifeline exhaustion.** When all lifelines are used, the button shows "No lifelines remaining" (disabled). A supportive message appears: "You've used all your lifelines. Keep reading and trying — your teacher can help too." The teacher dashboard flags students who have exhausted lifelines with 0 or few annotations as needing direct intervention.
+
+**Schema addition.** Each student annotation tracks hint usage: `hints_used: integer` (how many lifeline levels were revealed for this annotation, 0 if none). This is research-valuable data — which flaws need the most hints across students and scenarios.
+
+**Lifelines and the warm-up.** If the warm-up scenario is used, lifelines are disabled (`lifelines_per_student: 0`) since the teacher is guiding the class through the activity live.
+
+### Inline Perspective Prompts (Phase 2)
+
+When a student is assigning a thinking behavior in Phase 2 and hasn't written anything in the explanation field for 30+ seconds, an optional hint appears below the explanation prompt:
+
+"Need a starting point? Try this: Imagine you're [persona name]. [perspective_prompt from facilitation guide]."
+
+**Data source:** `evaluation.yaml` → `facilitation_guide.phase_2[]` — matched to the student's annotation by flaw pattern overlap. The `perspective_prompt` field provides the empathy-based prompt.
+
+**Presentation:** Collapsible, appears as a subtle "Need a hint?" link. Only one per annotation. Does not consume a lifeline (it's Phase 2-specific scaffolding, not the lifeline system).
+
+### Phase 4: Overlap Framing
+
+When AI annotations are revealed in Phase 4, the app compares student annotations against AI annotations by **sentence ID overlap** (any shared sentence IDs between student and AI annotation locations). Where overlap is found:
+
+```
+┌───────────────────────────────┐
+│ ✓ You found this too!          │
+│                                │
+│ Your take:                     │
+│ "She said the research proves  │
+│  it but she only read two      │
+│  articles"                     │
+│                                │
+│ The AI's take:                 │
+│ "The AI thinks Mia might be    │
+│  saying a lot more than her    │
+│  sources can back up..."       │
+│                                │
+│ Do you agree with how the AI   │
+│ explained it?                  │
+└───────────────────────────────┘
+```
+
+This frames the AI as a peer to compare against, not an answer key. The student's work is validated ("you found this too") and they're invited to evaluate the AI's explanation rather than accept it.
+
+For AI annotations with no student overlap: "The AI noticed something in turns [N] that you didn't mark. Read it — do you agree?"
+
+### Reflection Step (Post-Phase 4)
+
+After Phase 4 discussion time, before the session ends, a reflection prompt appears in the student's work panel:
+
+```
+┌─────────────────────────────────┐
+│  Before you go...               │
+│                                 │
+│  What's one thing you noticed   │
+│  on re-reading that you missed  │
+│  the first time?                │
+│  ┌─────────────────────────┐    │
+│  │                         │    │
+│  └─────────────────────────┘    │
+│                                 │
+│  What will you look for in the  │
+│  next discussion?               │
+│  ┌─────────────────────────┐    │
+│  │                         │    │
+│  └─────────────────────────┘    │
+│                                 │
+│  [Done]                         │
+└─────────────────────────────────┘
+```
+
+**Why this matters:** Without structured reflection, the activity ends at Phase 4 and the learning stays in that scenario. Reflection is the metacognitive step that builds transfer — students articulate what strategies worked and what they'd do differently. These responses are stored per student per session and are valuable research data.
+
+**Trigger:** The teacher activates the reflection step (a button on the teacher dashboard after Phase 4 discussion has had sufficient time). Students see the reflection form in their work panel. Responses are optional but encouraged. The session ends after reflection, or when the teacher closes it.
 
 ---
 
@@ -1067,7 +1245,9 @@ Content follows the exact format from design doc lines 867-902.
 
 ### Warm-Up Session
 
-The teacher creates a session with the warm-up micro-scenario (`is_warmup: true`). The warm-up artifacts are hand-crafted to the same schemas as pipeline-produced scenarios (implementation-pipeline.md Phase 7) and stored at `configs/reference/warmup/` (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, `cheat_sheet.md`). They are imported into the database the same way as any other scenario. The app behavior is identical to a regular session, with these additions:
+The warm-up session is optional. If used, the teacher creates a session with the warm-up micro-scenario (`is_warmup: true`). The warm-up artifacts are hand-crafted to the same schemas as pipeline-produced scenarios and stored at `configs/reference/warmup/`. They are imported into the database the same way as any other scenario. If the warm-up is skipped, students learn the tool on their first real scenario — the guided first detection mechanic (`Scaffolds > Guided First`) and reading strategy hints (`Scaffolds`) provide onboarding without a separate tutorial session. Lifelines are disabled for warm-up sessions (`lifelines_per_student: 0`).
+
+The app behavior for warm-up sessions is identical to a regular session, with these additions:
 
 **Phase indicator** shows a "Tutorial" badge next to the phase numbers.
 

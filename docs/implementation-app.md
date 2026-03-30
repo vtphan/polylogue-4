@@ -250,16 +250,22 @@ This structure will be refined during implementation. It is included here to sho
    - Reference: `uiux-app.md > Student > Phase 1` (full Phase 1 spec)
    - Reference: `uiux-app.md > Student > Phase 1 > Transcript` (turn display, sentence selection, annotation markers, enumeration format)
    - Reference: `uiux-app.md > Student > Phase 1 > Work Panel` (empty state, guided first annotation, reading nudge, detection act picker, annotation form, annotation list)
+   - Reference: `uiux-app.md > Scaffolds` (topic context, reading strategy hints, guided first detection, re-reading nudge, flaw pattern library)
+   - Reference: `uiux-app.md > Scaffolds > Lifelines` (lifeline system — graduated hints, targeting logic, Phase 1 hint levels)
+   - Reference: `uiux-app.md > Scaffolds > Guided First` (onboarding mechanic for first 2-3 scenarios)
    - Reference: `uiux-app.md > Component > TranscriptView` (props, schema, behavior)
    - Reference: `uiux-app.md > Component > AnnotationPanel` (modes, fields, schema mapping)
-   - Reference: `uiux-app.md > Component > DetectionActPicker` (schema fields, display, output)
+   - Reference: `uiux-app.md > Component > DetectionActPicker` (schema fields, display, reading strategy hints per act)
    - Reference: `uiux-app.md > Interactions > Sentence Selection` (tap mechanics, multi-select, cross-turn)
    - Reference: `uiux-app.md > Tablet` (touch targets, keyboard management, portrait mode panel switcher)
    - Reference: `uiux-app.md > Design Language > Student` (spacious layout, conversational copy, micro-animations)
+   - Schema note: `student_annotations.yaml` needs `hints_used: integer` field for tracking lifeline usage per annotation
 
 4. **Thinking behaviors (Phase 2) + submission flow** — extending annotations, submission gate.
    - Reference: `uiux-app.md > Student > Phase 2` (full Phase 2 spec)
    - Reference: `uiux-app.md > Student > Phase 2 > Work Panel` (annotation checklist, behavior assignment, progressive disclosure, submit button)
+   - Reference: `uiux-app.md > Scaffolds > Lifelines` (Phase 2 lifeline hints — narrowed options, perspective prompts)
+   - Reference: `uiux-app.md > Scaffolds` (inline perspective prompts for Phase 2)
    - Reference: `uiux-app.md > Component > ThinkingBehaviorBrowser` (schema fields, progressive disclosure, library-first design)
    - Reference: `uiux-app.md > Interactions > Annotation Lifecycle` (draft → submitted states)
    - Reference: `uiux-app.md > Engagement` (submission celebration moment, progress satisfaction)
@@ -277,7 +283,8 @@ This structure will be refined during implementation. It is included here to sho
 
 7. **AI reveal (Phase 4) + teacher dashboard** — final student phase + teacher monitoring and controls.
    - Reference: `uiux-app.md > Student > Phase 4` (full Phase 4 spec)
-   - Reference: `uiux-app.md > Student > Phase 4 > AI Tab` (AI annotation cards, evaluation_student.yaml field mapping, "AI missed this" discovery)
+   - Reference: `uiux-app.md > Student > Phase 4 > AI Tab` (AI annotation cards, evaluation_student.yaml field mapping, "AI missed this" discovery, "You found this too" overlap framing)
+   - Reference: `uiux-app.md > Scaffolds > Reflection` (post-Phase 4 reflection step — teacher-triggered, metacognitive prompts)
    - Reference: `uiux-app.md > Teacher > Dashboard` (active sessions, available scenarios, import)
    - Reference: `uiux-app.md > Teacher > Monitor` (student activity table, phase controls, detail panel)
    - Reference: `uiux-app.md > Teacher > Monitor > Student Monitor` (status indicators, schema fields)
@@ -293,8 +300,9 @@ This structure will be refined during implementation. It is included here to sho
 9. **Session management + onboarding** — teacher creates sessions, assigns groups, onboarding flow.
    - Reference: `uiux-app.md > Teacher > Create Session` (scenario selection, group assignment, session code)
    - Reference: `uiux-app.md > Student > Join` (session code entry, authentication)
-   - Reference: `uiux-app.md > Onboarding` (tutorial status bar messages)
-   - Note: The warm-up scenario (Scenario 1 in `docs/scenario-sequence.md`) is optional. If used, it is hand-crafted and stored in `configs/reference/warmup/`. If skipped, students learn the tool on their first real scenario.
+   - Reference: `uiux-app.md > Onboarding` (tutorial status bar messages, warm-up optional)
+   - Note: The warm-up scenario (Scenario 1 in `docs/scenario-sequence.md`) is optional. If skipped, the guided first detection (`uiux-app.md > Scaffolds > Guided First`) and reading strategy hints provide onboarding without a separate tutorial session.
+   - Schema note: `session_configuration.yaml` needs `lifelines_per_student: integer` field (default 3, configurable by teacher at session creation)
 
 10. **Polish + deployment** — university server setup, final testing.
     - Reference: `uiux-app.md > Tablet` (verify all tablet interactions, orientation handling, keyboard management)
@@ -319,3 +327,7 @@ These decisions are deferred until pipeline implementation is complete:
 5. **Research data export format.** CSV? JSON? Direct SQLite access? Depends on what analysis tools the researcher uses.
 
 6. **Researcher routing.** The project structure shows `student/` and `teacher/` route directories. The researcher role needs either its own routes (`researcher/`) or elevated permissions on the teacher routes. Decision depends on whether researcher needs distinct UI (data export, cross-scenario comparison) or just extended access to the teacher dashboard.
+
+7. **Phase 3 reaction text field (post-MVP).** For each peer annotation that differs from theirs, students could write a short reaction: "Do you agree or disagree? Why?" This captures reasoning that currently evaporates after verbal discussion and produces valuable research data. See `uiux-app.md > Scaffolds` for context.
+
+8. **Cross-session memory (post-MVP).** Track what detection acts and thinking behaviors each student has encountered across sessions. Surface growth and recommend what to practice next. Requires user accounts and persistent storage beyond the current session-scoped model.
