@@ -28,6 +28,8 @@ Fewer target flaws also means easier. A 1-flaw scenario lets students focus; a 3
 
 Some flaw-behavior pairings are more intuitive than others. `big_claim_little_evidence` + `confirmation_bias` is the most accessible combination (chosen for the warm-up scenario). Pairings like `parts_contradict` + `anchoring_bias` require more abstract reasoning.
 
+**Flaw-type diversity matters for difficulty and learning transfer.** When targeting 2+ flaws, mixing an individual flaw (Acts 1-3) with an interaction flaw (Acts 4-5) is harder than two individual flaws — but it forces students to evaluate the group's reasoning process, not just individual claims. Two individual flaws let students work speaker-by-speaker in isolation; adding an interaction flaw requires tracking cross-turn dynamics. See `create_scenario` guidance for details.
+
 ### 2. Signal Moment Strength (`create_scenario` -- `accomplishes` fields)
 
 The `accomplishes` field in the turn outline controls how overtly a persona overshoots, omits, or capitulates. Stronger wording produces more visible signal moments:
@@ -49,13 +51,18 @@ The instructional designer adjusts phrasing to make hooks more or less visible w
 
 The instructional designer can also adjust overconfident language, make concrete absences more noticeable, and tighten proximity for cross-turn contradictions.
 
-### 4. Transcript Density (turn outline structure)
+### 4. Transcript Density and Anti-Patterns (turn outline structure)
 
 The spacing of flaw-surfacing turns relative to normal discussion turns affects visibility:
 
 - Clustered flaw turns (close together) = easier to spot by contrast with surrounding conversation
 - Spread flaw turns (separated by many buffer turns) = harder, because the flaw gets buried in normal discussion
 - More total turns (toward the 16-turn maximum) with the same number of flaws = more dilution
+
+**Anti-patterns that distort difficulty:**
+- 4+ consecutive turns of unchecked agreement makes omission flaws feel artificial rather than natural — the total absence of pushback is itself a signal that something is scripted
+- Omission-based flaws (Act 3) are more naturally detectable when at least one persona briefly surfaces the missing concern before being redirected — the contrast ("someone thought of it but the group moved past it") is more detectable than total silence
+- Evidence claims that go completely unchallenged make the flaw too easy *and* too cartoonish — brief skepticism from another persona creates contrast that makes the flaw both more natural and more interesting to evaluate
 
 ---
 

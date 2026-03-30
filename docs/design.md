@@ -290,9 +290,9 @@ After that, run `/initialize_polylogue` to sync everything else.
 **Process:**
 
 1. **Draft the plan.** Based on the topic, context, and instructional goals, generate:
-   - 2-3 persona sketches (name, role, perspective, what they know well, what they'll get wrong)
-   - 1-3 target flaw-behavior combinations from the library
-   - A turn-by-turn outline specifying: who speaks, what the turn should accomplish, which flaw surfaces where
+   - 2-3 persona sketches (name, role, perspective, what they know well, what they'll get wrong). Persona perspectives must create genuine tension — pulling in different directions, not just different motivations toward the same conclusion. Agreement-only discussions produce flat transcripts where students evaluate individuals in isolation rather than group reasoning.
+   - 1-3 target flaw-behavior combinations from the library. When targeting 2+, prefer mixing an individual flaw (Acts 1-3: something wrong with what one person *says*) with an interaction flaw (Acts 4-5: something wrong with how the group *resolves*). This ensures students must evaluate both individual claims and the group's reasoning process.
+   - A turn-by-turn outline specifying: who speaks, what the turn should accomplish, which flaw surfaces where. Avoid extended runs of unchecked agreement — omission-based and evidence-based flaws are more detectable when at least one persona briefly surfaces a concern or shows skepticism before being redirected.
    - The discussion arc (how it opens, where tension builds, how it resolves or fails to resolve)
 
 2. **Validate the plan.** Invoke a **learning scientist subagent** that checks:

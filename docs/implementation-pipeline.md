@@ -15,11 +15,11 @@ This plan covers implementation of the Polylogue 4 pipeline: the system that gen
 ## Phase Map
 
 ```
-Phase 1 → Phase 2 → REVIEW A → Phase 3 → Phase 4 → Phase 5 ─┬─→ Phase 6 → REVIEW B
+Phase 1 → Phase 2 → REVIEW A → Phase 3 → Phase 4 → Phase 5 ─┬─→ Phase 6 → REVIEW B → Phase 6.1 → Phase 6.2
                                                               └─→ Phase 7 (parallel)
 ```
 
-All phases are sequential except Phases 6 and 7, which can run in parallel after Phase 5.
+All phases are sequential except Phases 6 and 7, which can run in parallel after Phase 5. Phase 6.1 follows Review B and addresses findings from both the internal review and an external pedagogical review of the first scenario. Phase 6.2 generates a second scenario under the revised guidance and compares it against the first.
 
 ---
 
@@ -477,6 +477,113 @@ artifacts. End with READY TO PROCEED or NEEDS REVISION (prioritized).
 
 ---
 
+## Phase 6.1: Review B Fixes and Scenario Plan Guidance
+
+**Objective:** Address findings from the internal Review B and an external pedagogical review of the first scenario (ocean_plastic_campaign). Two technical fixes and four guidance additions to `create_scenario`.
+
+**Inputs:**
+- Review B results (`docs/Review_B_results.md`) — 2 technical issues
+- External reviewer analysis (`docs/Review_B_response.md`) — 3 observations about flat group dynamics, 3 proposals (A, B, C) plus one extension (C+)
+- First scenario outputs in `registry/ocean_plastic_campaign/`
+
+**Why a separate phase:** Review B was designed to catch technical integration and prompt quality issues. It succeeded at that — 12 of 14 criteria passed, and the 2 issues found were straightforward. But an external pedagogical review identified a higher-level problem: the first scenario's discussion dynamics are flat (no persona disagreement, one-directional flaw detection, cartoonish accumulation of omission). These issues originate in the `create_scenario` command's guidance, not in the pipeline's mechanics. Phase 6.1 addresses both the technical fixes and the guidance gap.
+
+**Tasks:**
+
+1. **Fix `evaluate_script.md` Step 4** — Add `--detection-act-library` and `--thinking-behavior-library` flags to the `export_for_app.py` invocation so the cheat sheet uses plain-language flaw names instead of canonical IDs.
+
+2. **Fix `evaluation.yaml` and `evaluation_student.yaml` ann_05** — Add `turn_08.s01` to the sentences list so the `abandoned_concern` annotation captures both the concern being raised (turn 6) and abandoned (turn 8).
+
+3. **Add persona conflict guidance to `create_scenario.md`** (Proposal A) — Persona perspectives must pull in different directions, not just represent different motivations toward the same conclusion. Agreement-only discussions are a quality problem.
+
+4. **Add flaw-type diversity guidance to `create_scenario.md`** (Proposal B) — When targeting 2+ flaws, prefer mixing individual flaws (Acts 1-3) with interaction flaws (Acts 4-5). Two individual flaws produce discussions where students evaluate speakers in isolation; interaction flaws force students to evaluate the group's reasoning process.
+
+5. **Add turn outline anti-pattern guidance to `create_scenario.md`** (Proposals C and C+) — Warn against:
+   - 4+ consecutive turns of unchecked agreement or enthusiasm
+   - Omission flaws (Act 3) where the missing thing is never briefly acknowledged — at least one persona should surface the concern before being redirected
+   - Evidence claims that go completely unchallenged — at least one persona should show brief skepticism before being won over
+
+6. **Update `create_scenario.md` quality checklist** — Add 4 new items reflecting the guidance: persona tension, flaw-type diversity, no unchecked agreement runs, omission/evidence anti-patterns.
+
+7. **Sync updated commands to `.claude/commands/`**.
+
+**Outputs:**
+- Updated `configs/evaluation/commands/evaluate_script.md`
+- Updated `registry/ocean_plastic_campaign/evaluation.yaml` and `evaluation_student.yaml`
+- Updated `configs/scenario/commands/create_scenario.md`
+- Updated `.claude/commands/` (synced)
+
+**Notes:**
+- The first scenario (ocean_plastic_campaign) is not regenerated. It served its purpose — proving the pipeline's mechanics work. The guidance additions ensure future scenarios avoid the same flatness.
+- The guidance additions are prose, not new parameters or branching logic. They keep the command simple while encoding lessons learned.
+- The external reviewer's analysis, the response, and the Review B results are preserved as historical records in `docs/`.
+
+---
+
+## Phase 6.2: Second Scenario — Guidance Validation
+
+**Objective:** Generate a second scenario under the revised `create_scenario` guidance and compare it against the first scenario (ocean_plastic_campaign) on the specific dimensions that were identified as weaknesses.
+
+**Inputs:**
+- Updated `create_scenario` command (with persona conflict, flaw-type diversity, and anti-pattern guidance from Phase 6.1)
+- All pipeline artifacts from Phases 1-6
+- PBL reference: `references/PBL/6th Grade STEM (Fall 2025).txt` — same unit, different topic
+- First scenario outputs in `registry/ocean_plastic_campaign/` (comparison baseline)
+
+**Constraints on scenario design:**
+
+These constraints exist to isolate whether the guidance changes fix the problems the external reviewer identified. They are specific to this validation phase, not general rules.
+
+1. **Must include an interaction flaw (Act 4 or Act 5).** The first scenario used only Acts 2-3 (individual flaws). The second must mix an individual flaw with an interaction flaw — e.g., `missing_downsides` + `fake_agreement`, or `big_claim_little_evidence` + `abandoned_concern`. This tests Proposal B (flaw-type diversity).
+
+2. **Personas must disagree about something substantive.** Not just different areas of focus — different positions on a decision, tradeoff, or interpretation. The scenario plan should make clear what the personas disagree about. This tests Proposal A (persona conflict).
+
+3. **Same PBL unit, different topic.** Stay within the 6th-grade STEM environmental threats unit for consistency. Choose a different environmental issue so the comparison isolates the guidance changes, not the subject matter.
+
+4. **2 personas, 2 target flaws.** Same complexity as the first scenario so the comparison is apples-to-apples.
+
+**Tasks:**
+
+1. Run `create_scenario` with a topic from the PBL unit, following the updated guidance. Verify the scenario plan satisfies the constraints above and passes all new quality checklist items.
+2. Run `create_script` to generate the transcript.
+3. Run `evaluate_script` to produce annotations and facilitation guide.
+4. Run all validation scripts (`validate_schema.py`, `review_transcript.py`) against the outputs.
+5. Produce the comparison analysis (see below).
+
+**Outputs:**
+- `registry/{scenario_id}/scenario.yaml`
+- `registry/{scenario_id}/script.yaml`
+- `registry/{scenario_id}/script_pre.yaml`
+- `registry/{scenario_id}/script_raw.yaml`
+- `registry/{scenario_id}/evaluation.yaml`
+- `registry/{scenario_id}/evaluation_student.yaml`
+- `registry/{scenario_id}/cheat_sheet.md`
+- Comparison analysis (inline in the session or saved to `docs/`)
+
+**Comparison criteria:**
+
+Evaluate the second scenario against the first on the three dimensions the external reviewer flagged:
+
+| Dimension | ocean_plastic_campaign (baseline) | Second scenario (expected improvement) |
+|-----------|----------------------------------|---------------------------------------|
+| **Persona disagreement** | Mia and Jaylen agree for 12 turns. Only tension is turn 6's mild question, dropped immediately. | Personas should disagree on at least one substantive point. Multiple turns should show genuine back-and-forth, not just enthusiasm in the same direction. |
+| **Flaw detection directionality** | Both flaws are individual (Acts 2-3). Students can find them by reading each persona's turns in isolation. | At least one flaw requires tracking cross-turn dynamics — how the group resolves (or fails to resolve) a disagreement. Students must read the interaction, not just the individuals. |
+| **Naturalism of omission/evidence flaws** | missing_practical_details surfaces as 4 consecutive turns of unchecked enthusiasm with zero logistics. big_claim_little_evidence goes essentially unchallenged. | Omission and evidence flaws should use contrast — at least one persona briefly surfaces a concern or shows skepticism before being redirected. The flaw is visible through what the group does with the concern, not through its total absence. |
+
+**Success criteria:**
+
+- All schemas validate, all scripts pass (same as Phase 5)
+- The scenario plan passes all new quality checklist items in `create_scenario`
+- The comparison analysis shows improvement on all three dimensions
+- No regression on the criteria that the first scenario handled well: information barrier, persona voice distinction, signal moment calibration, 6th-grade language level
+
+**Notes:**
+- The first scenario is not regenerated. It stands as the baseline.
+- If the second scenario still shows flat dynamics despite the updated guidance, the issue is deeper than command prose — it may require structural changes to the scenario plan schema (e.g., a required `conflict` field) or changes to the learning scientist's validation criteria. Document what failed and why.
+- Save all intermediate artifacts (raw transcript, pre-enumeration transcript) for the same reasons as Phase 5 — they serve as additional test fixtures and as evidence of the instructional designer's editing boundaries.
+
+---
+
 ## Phase 7: Warm-Up Micro-Scenario
 
 **Objective:** Hand-craft the onboarding micro-scenario used to teach the four-phase workflow.
@@ -485,7 +592,7 @@ artifacts. End with READY TO PROCEED or NEEDS REVISION (prioritized).
 - Design doc: "First-Session Onboarding" (lines 723-729)
 - All schemas from Phase 2
 - Reference libraries from Phase 1
-- First scenario outputs from Phase 5 (quality reference)
+- Scenario outputs from Phase 5 and Phase 6.2 (quality reference)
 
 **Tasks:**
 1. Choose a universal topic (e.g., whether the school should switch to a four-day week) — no domain knowledge required
@@ -522,4 +629,6 @@ artifacts. End with READY TO PROCEED or NEEDS REVISION (prioritized).
 | 5 | First scenario | Phase 4 | End-to-end architectural validation |
 | 6 | Python scripts | Phase 5 | Script formalization from manual experience |
 | **REVIEW B** | **Full integration review** | **Phase 6** | **Technical integration + prompt/command quality + pedagogical quality** |
+| 6.1 | Review B fixes + scenario plan guidance | Review B | Flat group dynamics, missing library flags, cross-turn annotation |
+| 6.2 | Second scenario — guidance validation | Phase 6.1 | Validates revised guidance produces richer group dynamics |
 | 7 | Warm-up scenario | Phase 5 | Onboarding artifact for first classroom use |

@@ -57,7 +57,9 @@ If the script is not available, verify manually:
 If `configs/evaluation/scripts/export_for_app.py` exists, run it:
 
 ```bash
-python configs/evaluation/scripts/export_for_app.py registry/{scenario_id}/evaluation.yaml registry/{scenario_id}/
+python configs/evaluation/scripts/export_for_app.py registry/{scenario_id}/evaluation.yaml registry/{scenario_id}/ \
+  --detection-act-library configs/reference/detection_act_library.yaml \
+  --thinking-behavior-library configs/reference/thinking_behavior_library.yaml
 ```
 
 This produces:

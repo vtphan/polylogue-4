@@ -28,12 +28,13 @@ Based on the operator's input, generate a complete scenario plan:
    - Each persona needs a distinct perspective on the topic
    - Strengths should be genuine — they know real things
    - **Weaknesses must be phrased as natural knowledge gaps or tendencies**, NOT as flaw labels. Write "only researched one source, tends to generalize from limited data" — NOT "will produce a big-claim-little-evidence flaw"
-   - Persona perspectives should create natural tension that drives the discussion
+   - **Persona perspectives must pull in different directions**, not just represent different areas of focus pointing at the same conclusion. Two personas who both want the same outcome with different motivations will agree for the entire transcript — that produces flat discussions where students evaluate individuals in isolation rather than group reasoning. For 2-persona scenarios, the personas should disagree about something substantive: a priority, a tradeoff, or an interpretation of evidence. Agreement-only discussions are a quality problem, not a stylistic choice.
 
 3. **Select target flaw-behavior combinations** (1-3):
    - Choose combinations that arise naturally from the personas' weaknesses and the topic
    - Assign each flaw to a specific persona and specific turn(s)
    - Ensure the combination is detectable by 6th graders — not too subtle, not too obvious
+   - **Prefer flaw-type diversity across detection acts.** When targeting 2+ flaws, mix an individual flaw (Acts 1-3: something wrong with what one person *says*) with an interaction flaw (Acts 4-5: something wrong with how the group *resolves*). Two individual flaws produce discussions where students evaluate speakers in isolation; adding an interaction flaw forces students to evaluate the group's reasoning process — the skill that transfers to their own PBL teamwork. This is a recommendation, not a hard rule — there are legitimate scenarios where two Act 2 flaws are the right choice — but the default should be to mix.
 
 4. **Write the turn outline** (12-16 turns):
    - Specify speaker and accomplishes for each turn
@@ -42,6 +43,10 @@ Based on the operator's input, generate a complete scenario plan:
      - GOOD: "Share what you found from your one article and explain why you think it settles the question"
    - For non-flaw turns, describe the conversational function: opening, reacting, building tension, wrapping up
    - Ensure the speaker sequence creates natural back-and-forth
+   - **Avoid these turn outline anti-patterns:**
+     - **4+ consecutive turns of unchecked agreement or enthusiasm.** Real group discussions have friction. If no persona pushes back, questions, or hesitates for 4+ turns in a row, the discussion will feel artificially harmonious.
+     - **Omission flaws (Act 3) where the missing thing is never acknowledged.** When a plan has a lot of ambitious ideas with no practical details, at least one persona should briefly surface a practical concern ("but how would we pay for that?") before being brushed aside or redirected. The contrast — someone thought of it but the group moved past it — is more naturalistic and more detectable than total silence. This also creates a natural setup for Act 5 flaws like `abandoned_concern`.
+     - **Evidence claims that go completely unchallenged.** When a persona makes a big claim from thin evidence, at least one other persona should show brief skepticism or ask a probing question before being won over. This makes the flaw detectable through *contrast* (someone noticed but was convinced) rather than through *absence* (nobody noticed).
 
 5. **Write the discussion arc**: One paragraph describing the flow — how it opens, where tension builds, how it resolves or fails to resolve
 
@@ -88,9 +93,14 @@ If the script is not available, verify manually:
 
 Before saving, verify:
 - [ ] Persona weaknesses are natural language, not flaw labels
+- [ ] Persona perspectives create genuine tension, not just different motivations toward the same conclusion
 - [ ] `accomplishes` fields steer without naming flaws
 - [ ] Target flaws use canonical IDs from the reference libraries
 - [ ] Thinking behaviors use canonical IDs from the reference libraries
+- [ ] If 2+ target flaws, they span different detection acts (individual + interaction preferred)
 - [ ] Each flaw-surfacing turn's `accomplishes` field creates conditions for a signal moment
+- [ ] No 4+ consecutive turns of unchecked agreement
+- [ ] Omission flaws have at least one turn where a persona briefly surfaces the missing concern
+- [ ] Evidence claims are briefly challenged before being accepted
 - [ ] Turn count is 12-16
 - [ ] Each persona speaks multiple times with natural back-and-forth

@@ -68,7 +68,7 @@ annotations:
   - annotation_id: ann_05
     location:
       turn: turn_06
-      sentences: [turn_06.s01, turn_06.s02]
+      sentences: [turn_06.s01, turn_06.s02, turn_08.s01]
     argument_flaw:
       pattern: abandoned_concern
       detection_act: not_really_resolved
