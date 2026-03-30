@@ -665,7 +665,13 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 
 2. **Guided first annotation.** On the first annotation creation (first time form is shown), display inline guide above form: "Nice! You found something. Now: (1) Pick which type of problem it is, (2) Describe what you noticed in your own words." Disappears after first save, does not reappear. Reference: `uiux-app.md > Student > Phase 1 > Work Panel` guided first annotation.
 
-3. **Re-reading nudge.** Client-side timer: if 3+ minutes in Phase 1 with 0 annotations, show a dismissible nudge at the top of the work panel. Disappears on dismiss or on first annotation save. Reference: `uiux-app.md > Scaffolds` re-reading nudge. This uses a client-side timer — no server call needed.
+3. **Re-reading nudges.** Two distinct nudges, both client-side:
+
+   a. **Stuck nudge:** Client-side timer: if 3+ minutes in Phase 1 with 0 annotations, show a dismissible nudge at the top of the work panel: "Try re-reading the discussion from the beginning. Use one of the questions below as a lens." Disappears on dismiss or on first annotation save. Reference: `uiux-app.md > Scaffolds` re-reading nudge.
+
+   b. **Different-lens nudge:** After the first annotation is saved, show a one-time dismissible nudge: "Nice work! Now try reading the discussion again with a different question in mind." Encourages breadth — essential for Acts 3-5, which require a second pass with a different detection question. Disappears on dismiss or on second annotation save. Does not reappear. Reference: `uiux-app.md > Scaffolds` re-reading nudge.
+
+   A student triggers at most one: if stuck for 3+ minutes, nudge (a) fires; if they annotate before that, nudge (a) never fires and nudge (b) fires once after the first save. Both are client-side — no server call needed.
 
 4. **Annotation marker micro-animation.** When an annotation is saved, the corresponding sentences show a brief scale-up + checkmark animation on the annotation marker. Reference: `uiux-app.md > Design Language > Student` micro-animations.
 
@@ -809,6 +815,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 2. **Guided first detection.** Implement per `uiux-app.md > Scaffolds > Guided First`:
    - Activates when `session.guided_first_detection` is true AND student has 0 annotations after dismissing the topic context
    - Selects `most_will_catch` flaw from facilitation guide
+   - Resolves the turn and persona for the prompt via: `what_to_expect[].flaw` → match `annotations[].argument_flaw.pattern` → `annotations[].location.turn` → `script.yaml` turns → `speaker` → `scenario.yaml` personas → `name`
    - Shows prompt: "Let's start with turn [N]. Read what [persona] says. Does anything stand out to you?"
    - Transcript scrolls to or highlights the target turn
    - Detection act picker may show subtle suggestion
@@ -912,7 +919,7 @@ PART 3: EDGE CASES
 9. HINT SYSTEM EDGE CASES
    - All lifelines exhausted: button disabled, supportive message shown
    - All per-type caps exhausted for current phase but budget remains: show which types are available in other phase
-   - Student has found all flaws: location hint has nothing to target (graceful handling)
+   - Student has found all flaws: location hint type disabled with "You've already found all the key moments!" even if per-type cap isn't reached
    - Zero budget: hint button hidden when lifeline_budget is 0
    - Character hint persistence: revealed in Phase 1, still visible in Phase 2 without re-cost
    - Persona resolution works for both planned and emergent flaws (via turn speaker)
@@ -945,7 +952,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - Peer annotations: outlined dots in each peer's assigned color
    - Where annotations overlap (same sentences): dots stack horizontally
    - Tapping any marker shows details in work panel
-   - Group member colors: assigned at session creation (up to 5 distinct colors per group), consistent within session. Stored on `Student` record or computed from group position.
+   - Group member colors: computed from `GroupMember` position index within the group (0→color A, 1→color B, etc.), up to 5 distinct colors per group, consistent within session. No schema change needed — position is the index in the `GroupMember` query ordered by `id`.
 
 3. **Phase 3 transition moment.** Animated reveal: "Your group marked [N] moments in the discussion. Let's see what everyone noticed!" Count comes from peer annotation snapshots. Peer annotation markers fade in on transcript.
 
@@ -1105,7 +1112,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - Not started (○): `first_opened` is null
      - Active (●): `first_opened` is non-null
      - Submitted (✓): all annotations have `submitted: true`
-     - May need help (⚠): >50% of `facilitation_guide.timing.phase_1_minutes` elapsed since phase start with 0 annotations, or >100% of phase time with fewer annotations than group average. Time is measured from the phase start (phase clock), not from the student's `first_opened` — late-arriving students are flagged immediately because they need help catching up. The flag persists until the student creates an annotation. Thresholds are derived from the scenario's facilitation guide timing, not hardcoded.
+     - May need help (⚠): >50% of the current phase's timing (`facilitation_guide.timing.phase_N_minutes`) elapsed since phase start with 0 annotations, or >100% of phase time with fewer annotations than group average. Applies in both Phase 1 and Phase 2. Time is measured from the phase start (phase clock), not from the student's `first_opened` — late-arriving students are flagged immediately because they need help catching up. The flag persists until the student creates an annotation. Thresholds are derived from the scenario's facilitation guide timing, not hardcoded.
      - Hints exhausted (flag): student has used all lifelines AND has 0-1 annotations
    - Class-level summary: total active, submitted count, and how many target flaws have been found by at least one group
    - Tapping student name opens their annotations in detail panel (read-only)
@@ -1117,10 +1124,11 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - **Low-submission warning:** When fewer than 50% of students have submitted, the dialog shows a prominent color-coded warning (orange/red): "Only [N] of [M] have submitted. Most students' work will be auto-submitted incomplete."
    - Shows: what will happen (auto-submit, peer visibility, lock editing, etc.)
    - "Advance Now" / "Wait" buttons
-   - Server Action: `advancePhase(sessionId, toPhase)`:
+   - Server Action: `advancePhase(sessionId, toPhase)` — **wrap in a database transaction** to ensure atomicity:
      - If advancing to Phase 3: call `forceSubmitAll`, then `takeSnapshot(sessionId, 3)`
      - If advancing to Phase 4: call `takeSnapshot(sessionId, 4)`
      - Update `active_phase`, record `PhaseTransition`
+     - If any step fails, the transaction rolls back — no partial state (e.g., force-submitted but not snapshotted)
    - Reflection activation: after Phase 4 discussion, a separate "Start Reflection" button sets `reflection_active: true`
    - "End Session" button: archives the session early. Confirmation dialog: "End this session? Students will no longer be able to make changes. You can still view the data." On confirm: sets `status: "archived"`. Students see notification and UI becomes read-only. Server Action: `endSession(sessionId)` — sets status to archived.
 
@@ -1140,7 +1148,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - Resolve flaw pattern IDs to plain-language names using reference libraries
 
 7. **API routes for polling.**
-   - `GET /api/session/[id]/phase` — returns `active_phase` and `reflection_active` (student polls this)
+   - `GET /api/session/[id]/phase` — returns `active_phase`, `reflection_active`, and `status` (student polls this; `status` enables detection of session end/auto-archive)
    - `GET /api/session/[id]/activity` — returns `StudentActivity` records for all students in session (teacher polls this)
 
 **Outputs:**

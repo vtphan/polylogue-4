@@ -526,7 +526,7 @@ The student enters a session using a code provided by the teacher.
 
 **Late-arriving students.** Students always enter Phase 1 regardless of the session's current phase. A student who arrives when the class is in Phase 2 or 3 works through Phase 1 at their own pace. At the next teacher phase advance, they are force-submitted and snapshotted like everyone else — their annotations may be incomplete (no thinking behaviors assigned) and this is handled gracefully in comparison views.
 
-**Reconnection.** If a student's browser has a valid session cookie (JWT), navigating to `/student` redirects them directly to their active session without re-entering credentials. If the cookie has expired (e.g., device restart, cleared cookies), re-entering the same session code + name re-authenticates into their existing session state with all annotations preserved.
+**Reconnection.** If a student's browser has a valid session cookie, navigating to `/student` redirects them directly to their active session without re-entering credentials. If the cookie has expired (e.g., device restart, cleared cookies), re-entering the same session code + name re-authenticates into their existing session state with all annotations preserved.
 
 **No account creation.** Students are pre-assigned to groups by the teacher. The join screen authenticates them into their assigned slot. The session code + full name combination is the authentication mechanism.
 
@@ -540,7 +540,7 @@ The student enters a session using a code provided by the teacher.
 
 #### Transcript Panel (left)
 
-**Turn display.** The transcript is loaded from `discussion_transcript.yaml`. Each turn is a visually distinct block, identified by its `turn_id` (e.g., `turn_01`). Each sentence within a turn has a unique `id` (e.g., `turn_01.s01`) — these IDs are not displayed to students but are used internally to track selection and annotation locations.
+**Turn display.** The transcript is loaded from `script.yaml`. Each turn is a visually distinct block, identified by its `turn_id` (e.g., `turn_01`). Each sentence within a turn has a unique `id` (e.g., `turn_01.s01`) — these IDs are not displayed to students but are used internally to track selection and annotation locations.
 
 ```
 ┌─────────────────────────────────┐
@@ -1243,7 +1243,7 @@ This is the teacher's primary screen during class. Two-panel layout:
 - Not started (circle outline): `student_activity.first_opened` is null — student hasn't opened the transcript
 - Active (solid circle): `student_activity.first_opened` is non-null — student has opened the transcript
 - Submitted (checkmark): annotation's `submitted` field is true
-- May need help (warning): >50% of the scenario's `facilitation_guide.timing.phase_1_minutes` elapsed since phase start with 0 annotations, or >100% of phase time with fewer annotations than group average. Time is measured from the phase start (phase clock), not from the student's `first_opened` — late-arriving students are flagged immediately because they need help catching up. The flag persists until the student creates an annotation. Thresholds are derived from the facilitation guide timing for this scenario, not hardcoded.
+- May need help (warning): >50% of the current phase's timing (`facilitation_guide.timing.phase_N_minutes`) elapsed since phase start with 0 annotations, or >100% of phase time with fewer annotations than group average. Applies in both Phase 1 and Phase 2. Time is measured from the phase start (phase clock), not from the student's `first_opened` — late-arriving students are flagged immediately because they need help catching up. The flag persists until the student creates an annotation. Thresholds are derived from the facilitation guide timing for this scenario, not hardcoded.
 
 **Annotation count** displays `student_activity.annotation_count`. Updates via polling (every 5-10 seconds).
 
@@ -1325,7 +1325,7 @@ Content follows the exact format from design doc lines 867-902, with the additio
 
 **Purpose:** Displays the discussion transcript with sentence-level selection and annotation markers.
 
-**Schema:** `discussion_transcript.yaml` — consumes `personas[]` (name, role), `turns[]` (turn_id, speaker, sentences[]), and `sentences[]` (id, text).
+**Schema:** `script.yaml` — consumes `personas[]` (name, role), `turns[]` (turn_id, speaker, sentences[]), and `sentences[]` (id, text).
 
 **Props:**
 - `turns`: array of turn objects from transcript schema — each has `turn_id` (e.g., `turn_01`), `speaker`, and `sentences[]` where each sentence has `id` (e.g., `turn_01.s01`) and `text`
@@ -1388,7 +1388,9 @@ Content follows the exact format from design doc lines 867-902, with the additio
 **Schema:** `thinking_behavior_library.yaml` — renders `thinking_behaviors[]`, each with `behavior_id`, `name`, `description`, `formal_term`.
 
 **Display:**
-- 8 library behaviors as radio options, each showing `name` field (plain-language, e.g., "Only seeing what you want to see") and `description` field (one-line explanation) beneath it
+- 8 library behaviors as radio options. Progressive disclosure (same expand-on-select pattern as DetectionActPicker):
+  - **Initial view:** All 8 behaviors show only their `name` field (one line each, scannable). The list fits on screen without scrolling.
+  - **On tap:** The selected behavior expands to show its `description` field. Other behaviors collapse to name-only.
 - The `formal_term` field (e.g., "Confirmation bias") is not shown to students — teacher reference only
 - "None of these fit" option at the bottom, visually secondary (smaller font, muted color)
 - When "none of these fit" is selected: text input appears
@@ -1518,8 +1520,8 @@ The student app polls the server at a regular interval:
 
 | What's polled | Interval | Used by |
 |--------------|----------|---------|
-| Active phase + reflection_active | 5 seconds | Student: detect phase transitions and reflection activation |
-| Student activity | 10 seconds | Teacher: monitoring dashboard |
+| Active phase + reflection_active + status | 5 seconds | Student: detect phase transitions, reflection activation, and session end/archive |
+| Student activity + flaw coverage | 10 seconds | Teacher: monitoring dashboard, per-group flaw coverage indicators |
 
 Peer annotations are **not polled**. The Phase 3 comparison view operates on a snapshot taken at the Phase 2→3 transition. A fresh snapshot (including Phase 3 revisions) is taken at the Phase 3→4 transition. See design.md Phase 3 comparison logic.
 
