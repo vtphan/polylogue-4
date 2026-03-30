@@ -770,7 +770,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 - `uiux-app.md > Scaffolds > Lifelines` (full lifeline system spec)
 - `uiux-app.md > Scaffolds > Guided First` (guided first detection)
 - `uiux-app.md > Scaffolds` (inline perspective prompts)
-- Scenario artifacts in `REGISTRY_PATH` — specifically `evaluation.yaml` (facilitation_guide with what_to_expect, phase_1, phase_2 scaffolds) and `scenario.yaml` (persona weaknesses for Level 1 hint fallback). Read the actual artifacts to understand the data shape.
+- Scenario artifacts in `REGISTRY_PATH` — specifically `evaluation.yaml` (facilitation_guide with what_to_expect, phase_1, phase_2 scaffolds) and `scenario.yaml` (persona strengths, weaknesses, and flaw-to-persona mapping for Level 1 hints). Read the actual artifacts to understand the data shape.
 
 **Tasks:**
 
@@ -781,7 +781,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    b. **Targeting logic (student-directed):** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system targets the nearest unfound flaw in the selected region. To determine flaw locations, match each `what_to_expect[].flaw` against the evaluation's `annotations[]` by `argument_flaw.pattern`, then use the annotation's `location.turn` and `location.sentences` for region mapping and overlap checking. If no unfound flaw exists in that region, the system suggests trying a different region. Data source: `TeacherEvaluation` (facilitation_guide + annotations, both stored from `evaluation.yaml` at import time).
 
    c. **Graduated hint levels:** Each tap reveals the next level for the target flaw:
-   - Level 1 (Character): Derived from `scenario.yaml` persona weaknesses using a template: "Think about [name]. [weakness rephrased as question]." (e.g., "Think about Mia. She's really passionate about this topic. How might that affect what she says?"). If `facilitation_guide.phase_2[].character_hint` is present in the evaluation, use it instead (pre-written by evaluator, more tailored). If neither source produces a usable hint, skip Level 1 and start at Level 2.
+   - Level 1 (Character): Derived from `scenario.yaml` persona `strengths[]` and `weaknesses[]` using a template: "Think about [name]. [strength] — but [weakness rephrased as question]. How might that affect what [they] say?" (e.g., "Think about Mia. She found real statistics and genuinely cares about the environment — but she gets carried away and goes further than what her sources actually said. How might that affect what she says?"). The flaw-to-persona mapping comes from `scenario.yaml` → `target_flaws[].persona`. For emergent flaws (not in `target_flaws`), no persona mapping exists — skip Level 1 and start at Level 2.
    - Level 2 (Location): Flaw location resolved via evaluation annotations (matched by `what_to_expect[].flaw` → `annotations[].argument_flaw.pattern` → `annotations[].location.turn`) — rendered as "Re-read turns N through M."
    - Level 3 (Question): detection question from `facilitation_guide.phase_1[].prompt`
    - Level 4 (Pattern): `plain_language` + `description` from detection act library
@@ -860,7 +860,7 @@ PART 1: FUNCTIONAL CORRECTNESS
 3. SCAFFOLD DATA FLOW
    Verify lifeline hints read the correct fields from the imported artifacts:
    - Flaw locations: resolved via evaluation.yaml annotations[].location (matched by flaw pattern), NOT from a turn_ids field
-   - Level 1: scenario.yaml persona weaknesses (rephrased, not raw)
+   - Level 1: scenario.yaml persona strengths + weaknesses (rephrased via template, not raw). Flaw-to-persona mapping from target_flaws[].persona.
    - Level 2: flaw location from annotations (rendered as "Re-read turns N through M")
    - Level 3: evaluation.yaml facilitation_guide.phase_1[].prompt
    - Level 4: detection_act_library patterns
@@ -909,7 +909,7 @@ PART 3: EDGE CASES
    - All lifelines exhausted: button disabled, supportive message shown
    - Student has found all flaws: lifeline has nothing to hint (graceful handling)
    - Zero lifelines: button hidden when lifelines_per_student is 0
-   - Level 1 skipped for emergent flaw: starts at Level 2
+   - Level 1 skipped for emergent flaw (no target_flaws[].persona mapping): starts at Level 2
 
 Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVISION.
 ```
@@ -1238,7 +1238,7 @@ PART 3: SCAFFOLDS
 10. LIFELINE SYSTEM: Verify:
     - Targeting logic selects correct flaw
     - Graduated hints reveal correct content at each level
-    - Level 1 skipped for emergent flaws
+    - Level 1 uses strengths + weaknesses from scenario.yaml (not raw), skipped for emergent flaws
     - Remaining count decrements correctly
     - Exhaustion state shows supportive message
     - Phase 2 lifelines narrow options correctly
