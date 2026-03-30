@@ -827,7 +827,7 @@ Three tabs: Comparison, AI Perspective, My Annotations.
 
 Each AI annotation card renders fields from `evaluation_student.yaml` (not the full evaluation — `plausible_alternatives`, `planned`, `quality_assessment`, and `facilitation_guide` are excluded by the pipeline's `export_for_app.py` split):
 - Location: `annotation.location.turn` + `annotation.location.sentences` (displayed as "Turn 5, sentences 2-3")
-- Argument flaw: `annotation.argument_flaw.detection_act` (resolved to the act's `name` via the detection act library) + `annotation.argument_flaw.pattern` (the specific flaw name, e.g., "Big claim, little evidence") + `annotation.argument_flaw.explanation` (6th-grade language)
+- Argument flaw: `annotation.argument_flaw.detection_act` (resolved to the act's `name` via the detection act library) + `annotation.argument_flaw.pattern` (canonical ID, e.g., `big_claim_little_evidence` — resolved to plain-language name via library) + `annotation.argument_flaw.explanation` (6th-grade language)
 - Thinking behavior: `annotation.thinking_behavior.pattern` (resolved to the behavior's `name` via the thinking behavior library) + `annotation.thinking_behavior.explanation` (6th-grade language)
 - A discussion prompt: "Do you agree?" or a more specific question (hardcoded in the UI, not from the evaluation)
 

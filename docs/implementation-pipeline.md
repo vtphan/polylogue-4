@@ -76,8 +76,8 @@ All phases are sequential except Phases 6 and 7, which can run in parallel after
 - `configs/reference/thinking_behavior_library.yaml`
 
 **Notes:**
-- Canonical IDs established here propagate into every schema, prompt, and script. Use the exact names from the design doc tables (e.g., `"big claim, little evidence"`, `"confirmation bias"`).
-- Detection act IDs use snake_case: `somethings_wrong`, `not_enough_support`, `somethings_missing`, `doesnt_fit_together`, `not_really_resolved`.
+- Canonical IDs established here propagate into every schema, prompt, and script. All canonical IDs use snake_case (e.g., `big_claim_little_evidence`, `confirmation_bias`, `not_enough_support`).
+- Detection act IDs: `somethings_wrong`, `not_enough_support`, `somethings_missing`, `doesnt_fit_together`, `not_really_resolved`.
 - Reference libraries are data files (actual content the app renders and subagents reference), not schema definitions.
 
 ---
@@ -188,14 +188,13 @@ CRITERIA:
 
 7. REFERENCE LIBRARY COMPLETENESS
    detection_act_library.yaml must contain all 19 patterns across 5 acts:
-   - Act 1 (3): factual error, misapplied idea, wrong cause
-   - Act 2 (5): big claim little evidence, one example as proof, correlation as
-     causation, weak source strong claim, guess treated as fact
-   - Act 3 (4): missing practical details, missing people, missing downsides,
-     missing conditions
-   - Act 4 (3): conclusion exceeds evidence, parts contradict, solution doesn't
-     match problem
-   - Act 5 (4): abandoned concern, fake agreement, steamrolled, harmony over accuracy
+   - Act 1 (3): factual_error, misapplied_idea, wrong_cause
+   - Act 2 (5): big_claim_little_evidence, one_example_as_proof, correlation_as_causation,
+     weak_source_strong_claim, guess_treated_as_fact
+   - Act 3 (4): missing_practical_details, missing_people, missing_downsides,
+     missing_conditions
+   - Act 4 (3): conclusion_exceeds_evidence, parts_contradict, solution_doesnt_match_problem
+   - Act 5 (4): abandoned_concern, fake_agreement, steamrolled, harmony_over_accuracy
    thinking_behavior_library.yaml must contain all 8 behaviors.
    All plain-language names and descriptions must be in 6th-grade language.
 
@@ -488,7 +487,7 @@ artifacts. End with READY TO PROCEED or NEEDS REVISION (prioritized).
 
 **Tasks:**
 1. Choose a universal topic (e.g., whether the school should switch to a four-day week) — no domain knowledge required
-2. Hand-write scenario plan: 2 personas, 1 target flaw (Act 2: "big claim, little evidence" + confirmation bias)
+2. Hand-write scenario plan: 2 personas, 1 target flaw (Act 2: `big_claim_little_evidence` + `confirmation_bias`)
 3. Hand-write transcript: 5-6 turns with one obvious signal moment (stronger than a real scenario — the point is teaching the workflow)
 4. Hand-write evaluation: annotations, quality assessment, facilitation guide tailored to the walkthrough context
 5. Run `export_for_app.py` to produce student-facing extract and cheat sheet
@@ -502,7 +501,7 @@ artifacts. End with READY TO PROCEED or NEEDS REVISION (prioritized).
 - `configs/reference/warmup/cheat_sheet.md`
 
 **Notes:**
-- The flaw should be intentionally easy — "big claim, little evidence" with confirmation bias is the most intuitive combination for first exposure.
+- The flaw should be intentionally easy — `big_claim_little_evidence` with `confirmation_bias` is the most intuitive combination for first exposure.
 - The signal moment should be stronger than in real scenarios. Example: a persona says "the research proves it works" immediately after mentioning they read one blog post.
 - All artifacts must conform to the same schemas as pipeline-produced scenarios. The app handles one format, not two.
 - This is a hand-crafted artifact, not a pipeline product. It is written once and reused for every new class.

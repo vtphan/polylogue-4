@@ -61,7 +61,7 @@ Every targeted flaw in a scenario has both layers: an argument flaw that student
 
 A curated library of concrete, nameable patterns organized by five detection acts. Each pattern is described in plain language a 6th grader can understand.
 
-**Canonical naming.** Each pattern has two names: a **canonical ID** (lowercase, used in all schemas and pipeline artifacts, e.g., `"big claim, little evidence"`) and a **plain-language name** (student-facing, e.g., `"They're saying a lot based on very little"`). The canonical ID is the value used in `flaw_pattern` fields throughout the pipeline. The plain-language name appears only in the Perspectives app UI and student-facing annotations.
+**Canonical naming.** All canonical IDs — detection acts, argument flaw patterns, and thinking behaviors — use `snake_case`. Each pattern has two names: a **canonical ID** (snake_case, used in all schemas and pipeline artifacts, e.g., `big_claim_little_evidence`) and a **plain-language name** (student-facing, e.g., `"They're saying a lot based on very little"`). The canonical ID is the value used in `flaw_pattern` fields throughout the pipeline. The plain-language name appears only in the Perspectives app UI and student-facing annotations.
 
 #### Act 1: Something's Wrong
 
@@ -69,11 +69,11 @@ A curated library of concrete, nameable patterns organized by five detection act
 
 The student recognizes that a specific claim is factually incorrect or distorted.
 
-| Pattern | Plain-language name | What it looks like |
+| Pattern (canonical ID) | Plain-language name | What it looks like |
 |---------|--------------------|--------------------|
-| Factual error | "That's not true" | A specific claim that is verifiably wrong |
-| Misapplied idea | "That's not what that means" | Using a concept or term incorrectly |
-| Wrong cause | "That's not why it happens" | Asserting a cause-effect relationship that doesn't hold |
+| `factual_error` | "That's not true" | A specific claim that is verifiably wrong |
+| `misapplied_idea` | "That's not what that means" | Using a concept or term incorrectly |
+| `wrong_cause` | "That's not why it happens" | Asserting a cause-effect relationship that doesn't hold |
 
 #### Act 2: Not Enough Support
 
@@ -81,13 +81,13 @@ The student recognizes that a specific claim is factually incorrect or distorted
 
 The student notices that a claim is bigger than the evidence behind it.
 
-| Pattern | Plain-language name | What it looks like |
+| Pattern (canonical ID) | Plain-language name | What it looks like |
 |---------|--------------------|--------------------|
-| Big claim, little evidence | "They're saying a lot based on very little" | Sweeping conclusion from one or two data points |
-| One example as proof | "That's just one example" | A single anecdote, interview, or source treated as settling the question |
-| Correlation as causation | "Just because two things happened together doesn't mean one caused the other" | Two things co-occurring treated as one causing the other |
-| Weak source, strong claim | "That's not a strong enough source for that claim" | A weak source (news article, one opinion) treated as definitive evidence |
-| Guess treated as fact | "They're acting like they know but they're just guessing" | Stating something with certainty when it's really a guess or assumption |
+| `big_claim_little_evidence` | "They're saying a lot based on very little" | Sweeping conclusion from one or two data points |
+| `one_example_as_proof` | "That's just one example" | A single anecdote, interview, or source treated as settling the question |
+| `correlation_as_causation` | "Just because two things happened together doesn't mean one caused the other" | Two things co-occurring treated as one causing the other |
+| `weak_source_strong_claim` | "That's not a strong enough source for that claim" | A weak source (news article, one opinion) treated as definitive evidence |
+| `guess_treated_as_fact` | "They're acting like they know but they're just guessing" | Stating something with certainty when it's really a guess or assumption |
 
 #### Act 3: Something's Missing
 
@@ -95,12 +95,12 @@ The student notices that a claim is bigger than the evidence behind it.
 
 The student notices that an important consideration is absent.
 
-| Pattern | Plain-language name | What it looks like |
+| Pattern (canonical ID) | Plain-language name | What it looks like |
 |---------|--------------------|--------------------|
-| Missing practical details | "How would that actually work?" | No consideration of cost, time, space, or implementation |
-| Missing people | "They didn't ask ___" | Only consulting one person or group when others are clearly affected |
-| Missing downsides | "They only talked about the good stuff" | Presenting only positives with no tradeoffs or risks |
-| Missing conditions | "That only works if ___" | Not considering what needs to be true for the plan to work |
+| `missing_practical_details` | "How would that actually work?" | No consideration of cost, time, space, or implementation |
+| `missing_people` | "They didn't ask ___" | Only consulting one person or group when others are clearly affected |
+| `missing_downsides` | "They only talked about the good stuff" | Presenting only positives with no tradeoffs or risks |
+| `missing_conditions` | "That only works if ___" | Not considering what needs to be true for the plan to work |
 
 #### Act 4: Doesn't Fit Together
 
@@ -108,11 +108,11 @@ The student notices that an important consideration is absent.
 
 The student compares two parts of the discussion and notices they don't align.
 
-| Pattern | Plain-language name | What it looks like |
+| Pattern (canonical ID) | Plain-language name | What it looks like |
 |---------|--------------------|--------------------|
-| Conclusion exceeds evidence | "They're claiming way more than they showed" | The final claim goes far beyond what the discussion established |
-| Parts contradict | "Wait, that's the opposite of what they said before" | Different speakers or moments present conflicting information |
-| Solution doesn't match problem | "That doesn't solve what they said the problem was" | The proposed action doesn't address the stated goal |
+| `conclusion_exceeds_evidence` | "They're claiming way more than they showed" | The final claim goes far beyond what the discussion established |
+| `parts_contradict` | "Wait, that's the opposite of what they said before" | Different speakers or moments present conflicting information |
+| `solution_doesnt_match_problem` | "That doesn't solve what they said the problem was" | The proposed action doesn't address the stated goal |
 
 #### Act 5: Not Really Resolved
 
@@ -120,12 +120,12 @@ The student compares two parts of the discussion and notices they don't align.
 
 The student notices that the group's process of reaching a conclusion was flawed.
 
-| Pattern | Plain-language name | What it looks like |
+| Pattern (canonical ID) | Plain-language name | What it looks like |
 |---------|--------------------|--------------------|
-| Abandoned concern | "Someone raised a good point but gave up on it" | A valid point is dropped after pushback without being addressed |
-| Fake agreement | "They said they agreed but they actually didn't" | The group "agrees" but members have unresolved contradictions |
-| Steamrolled | "One person just kept talking louder until everyone gave in" | A less confident member yields not because they were wrong but because they couldn't sustain the argument |
-| Harmony over accuracy | "They just wanted everyone to feel included, not to get it right" | The group prioritizes everyone feeling good over actually solving the problem |
+| `abandoned_concern` | "Someone raised a good point but gave up on it" | A valid point is dropped after pushback without being addressed |
+| `fake_agreement` | "They said they agreed but they actually didn't" | The group "agrees" but members have unresolved contradictions |
+| `steamrolled` | "One person just kept talking louder until everyone gave in" | A less confident member yields not because they were wrong but because they couldn't sustain the argument |
+| `harmony_over_accuracy` | "They just wanted everyone to feel included, not to get it right" | The group prioritizes everyone feeling good over actually solving the problem |
 
 ### Layer 2: Thinking Behaviors
 
@@ -133,16 +133,16 @@ A curated library of cognitive patterns, drawn from cognitive science and bias r
 
 **Intentional mix of individual and social behaviors.** The library includes both individual cognitive patterns (how a person processes information on their own) and social dynamics (how group interaction distorts thinking). Both are needed: individual biases transfer to students' own reading, researching, and opinion-forming; social biases transfer to their PBL teamwork, group discussions, and consensus-building. In a 2-3 persona discussion, individual biases surface in what a persona *says* (their claims and reasoning), while social biases surface in how personas *interact* (how they respond to challenges and reach agreement).
 
-| Thinking behavior | Plain-language name | What it looks like | Formal term |
+| Canonical ID | Plain-language name | What it looks like | Formal term |
 |-------------------|--------------------|--------------------|-------------|
-| Only seeing what you want to see | "They only paid attention to things that agreed with them" | Seeking, favoring, or remembering only information that confirms existing beliefs; ignoring or dismissing contradictory evidence | Confirmation bias |
-| Sticking with the first thing you heard | "They got stuck on the first thing they heard and couldn't let go" | Over-relying on the first piece of information encountered, letting it shape all subsequent thinking | Anchoring bias |
-| Feelings instead of evidence | "They believed it because they felt strongly, not because they had proof" | Making conclusions based on emotions, enthusiasm, or personal investment rather than on evidence and logic | Emotional reasoning |
-| All-or-nothing thinking | "They acted like it was either totally great or totally terrible" | Seeing things in only two categories — good or bad, right or wrong — without recognizing nuance or middle ground | Black-and-white thinking |
-| Going along with the group | "They just went along with everyone else instead of thinking for themselves" | Suppressing independent thinking to maintain group harmony; conforming to the majority without critical evaluation | Groupthink |
-| Trusting the speaker, not the evidence | "They believed it because of who said it, not because the evidence was good" | Accepting claims based on the speaker's confidence, role, or authority rather than evaluating the evidence independently | Overreliance on authority |
-| Only hearing one side | "They only looked at sources and opinions that agreed with them" | Surrounding oneself with information that reinforces existing views; not seeking out different perspectives | Echo chamber effect |
-| Narrow focus | "They only focused on one part and missed the bigger picture" | Concentrating on a single aspect while ignoring other relevant factors; inability to see the full scope of the issue | Tunnel vision |
+| `confirmation_bias` | "They only paid attention to things that agreed with them" | Seeking, favoring, or remembering only information that confirms existing beliefs; ignoring or dismissing contradictory evidence | Confirmation bias |
+| `anchoring_bias` | "They got stuck on the first thing they heard and couldn't let go" | Over-relying on the first piece of information encountered, letting it shape all subsequent thinking | Anchoring bias |
+| `emotional_reasoning` | "They believed it because they felt strongly, not because they had proof" | Making conclusions based on emotions, enthusiasm, or personal investment rather than on evidence and logic | Emotional reasoning |
+| `black_and_white_thinking` | "They acted like it was either totally great or totally terrible" | Seeing things in only two categories — good or bad, right or wrong — without recognizing nuance or middle ground | Black-and-white thinking |
+| `groupthink` | "They just went along with everyone else instead of thinking for themselves" | Suppressing independent thinking to maintain group harmony; conforming to the majority without critical evaluation | Groupthink |
+| `overreliance_on_authority` | "They believed it because of who said it, not because the evidence was good" | Accepting claims based on the speaker's confidence, role, or authority rather than evaluating the evidence independently | Overreliance on authority |
+| `echo_chamber` | "They only looked at sources and opinions that agreed with them" | Surrounding oneself with information that reinforces existing views; not seeking out different perspectives | Echo chamber effect |
+| `tunnel_vision` | "They only focused on one part and missed the bigger picture" | Concentrating on a single aspect while ignoring other relevant factors; inability to see the full scope of the issue | Tunnel vision |
 
 ### Flaw-Behavior Mapping
 
@@ -156,21 +156,21 @@ The relationship between argument flaws and thinking behaviors is **many-to-many
 | **Evaluation** (evaluate_script) | Primary behavior + plausible alternatives | The AI perspective suggests one, acknowledges others are defensible |
 | **Student-facing** (Perspectives app) | Open — student selects and explains | Supports perspective-taking and reasoned discussion; multiple answers can be valid |
 
-**Example: "Big claim, little evidence" can be caused by different behaviors:**
+**Example: `big_claim_little_evidence` can be caused by different behaviors:**
 
 | Thinking behavior | How it produces this flaw |
 |---|---|
-| Confirmation bias | They only sought evidence that agreed with them, so they ended up with very little |
-| Tunnel vision | They were so focused on one angle they didn't look for more evidence |
-| Overreliance on authority | They found one expert who agreed and stopped looking |
+| `confirmation_bias` | They only sought evidence that agreed with them, so they ended up with very little |
+| `tunnel_vision` | They were so focused on one angle they didn't look for more evidence |
+| `overreliance_on_authority` | They found one expert who agreed and stopped looking |
 
-**Example: Confirmation bias can produce different argument flaws:**
+**Example: `confirmation_bias` can produce different argument flaws:**
 
-| Argument flaw | How confirmation bias produces it |
+| Argument flaw | How `confirmation_bias` produces it |
 |---|---|
-| Big claim, little evidence | Only finding sources that support the view |
-| Missing downsides | Ignoring negative information about the preferred solution |
-| Abandoned concern | Dismissing a peer's valid objection because it challenges their belief |
+| `big_claim_little_evidence` | Only finding sources that support the view |
+| `missing_downsides` | Ignoring negative information about the preferred solution |
+| `abandoned_concern` | Dismissing a peer's valid objection because it challenges their belief |
 
 ### Flaw-Behavior Combination Library
 
@@ -180,12 +180,12 @@ Example combinations:
 
 | Argument flaw | Thinking behavior | What it looks like in a discussion |
 |---------------|------------------|------------------------------------|
-| Big claim, little evidence | Confirmation bias | A persona finds one source that supports their view and treats it as conclusive proof, ignoring other information |
-| One example as proof | Overreliance on authority | A persona interviews one enthusiastic adult and treats their opinion as settling the question |
-| Missing downsides | Tunnel vision | A persona is so focused on one benefit that they never consider any risks or drawbacks |
-| Abandoned concern | Groupthink | A persona raises a valid objection but backs down because the rest of the group isn't receptive |
-| Correlation as causation | Feelings instead of evidence | A persona is personally invested in the project and assumes their positive experience caused the positive results |
-| Fake agreement | Going along with the group | Personas "agree" on a plan that papers over contradictions because no one wants to be the holdout |
+| `big_claim_little_evidence` | `confirmation_bias` | A persona finds one source that supports their view and treats it as conclusive proof, ignoring other information |
+| `one_example_as_proof` | `overreliance_on_authority` | A persona interviews one enthusiastic adult and treats their opinion as settling the question |
+| `missing_downsides` | `tunnel_vision` | A persona is so focused on one benefit that they never consider any risks or drawbacks |
+| `abandoned_concern` | `groupthink` | A persona raises a valid objection but backs down because the rest of the group isn't receptive |
+| `correlation_as_causation` | `emotional_reasoning` | A persona is personally invested in the project and assumes their positive experience caused the positive results |
+| `fake_agreement` | `groupthink` | Personas "agree" on a plan that papers over contradictions because no one wants to be the holdout |
 
 The full combination library will be expanded as scenarios are developed. Not every combination is equally productive — some pairings are natural and some are forced. The library should grow from what works in practice.
 
@@ -320,8 +320,8 @@ personas:
     weaknesses: [string] # what they'll get wrong and why
 discussion_arc: string           # how it opens, where tension builds, how it resolves or fails to resolve
 target_flaws:
-  - flaw_pattern: string        # canonical ID from argument flaw library, e.g., "big claim, little evidence"
-    thinking_behavior: string   # canonical ID from thinking behavior library, e.g., "confirmation bias"
+  - flaw_pattern: string        # canonical ID from argument flaw library, e.g., "big_claim_little_evidence"
+    thinking_behavior: string   # canonical ID from thinking behavior library, e.g., "confirmation_bias"
     surfaces_in: [turn numbers] # where in the discussion this appears
     persona: string             # who produces it
 turn_outline:
@@ -373,10 +373,10 @@ Examples for flaw-surfacing turns:
 
 | Target flaw | BAD accomplishes (reveals intent) | GOOD accomplishes (steers naturally) |
 |---|---|---|
-| Big claim, little evidence | "Make a sweeping claim supported by insufficient evidence" | "Share what you found from your one article and explain why you think it settles the question" |
-| Correlation as causation | "Treat a correlation as proof of causation" | "Point out that the students who participated the most had the biggest change, and explain why you think the garden made the difference" |
-| Abandoned concern | "Raise a valid concern and then drop it when pushed back on" | "Bring up the question about the salad bar, but acknowledge the group seems ready to move on" |
-| Missing practical details | "Omit feasibility analysis" | "Describe your plan for the garden — focus on what it would look like and what it would grow" |
+| `big_claim_little_evidence` | "Make a sweeping claim supported by insufficient evidence" | "Share what you found from your one article and explain why you think it settles the question" |
+| `correlation_as_causation` | "Treat a correlation as proof of causation" | "Point out that the students who participated the most had the biggest change, and explain why you think the garden made the difference" |
+| `abandoned_concern` | "Raise a valid concern and then drop it when pushed back on" | "Bring up the question about the salad bar, but acknowledge the group seems ready to move on" |
+| `missing_practical_details` | "Omit feasibility analysis" | "Describe your plan for the garden — focus on what it would look like and what it would grow" |
 
 Examples for non-flaw turns:
 
@@ -435,11 +435,11 @@ annotations:
       turn: string       # e.g., turn_03
       sentences: [string] # e.g., [turn_03.s02, turn_03.s03]
     argument_flaw:
-      pattern: string    # from library, e.g., "big claim, little evidence"
+      pattern: string    # from library, e.g., "big_claim_little_evidence"
       detection_act: string  # act_id from library, e.g., "not_enough_support"
       explanation: string    # 6th-grade explanation, framed as a perspective
     thinking_behavior:
-      pattern: string    # from library, e.g., "confirmation bias"
+      pattern: string    # from library, e.g., "confirmation_bias"
       explanation: string    # 6th-grade explanation
       plausible_alternatives: [string]  # other defensible behaviors
     planned: boolean     # was this a target flaw or an emergent one?
@@ -462,7 +462,7 @@ facilitation_guide:
     phase_3_minutes: integer         # recommended, e.g., 10-15
     phase_4_minutes: integer         # recommended, e.g., 10-15
   what_to_expect:                    # teacher's map of the transcript
-    - flaw: string                   # e.g., "big claim, little evidence"
+    - flaw: string                   # e.g., "big_claim_little_evidence"
       turns: string                  # e.g., "turns 5-8 (Mia)"
       signal: string                 # what students should notice, e.g., "Mia says 'the research proves...'"
       difficulty: string             # "most will catch it", "harder to spot", "easy to miss"
@@ -593,7 +593,7 @@ detection_acts:
     name: string                      # e.g., "Something's wrong"
     student_question: string          # e.g., "That's not right / That's not how it works"
     patterns:
-      - pattern_id: string            # canonical ID, e.g., "factual error"
+      - pattern_id: string            # canonical ID, e.g., "factual_error"
         plain_language: string        # e.g., "That's not true"
         description: string           # e.g., "A specific claim that is verifiably wrong"
 ```
@@ -602,7 +602,7 @@ detection_acts:
 
 ```yaml
 thinking_behaviors:
-  - behavior_id: string               # canonical ID, e.g., "confirmation bias"
+  - behavior_id: string               # canonical ID, e.g., "confirmation_bias"
     name: string                      # plain-language name, e.g., "Only seeing what you want to see"
     description: string               # what it looks like, in 6th-grade language
     formal_term: string               # e.g., "Confirmation bias" — for teacher reference
@@ -633,10 +633,10 @@ personas:
 
 | Field | Student sees? | Rationale |
 |---|---|---|
-| `argument_flaw.pattern` | Yes | Students see the flaw name (e.g., "big claim, little evidence") |
+| `argument_flaw.pattern` | Yes | Students see the flaw name (e.g., `big_claim_little_evidence` → resolved to plain-language name via library) |
 | `argument_flaw.detection_act` | Yes | Students see which detection question applies |
 | `argument_flaw.explanation` | Yes | The AI's perspective in 6th-grade language |
-| `thinking_behavior.pattern` | Yes | Students see the behavior name (e.g., "confirmation bias") |
+| `thinking_behavior.pattern` | Yes | Students see the behavior name (e.g., `confirmation_bias` → resolved to plain-language name via library) |
 | `thinking_behavior.explanation` | Yes | The AI's perspective on why it happened |
 | `thinking_behavior.plausible_alternatives` | No | Teacher uses these from the cheat sheet to prompt discussion verbally |
 | `planned` | No | Implementation detail — students don't know which flaws were designed |
