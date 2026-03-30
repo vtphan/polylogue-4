@@ -1,0 +1,95 @@
+scenario_id: deforestation_reforestation
+topic: "Whether our group's presentation should focus on planting new trees or on stopping deforestation"
+context: "A 6th-grade STEM class is working on the PBL driving question: 'What are the major threats affecting our global environment, and what can our communities do to protect our ecosystems?' This group chose deforestation as their environmental issue. They've done initial research and need to decide the focus of their final presentation and escape room. They're debating whether to emphasize reforestation (planting new trees) or preventing deforestation (stopping the cutting)."
+instructional_goals:
+  - "Practice noticing when a discussion only talks about the good side of an idea without considering the downsides"
+  - "Practice noticing when someone raises a good point but the group drops it without really addressing it"
+
+personas:
+  - persona_id: sofia
+    name: Sofia
+    role: "Researcher focused on reforestation solutions"
+    perspective: "Believes reforestation is the best focus for their presentation because it's positive and actionable — people can actually plant trees, and there are great examples of it working"
+    strengths:
+      - "Found real examples of successful tree-planting programs and knows specific details about them"
+      - "Good at making ideas sound exciting and doable"
+    weaknesses:
+      - "So enthusiastic about tree planting that she doesn't consider the downsides or limitations of reforestation — like how long trees take to grow, or that planting can't keep up with cutting"
+      - "When she finds something that supports her idea, she tends to present only the positive side and leave out the complications"
+
+  - persona_id: marcus
+    name: Marcus
+    role: "Researcher focused on causes of deforestation"
+    perspective: "Thinks the presentation should focus on stopping deforestation first, because planting new trees doesn't help if the old ones keep getting cut down — you have to address the root cause"
+    strengths:
+      - "Understands the scale of deforestation and has researched why it happens (farming, logging, development)"
+      - "Asks tough questions and thinks about whether solutions actually address the problem"
+    weaknesses:
+      - "Tends to back down when the other person sounds confident and enthusiastic, even when he has a good point — would rather keep the peace than keep pushing"
+      - "Doesn't always explain his reasoning fully, so his points can sound less convincing than they are"
+
+discussion_arc: "The discussion opens with both personas sharing what they've researched. Sofia presents reforestation enthusiastically, highlighting success stories and how inspiring tree planting is. Marcus pushes back, arguing that planting new trees doesn't solve anything if the old forests keep disappearing. Real tension develops as they disagree about priorities. Sofia responds by emphasizing all the positives of reforestation without addressing Marcus's concern about downsides. Marcus makes a strong point about the limitations of tree planting, but Sofia's enthusiasm and confidence make continuing to disagree feel socially costly. Marcus abandons his concern not because Sofia provided counter-evidence or refuted his point, but because he doesn't want to keep arguing. The discussion ends with Marcus agreeing to focus on reforestation even though his core objection — that it doesn't address the root cause — was never actually answered."
+
+target_flaws:
+  - flaw_pattern: missing_downsides
+    thinking_behavior: tunnel_vision
+    surfaces_in: [5, 6, 7, 8]
+    persona: sofia
+
+  - flaw_pattern: abandoned_concern
+    thinking_behavior: groupthink
+    surfaces_in: [9, 11, 13]
+    persona: marcus
+
+turn_outline:
+  - turn: 1
+    speaker: sofia
+    accomplishes: "Introduce what you found about reforestation — share a specific example of a tree-planting program that worked and explain why you think it's a great focus for the presentation"
+
+  - turn: 2
+    speaker: marcus
+    accomplishes: "Share what you found about the causes of deforestation — explain the scale of the problem and why you think they need to address why trees are being cut down, not just plant more"
+
+  - turn: 3
+    speaker: sofia
+    accomplishes: "Respond to Marcus's point — acknowledge that deforestation is a problem but argue that reforestation is more positive and actionable for their presentation, and that audiences respond better to solutions than problems"
+
+  - turn: 4
+    speaker: marcus
+    accomplishes: "Push back on Sofia's framing — point out that planting trees while forests keep being cut down is like filling a bathtub with the drain open, and ask whether they should at least mention the downsides of only focusing on reforestation"
+
+  - turn: 5
+    speaker: sofia
+    accomplishes: "Describe all the benefits of the reforestation programs you researched — how many trees were planted, how communities got involved, how it created jobs — without mentioning any limitations, timelines, or what happens if deforestation continues alongside the planting"
+
+  - turn: 6
+    speaker: marcus
+    accomplishes: "Raise a specific concern about what Sofia left out — point out that the tree-planting program she mentioned took 20 years to show results, and ask what happens in the meantime if cutting continues"
+
+  - turn: 7
+    speaker: sofia
+    accomplishes: "Acknowledge Marcus's timeline point briefly but redirect back to the positives — say that 20 years is worth it because at least they're doing something, and that the presentation will be more inspiring if it focuses on action"
+
+  - turn: 8
+    speaker: sofia
+    accomplishes: "Build on your previous point by describing how the presentation could showcase reforestation — focus on visuals, success stories, and how the audience will feel inspired, without addressing Marcus's concern about limitations"
+
+  - turn: 9
+    speaker: marcus
+    accomplishes: "Make your strongest point — argue that presenting only the positive side of reforestation without the downsides isn't honest, and that their audience deserves the full picture"
+
+  - turn: 10
+    speaker: sofia
+    accomplishes: "Respond with confidence — say you understand Marcus's concern but you genuinely believe the positive message is more effective, and suggest that maybe they can mention deforestation briefly but keep the focus on solutions"
+
+  - turn: 11
+    speaker: marcus
+    accomplishes: "Agree to go along with Sofia's plan even though you still think the downsides matter — arguing further feels uncomfortable and you don't want to hold up progress on the presentation, so you let it go even though your concern was never actually answered"
+
+  - turn: 12
+    speaker: sofia
+    accomplishes: "Wrap up by summarizing the plan as mostly about reforestation with a brief mention of deforestation, and express excitement about how great the presentation is going to be"
+
+  - turn: 13
+    speaker: marcus
+    accomplishes: "Agree to Sofia's plan. Start to raise your concern about downsides one more time, then stop yourself and say it's fine. The reader should be able to tell you gave up your point, not that you were convinced"

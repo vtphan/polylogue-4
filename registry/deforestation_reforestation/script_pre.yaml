@@ -1,0 +1,90 @@
+scenario_id: deforestation_reforestation
+
+personas:
+  - persona_id: sofia
+    name: Sofia
+    role: "Researcher focused on reforestation solutions"
+
+  - persona_id: marcus
+    name: Marcus
+    role: "Researcher focused on causes of deforestation"
+
+turns:
+  - speaker: sofia
+    sentences:
+      - text: "Okay so I found this really cool thing — there's a program in Ethiopia where they planted 350 million trees in one single day."
+      - text: "And it actually worked! The area started getting greener and people got really into it."
+      - text: "I think we should make our presentation about reforestation because it's so inspiring and people can actually do something about it."
+
+  - speaker: marcus
+    sentences:
+      - text: "Yeah that's cool, but I was looking into why deforestation happens in the first place, and it's really big."
+      - text: "Every year they cut down millions of acres of forest for farming and building and logging."
+      - text: "I think our presentation should talk about that, because if we don't stop the cutting, planting new trees doesn't really fix anything."
+
+  - speaker: sofia
+    sentences:
+      - text: "I mean yeah, deforestation is bad, obviously, but don't you think it's kind of depressing to just talk about the problem?"
+      - text: "If we do reforestation, we're showing people something they can actually go out and do."
+      - text: "People want to hear about solutions, not just bad news."
+
+  - speaker: marcus
+    sentences:
+      - text: "But that's like — okay, imagine you're filling up a bathtub but the drain is open."
+      - text: "You can keep pouring water in, but if the drain is open it's never gonna fill up."
+      - text: "That's what planting trees is like if we don't stop the cutting."
+      - text: "Shouldn't we at least mention that there are downsides to only focusing on reforestation?"
+
+  - speaker: sofia
+    sentences:
+      - text: "Okay but listen to what these programs actually did."
+      - text: "The one in Ethiopia got whole communities involved — thousands of people came out and planted trees together and it created jobs and everything."
+      - text: "And there's one in India where they planted 50 million trees and it brought back animals that had left the area."
+      - text: "See, it works! The presentation could show all of that, and the escape room could have people figure out how to plan their own tree-planting project."
+
+  - speaker: marcus
+    sentences:
+      - text: "Wait, but the Ethiopia one — I read about that too."
+      - text: "It took like 20 years for those trees to actually grow big enough to make a real difference."
+      - text: "So what's happening during those 20 years while they're still cutting down the old forests?"
+
+  - speaker: sofia
+    sentences:
+      - text: "I mean, 20 years sounds like a lot, but at least they're doing something, right?"
+      - text: "The point is you have to start somewhere."
+      - text: "And the presentation will be way more exciting if we focus on the action part — all the good stuff these programs did — instead of all the stuff that's going wrong."
+
+  - speaker: sofia
+    sentences:
+      - text: "Oh and I was thinking — for the presentation we could show before and after pictures of places where they planted trees."
+      - text: "Like how it was all dry and empty and then after the planting it's green and there are birds and stuff."
+      - text: "That's the kind of thing that makes people want to go out and do something!"
+
+  - speaker: marcus
+    sentences:
+      - text: "Sofia, I get that it looks cool, but if we only show the good parts and skip all the problems, that's not really honest."
+      - text: "Our audience is gonna think tree planting just fixes everything, and it doesn't."
+      - text: "They deserve to know the full picture."
+
+  - speaker: sofia
+    sentences:
+      - text: "I hear you, I do, but I really think the positive message is what's gonna work best."
+      - text: "We could mention deforestation at the beginning, like for context, and then spend most of the time on reforestation and what people can do."
+      - text: "That way we're covering both but the focus stays on solutions."
+
+  - speaker: marcus
+    sentences:
+      - text: "I guess... yeah, okay."
+      - text: "I still think the downsides matter, but if you think this way works better then let's just do it your way."
+      - text: "I don't want to hold us up — we still have to build the escape room too."
+
+  - speaker: sofia
+    sentences:
+      - text: "Yes! Okay so the plan is we open with a quick bit about deforestation, and then the rest is all about reforestation — the success stories, the community stuff, the before and after photos."
+      - text: "This is gonna be so good, I'm actually really excited."
+
+  - speaker: marcus
+    sentences:
+      - text: "Yeah, sounds good."
+      - text: "I still kinda think we should say something about how planting can't keep up with the cutting — actually, never mind, it's fine."
+      - text: "Let's go with your plan."

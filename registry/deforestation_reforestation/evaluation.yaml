@@ -1,0 +1,108 @@
+scenario_id: deforestation_reforestation
+
+annotations:
+  - annotation_id: ann_01
+    location:
+      turn: turn_05
+      sentences: [turn_05.s01, turn_05.s02, turn_05.s03, turn_05.s04, turn_07.s01, turn_07.s02, turn_07.s03, turn_08.s01, turn_08.s02, turn_08.s03]
+    argument_flaw:
+      pattern: missing_downsides
+      detection_act: somethings_missing
+      explanation: "The AI thinks Sofia might only be showing one side of the story here. She talks about all the great things reforestation programs did — communities coming together, animals coming back, cool before-and-after photos — but she never mentions any downsides. She doesn't talk about how long the trees take to grow, what happens if cutting continues, or whether planting can actually keep up with deforestation. Marcus keeps asking about these things, but Sofia keeps steering back to the positives."
+    thinking_behavior:
+      pattern: tunnel_vision
+      explanation: "The AI thinks Sofia might be so focused on how exciting and inspiring reforestation is that she's missing the bigger picture. She found all these amazing success stories and got so locked in on the positive side that she can't see the parts that don't fit her vision — like the 20-year timeline or the fact that cutting is still happening."
+      plausible_alternatives:
+        - confirmation_bias
+        - emotional_reasoning
+    planned: true
+
+  - annotation_id: ann_02
+    location:
+      turn: turn_11
+      sentences: [turn_09.s01, turn_09.s02, turn_09.s03, turn_11.s01, turn_11.s02, turn_11.s03, turn_13.s01, turn_13.s02, turn_13.s03]
+    argument_flaw:
+      pattern: abandoned_concern
+      detection_act: not_really_resolved
+      explanation: "The AI thinks Marcus raised a really important point that never got answered. In turn 9, he says that only showing the good parts of reforestation 'isn't really honest' and that the audience 'deserves the full picture.' That's a strong argument. But by turn 11, he gives in — not because Sofia proved him wrong, but because he doesn't want to hold things up. And in turn 13, he actually starts to bring it up again ('I still kinda think we should say something about how planting can't keep up with the cutting') but then stops himself and says 'never mind, it's fine.' His concern was dropped, not answered."
+    thinking_behavior:
+      pattern: groupthink
+      explanation: "The AI thinks Marcus might have gone along with Sofia's plan not because he changed his mind, but because disagreeing felt uncomfortable. He even says 'I don't want to hold us up' — which sounds like he cares more about keeping things moving and not being difficult than about saying what he really thinks. In turn 13 he literally starts to speak up and then stops himself."
+      plausible_alternatives:
+        - overreliance_on_authority
+        - emotional_reasoning
+    planned: true
+
+summary:
+  total_annotations: 2
+  target_flaws_surfaced: 2
+  target_flaws_planned: 2
+
+quality_assessment:
+  all_targets_surfaced: true
+  issues: []
+
+facilitation_guide:
+  timing:
+    phase_1_minutes: 12
+    phase_2_minutes: 10
+    phase_3_minutes: 13
+    phase_4_minutes: 15
+
+  what_to_expect:
+    - flaw: missing_downsides
+      turns: "turns 5, 7, and 8 (Sofia)"
+      signal: "Sofia lists benefit after benefit — community involvement, jobs, animals coming back, before-and-after photos — without ever mentioning a single downside, even after Marcus directly asks about limitations"
+      difficulty: most_will_catch
+
+    - flaw: abandoned_concern
+      turns: "turns 9, 11, and 13 (Marcus)"
+      signal: "Marcus says 'that's not really honest' and 'they deserve the full picture' in turn 9, then caves in turn 11 saying 'let's just do it your way,' and in turn 13 starts to bring it up again but stops mid-sentence with 'actually, never mind, it's fine'"
+      difficulty: harder_to_spot
+
+  phase_1:
+    - prompt: "Re-read turns 5 through 8. Sofia is talking a lot about reforestation. Make a list of all the good things she mentions. Now — did she mention anything bad or any problems? What does that tell you?"
+      targets: missing_downsides
+
+    - prompt: "Follow just Marcus's turns from turn 9 to 13. Does he change his mind, or does he just stop arguing? What's the difference?"
+      targets: abandoned_concern
+
+    - prompt: "Look at turn 4, where Marcus asks a direct question about downsides. Then read Sofia's response in turn 5. Did she actually answer his question?"
+      targets: missing_downsides
+
+    - prompt: "Read turn 13 really carefully — what does Marcus start to say, and what does he do next? Why do you think he stopped?"
+      targets: abandoned_concern
+
+  phase_2:
+    - flaw: missing_downsides
+      narrowed_options:
+        - tunnel_vision
+        - confirmation_bias
+        - emotional_reasoning
+      perspective_prompt: "Imagine you're Sofia. You found these incredible stories about tree planting — communities coming together, whole landscapes turning green. You're pumped about making an amazing presentation. Someone asks you about the downsides. Why might you skip over them and keep talking about the good stuff?"
+
+    - flaw: abandoned_concern
+      narrowed_options:
+        - groupthink
+        - overreliance_on_authority
+        - emotional_reasoning
+      perspective_prompt: "Imagine you're Marcus. You believe the audience deserves the full picture, and you said so. But Sofia sounds really confident and excited, and you still have to build the escape room together. Why might you say 'let's just do it your way' even though she never actually proved you wrong?"
+
+  phase_4:
+    - type: student_victory
+      prompt: "Some of you noticed that Sofia only talks about the good side of reforestation. That's exactly what the AI noticed too. Nice work — now can you point to the specific turns where she does this?"
+
+    - type: challenge
+      prompt: "The AI says Marcus gave up his point because of groupthink — he just went along with Sofia instead of thinking for himself. But some of you might have picked a different reason. If you said something else, make your case — why does your explanation fit better?"
+
+    - type: missed_flaw
+      prompt: "Let's look at turns 11 and 13 together. Marcus agrees with Sofia's plan both times. But look closely — did Sofia ever actually answer his concern about the downsides? What's the difference between being convinced and just giving up?"
+
+    - type: challenge
+      prompt: "Here's a tough one: Sofia says 'I hear you, I do' in turn 10. Does she really hear Marcus? What would it look like if she actually addressed his point instead of just acknowledging it?"
+
+    - type: missed_flaw
+      prompt: "Go back to turn 13. Marcus starts to say something about how 'planting can't keep up with the cutting' and then says 'never mind.' Why do you think he stopped? What does that tell you about how the discussion ended?"
+
+    - type: student_victory
+      prompt: "If you caught that Marcus's concern about honesty in turn 9 was never actually resolved — that's a big one. The group decided on a plan, but did they actually work through their disagreement, or did one person just stop pushing?"

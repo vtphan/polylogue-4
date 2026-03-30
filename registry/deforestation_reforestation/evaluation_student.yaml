@@ -1,0 +1,57 @@
+scenario_id: deforestation_reforestation
+annotations:
+- annotation_id: ann_01
+  location:
+    turn: turn_05
+    sentences:
+    - turn_05.s01
+    - turn_05.s02
+    - turn_05.s03
+    - turn_05.s04
+    - turn_07.s01
+    - turn_07.s02
+    - turn_07.s03
+    - turn_08.s01
+    - turn_08.s02
+    - turn_08.s03
+  argument_flaw:
+    pattern: missing_downsides
+    detection_act: somethings_missing
+    explanation: The AI thinks Sofia might only be showing one side of the story here. She talks about all the great things
+      reforestation programs did — communities coming together, animals coming back, cool before-and-after photos — but she
+      never mentions any downsides. She doesn't talk about how long the trees take to grow, what happens if cutting continues,
+      or whether planting can actually keep up with deforestation. Marcus keeps asking about these things, but Sofia keeps
+      steering back to the positives.
+  thinking_behavior:
+    pattern: tunnel_vision
+    explanation: The AI thinks Sofia might be so focused on how exciting and inspiring reforestation is that she's missing
+      the bigger picture. She found all these amazing success stories and got so locked in on the positive side that she can't
+      see the parts that don't fit her vision — like the 20-year timeline or the fact that cutting is still happening.
+- annotation_id: ann_02
+  location:
+    turn: turn_11
+    sentences:
+    - turn_09.s01
+    - turn_09.s02
+    - turn_09.s03
+    - turn_11.s01
+    - turn_11.s02
+    - turn_11.s03
+    - turn_13.s01
+    - turn_13.s02
+    - turn_13.s03
+  argument_flaw:
+    pattern: abandoned_concern
+    detection_act: not_really_resolved
+    explanation: The AI thinks Marcus raised a really important point that never got answered. In turn 9, he says that only
+      showing the good parts of reforestation 'isn't really honest' and that the audience 'deserves the full picture.' That's
+      a strong argument. But by turn 11, he gives in — not because Sofia proved him wrong, but because he doesn't want to
+      hold things up. And in turn 13, he actually starts to bring it up again ('I still kinda think we should say something
+      about how planting can't keep up with the cutting') but then stops himself and says 'never mind, it's fine.' His concern
+      was dropped, not answered.
+  thinking_behavior:
+    pattern: groupthink
+    explanation: The AI thinks Marcus might have gone along with Sofia's plan not because he changed his mind, but because
+      disagreeing felt uncomfortable. He even says 'I don't want to hold us up' — which sounds like he cares more about keeping
+      things moving and not being difficult than about saying what he really thinks. In turn 13 he literally starts to speak
+      up and then stops himself.
