@@ -1,0 +1,70 @@
+scenario_id: cafeteria_compostable_trays
+
+personas:
+  - persona_id: maya
+    name: Maya
+    role: "Lead researcher on plastic waste solutions"
+
+  - persona_id: jordan
+    name: Jordan
+    role: "Data tracker for the group's research"
+
+turns:
+  - speaker: maya
+    sentences:
+      - text: "Okay so I found this really good article last night about compostable trays."
+      - text: "Some schools have already switched and it's working really well."
+      - text: "I think we should tell the class that our school should do the same thing."
+
+  - speaker: jordan
+    sentences:
+      - text: "Oh cool, that sounds interesting."
+      - text: "Where's the article from though?"
+      - text: "Is it from a science website or just like someone's blog?"
+
+  - speaker: maya
+    sentences:
+      - text: "It was from this environmental news site, and it talked about how compostable trays break down way faster than plastic and don't sit in landfills forever."
+      - text: "The research proves that compostable trays are the best option for any school that wants to reduce waste."
+      - text: "It was one article but it covered pretty much everything we need to know."
+
+  - speaker: jordan
+    sentences:
+      - text: "Okay but how many studies did the article actually look at?"
+      - text: "Did they mention any schools where it didn't work out, or was it only good examples?"
+
+  - speaker: maya
+    sentences:
+      - text: "I looked at a bunch of stuff online and everything I found said compostable trays are great."
+      - text: "And there was this one school in Oregon that switched last year and their cafeteria waste went down by 40 percent."
+      - text: "That's a huge drop — if it worked there, it'll work at our school too."
+
+  - speaker: jordan
+    sentences:
+      - text: "Forty percent is a lot, but that's just one school."
+      - text: "What if their cafeteria is way smaller than ours, or what if compostable trays cost a lot more?"
+      - text: "It might not work the same way here."
+
+  - speaker: maya
+    sentences:
+      - text: "None of the sources I found said anything bad about compostable trays though."
+      - text: "Every single article was positive."
+      - text: "If there were real problems, at least one of my sources would have mentioned it."
+
+  - speaker: jordan
+    sentences:
+      - text: "I mean, maybe."
+      - text: "You did spend more time on this than I did, and I don't want to be the one slowing us down."
+      - text: "We still have to make the slides and everything."
+
+  - speaker: maya
+    sentences:
+      - text: "Exactly, and we're running out of time."
+      - text: "Let's just present compostable trays as a proven solution — we have the data from that Oregon school."
+      - text: "It's going to be a really strong presentation."
+
+  - speaker: jordan
+    sentences:
+      - text: "Okay yeah, let's go with it."
+      - text: "If we need more evidence we can always find some before the final version."
+      - text: "Let's start on the slides."

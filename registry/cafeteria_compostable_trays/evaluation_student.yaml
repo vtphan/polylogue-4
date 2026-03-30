@@ -1,0 +1,90 @@
+scenario_id: cafeteria_compostable_trays
+annotations:
+- annotation_id: ann_01
+  location:
+    turn: turn_03
+    sentences:
+    - turn_03.s02
+    - turn_03.s03
+  argument_flaw:
+    pattern: big_claim_little_evidence
+    detection_act: not_enough_support
+    explanation: The AI thinks Maya might be making a really big claim based on not very much. She says 'the research proves
+      that compostable trays are the best option for any school' — but she only read one article from one website. That's
+      a huge conclusion to draw from a single source.
+  thinking_behavior:
+    pattern: confirmation_bias
+    explanation: The AI thinks Maya might have already decided that compostable trays were the answer before she even finished
+      researching. She found one article that agreed with her, and she treated it like it covered everything she needed to
+      know — maybe because it told her what she already wanted to hear.
+- annotation_id: ann_02
+  location:
+    turn: turn_05
+    sentences:
+    - turn_05.s02
+    - turn_05.s03
+  argument_flaw:
+    pattern: one_example_as_proof
+    detection_act: not_enough_support
+    explanation: The AI thinks Maya might be treating one school's success as proof that it will work everywhere. She talks
+      about a school in Oregon that cut waste by 40 percent and then says 'if it worked there, it'll work at our school too.'
+      But one school's result doesn't automatically mean every school will get the same result.
+  thinking_behavior:
+    pattern: echo_chamber
+    explanation: The AI thinks Maya might have only been looking at sources that said good things about compostable trays.
+      She says 'everything I found said compostable trays are great' — which might mean she was searching in a way that only
+      showed her positive results, instead of looking for a mix of opinions.
+- annotation_id: ann_03
+  location:
+    turn: turn_07
+    sentences:
+    - turn_07.s01
+    - turn_07.s02
+    - turn_07.s03
+  argument_flaw:
+    pattern: missing_downsides
+    detection_act: somethings_missing
+    explanation: The AI thinks Maya might only be looking at the good stuff here. She says that because none of her sources
+      mentioned problems, there must not be any real problems. But just because she didn't find bad news doesn't mean bad
+      news doesn't exist — she might not have looked in the right places.
+  thinking_behavior:
+    pattern: echo_chamber
+    explanation: The AI thinks Maya might be stuck in an echo chamber — she only looked at sources that agreed with her, so
+      of course none of them said anything negative. If you only read articles that are pro-compostable trays, you'll never
+      see the downsides.
+- annotation_id: ann_04
+  location:
+    turn: turn_08
+    sentences:
+    - turn_08.s01
+    - turn_08.s02
+    - turn_08.s03
+  argument_flaw:
+    pattern: abandoned_concern
+    detection_act: not_really_resolved
+    explanation: The AI thinks Jordan might have given up on some really good questions without ever getting real answers.
+      Jordan asked about cost, cafeteria size, and whether one example is enough — but then backed down because Maya spent
+      more time researching and they were running out of time. Those questions were never actually answered.
+  thinking_behavior:
+    pattern: groupthink
+    explanation: The AI thinks Jordan might have gone along with Maya not because Maya proved him wrong, but because he didn't
+      want to slow the group down or seem difficult. He even says 'I don't want to be the one slowing us down' — which sounds
+      like he cared more about keeping the peace than getting the right answer.
+- annotation_id: ann_05
+  location:
+    turn: turn_09
+    sentences:
+    - turn_09.s01
+    - turn_09.s02
+    - turn_09.s03
+  argument_flaw:
+    pattern: conclusion_exceeds_evidence
+    detection_act: doesnt_fit_together
+    explanation: The AI thinks Maya might be claiming way more than she actually showed. She wants to present compostable
+      trays as 'a proven solution' — but all they really have is one article and one school's results. Calling something 'proven'
+      usually means there's a lot of strong evidence, and they don't have that.
+  thinking_behavior:
+    pattern: confirmation_bias
+    explanation: The AI thinks Maya might be so convinced compostable trays are the answer that she's describing her limited
+      evidence as if it's much stronger than it really is. When you already believe something, it's easy to feel like your
+      evidence proves more than it actually does.

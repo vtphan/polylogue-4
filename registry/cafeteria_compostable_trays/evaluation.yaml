@@ -1,0 +1,189 @@
+scenario_id: cafeteria_compostable_trays
+
+annotations:
+  - annotation_id: ann_01
+    location:
+      turn: turn_03
+      sentences: [turn_03.s02, turn_03.s03]
+    argument_flaw:
+      pattern: big_claim_little_evidence
+      detection_act: not_enough_support
+      explanation: "The AI thinks Maya might be making a really big claim based on not very much. She says 'the research proves that compostable trays are the best option for any school' — but she only read one article from one website. That's a huge conclusion to draw from a single source."
+    thinking_behavior:
+      pattern: confirmation_bias
+      explanation: "The AI thinks Maya might have already decided that compostable trays were the answer before she even finished researching. She found one article that agreed with her, and she treated it like it covered everything she needed to know — maybe because it told her what she already wanted to hear."
+      plausible_alternatives:
+        - anchoring_bias
+        - tunnel_vision
+    planned: true
+
+  - annotation_id: ann_02
+    location:
+      turn: turn_05
+      sentences: [turn_05.s02, turn_05.s03]
+    argument_flaw:
+      pattern: one_example_as_proof
+      detection_act: not_enough_support
+      explanation: "The AI thinks Maya might be treating one school's success as proof that it will work everywhere. She talks about a school in Oregon that cut waste by 40 percent and then says 'if it worked there, it'll work at our school too.' But one school's result doesn't automatically mean every school will get the same result."
+    thinking_behavior:
+      pattern: echo_chamber
+      explanation: "The AI thinks Maya might have only been looking at sources that said good things about compostable trays. She says 'everything I found said compostable trays are great' — which might mean she was searching in a way that only showed her positive results, instead of looking for a mix of opinions."
+      plausible_alternatives:
+        - confirmation_bias
+        - tunnel_vision
+    planned: true
+
+  - annotation_id: ann_03
+    location:
+      turn: turn_07
+      sentences: [turn_07.s01, turn_07.s02, turn_07.s03]
+    argument_flaw:
+      pattern: missing_downsides
+      detection_act: somethings_missing
+      explanation: "The AI thinks Maya might only be looking at the good stuff here. She says that because none of her sources mentioned problems, there must not be any real problems. But just because she didn't find bad news doesn't mean bad news doesn't exist — she might not have looked in the right places."
+    thinking_behavior:
+      pattern: echo_chamber
+      explanation: "The AI thinks Maya might be stuck in an echo chamber — she only looked at sources that agreed with her, so of course none of them said anything negative. If you only read articles that are pro-compostable trays, you'll never see the downsides."
+      plausible_alternatives:
+        - confirmation_bias
+        - black_and_white_thinking
+    planned: false
+
+  - annotation_id: ann_04
+    location:
+      turn: turn_08
+      sentences: [turn_08.s01, turn_08.s02, turn_08.s03]
+    argument_flaw:
+      pattern: abandoned_concern
+      detection_act: not_really_resolved
+      explanation: "The AI thinks Jordan might have given up on some really good questions without ever getting real answers. Jordan asked about cost, cafeteria size, and whether one example is enough — but then backed down because Maya spent more time researching and they were running out of time. Those questions were never actually answered."
+    thinking_behavior:
+      pattern: groupthink
+      explanation: "The AI thinks Jordan might have gone along with Maya not because Maya proved him wrong, but because he didn't want to slow the group down or seem difficult. He even says 'I don't want to be the one slowing us down' — which sounds like he cared more about keeping the peace than getting the right answer."
+      plausible_alternatives:
+        - overreliance_on_authority
+        - emotional_reasoning
+    planned: false
+
+  - annotation_id: ann_05
+    location:
+      turn: turn_09
+      sentences: [turn_09.s01, turn_09.s02, turn_09.s03]
+    argument_flaw:
+      pattern: conclusion_exceeds_evidence
+      detection_act: doesnt_fit_together
+      explanation: "The AI thinks Maya might be claiming way more than she actually showed. She wants to present compostable trays as 'a proven solution' — but all they really have is one article and one school's results. Calling something 'proven' usually means there's a lot of strong evidence, and they don't have that."
+    thinking_behavior:
+      pattern: confirmation_bias
+      explanation: "The AI thinks Maya might be so convinced compostable trays are the answer that she's describing her limited evidence as if it's much stronger than it really is. When you already believe something, it's easy to feel like your evidence proves more than it actually does."
+      plausible_alternatives:
+        - emotional_reasoning
+        - tunnel_vision
+    planned: false
+
+summary:
+  total_annotations: 5
+  target_flaws_surfaced: 2
+  target_flaws_planned: 2
+
+quality_assessment:
+  all_targets_surfaced: true
+  issues: []
+
+facilitation_guide:
+  timing:
+    phase_1_minutes: 12
+    phase_2_minutes: 10
+    phase_3_minutes: 13
+    phase_4_minutes: 15
+
+  what_to_expect:
+    - flaw: big_claim_little_evidence
+      turns: "turn 3 (Maya)"
+      signal: "Maya says 'the research proves that compostable trays are the best option for any school' but she only read one article"
+      difficulty: most_will_catch
+
+    - flaw: one_example_as_proof
+      turns: "turn 5 (Maya)"
+      signal: "Maya mentions one school in Oregon and says 'if it worked there, it'll work at our school too'"
+      difficulty: most_will_catch
+
+    - flaw: missing_downsides
+      turns: "turn 7 (Maya)"
+      signal: "Maya says 'none of the sources I found said anything bad' and concludes there are no real problems"
+      difficulty: harder_to_spot
+
+    - flaw: abandoned_concern
+      turns: "turns 8-10 (Jordan)"
+      signal: "Jordan says 'I don't want to be the one slowing us down' and drops all his earlier questions about cost and cafeteria size"
+      difficulty: harder_to_spot
+
+    - flaw: conclusion_exceeds_evidence
+      turns: "turn 9 (Maya)"
+      signal: "Maya calls compostable trays 'a proven solution' based on one article and one school"
+      difficulty: easy_to_miss
+
+  phase_1:
+    - prompt: "Re-read turn 3 carefully. Maya says the research 'proves' something. Ask yourself: how much research did she actually do?"
+      targets: big_claim_little_evidence
+
+    - prompt: "Look at turn 5. Maya talks about a school in Oregon. Is one school enough to know something will work at every school?"
+      targets: one_example_as_proof
+
+    - prompt: "Follow Jordan's turns from turn 4 all the way to turn 10. He asks some really good questions early on. What happens to those questions by the end?"
+      targets: abandoned_concern
+
+    - prompt: "Re-read turns 7 and 9. Pay attention to how Maya talks about problems and downsides. Does she think there are any?"
+      targets: missing_downsides
+
+  phase_2:
+    - flaw: big_claim_little_evidence
+      narrowed_options:
+        - confirmation_bias
+        - anchoring_bias
+        - tunnel_vision
+      perspective_prompt: "Imagine you're Maya. You found an article last night that really excited you about compostable trays. You're ready to present it to the class. Why might you say 'the research proves it' when you've only read one article?"
+
+    - flaw: one_example_as_proof
+      narrowed_options:
+        - echo_chamber
+        - confirmation_bias
+        - tunnel_vision
+      perspective_prompt: "Imagine you're Maya and you found a really impressive number — 40 percent less waste! That's exciting. Why might you assume that one school's success means it'll work at your school too?"
+
+    - flaw: missing_downsides
+      narrowed_options:
+        - echo_chamber
+        - confirmation_bias
+        - black_and_white_thinking
+      perspective_prompt: "Imagine you searched for information and every result you found was positive. Would you think 'maybe I'm not searching the right way' or would you think 'see, there really aren't any problems'? What might make someone think the second one?"
+
+    - flaw: abandoned_concern
+      narrowed_options:
+        - groupthink
+        - overreliance_on_authority
+        - emotional_reasoning
+      perspective_prompt: "Imagine you're Jordan. You have some good questions, but Maya has done more research than you and the presentation deadline is coming up. How would you feel about keeping on pushing back?"
+
+    - flaw: conclusion_exceeds_evidence
+      narrowed_options:
+        - confirmation_bias
+        - emotional_reasoning
+        - tunnel_vision
+      perspective_prompt: "Imagine you're Maya at the end of the conversation. You feel good about your research and you're ready to present. Why might you call something 'proven' even though you only have one real piece of data?"
+
+  phase_4:
+    - type: student_victory
+      prompt: "Some of you noticed that Maya says 'the research proves it' but she only read one article. That's a great catch — you spotted that a big claim needs big evidence to back it up."
+
+    - type: challenge
+      prompt: "The AI says Maya was in an echo chamber — only finding sources that agreed with her. But some of you might think she was just doing normal research and happened to find positive results. Both sides — what's your argument?"
+
+    - type: missed_flaw
+      prompt: "Let's look at Jordan for a second. In turns 4 and 6, he asks some really smart questions — about cost, about cafeteria size, about whether one example is enough. But by turn 8, he stops pushing. What changed? Why did he give up on those questions?"
+
+    - type: challenge
+      prompt: "The AI thinks Jordan gave in because of groupthink — he didn't want to slow the team down. But you could also argue he just trusted Maya because she did more research. Which do you think it was, and why?"
+
+    - type: missed_flaw
+      prompt: "In turn 9, Maya says compostable trays are 'a proven solution.' Think about what they actually have as evidence — one article and one school. Is that enough to call something 'proven'? What would you need to see before you used that word?"

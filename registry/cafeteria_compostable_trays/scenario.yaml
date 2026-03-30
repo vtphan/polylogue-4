@@ -1,0 +1,101 @@
+scenario_id: cafeteria_compostable_trays
+
+topic: "Whether the school cafeteria should switch to compostable trays to reduce plastic waste"
+
+context: >
+  A 6th-grade STEM class is working on the PBL driving question: "What are the
+  major threats affecting our global environment, and what can our communities do
+  to protect our ecosystems?" This group is investigating plastic waste at school
+  and found out that some schools have switched to compostable trays. They're
+  discussing whether their school should do the same.
+
+instructional_goals:
+  - "Practice evaluating whether someone's evidence is strong enough to support their claims"
+
+personas:
+  - persona_id: maya
+    name: Maya
+    role: "Lead researcher on plastic waste solutions"
+    perspective: "Believes compostable trays are the clear answer to the school's plastic waste problem based on her research"
+    strengths:
+      - "Genuinely motivated to find solutions to the plastic waste problem"
+      - "Good at finding and summarizing online articles"
+    weaknesses:
+      - "Only researched one source and treats it as if it covers everything"
+      - "Tends to focus on information that supports what she already wants to be true and ignores anything that might complicate the picture"
+      - "Treats a specific success story as proof that something will work everywhere"
+
+  - persona_id: jordan
+    name: Jordan
+    role: "Data tracker for the group's research"
+    perspective: "Wants to make sure their claims are backed by solid evidence before presenting to the class"
+    strengths:
+      - "Asks careful questions about where information comes from"
+      - "Understands that one example doesn't automatically prove a general point"
+    weaknesses:
+      - "Tends to back down when someone presents specific numbers confidently, even if the numbers come from limited data"
+      - "Would rather keep the project moving than keep arguing a point"
+
+discussion_arc: >
+  Maya opens excited about an article she found on compostable trays. Jordan asks
+  careful questions about the strength of her evidence — how many studies, what
+  kind of source. Maya responds with confidence, citing a single school's success
+  story and treating her one article as sufficient proof. She emphasizes that
+  everything she looked at was positive, never seeking out critical perspectives.
+  Jordan pushes back initially but gradually gives in — not because the evidence
+  is convincing, but because Maya seems so sure and Jordan doesn't want to hold
+  up the project. They agree to present compostable trays as a "proven solution"
+  despite the unresolved questions about whether one school's experience is enough
+  to generalize from.
+
+target_flaws:
+  - flaw_pattern: big_claim_little_evidence
+    thinking_behavior: confirmation_bias
+    surfaces_in: [3]
+    persona: maya
+
+  - flaw_pattern: one_example_as_proof
+    thinking_behavior: echo_chamber
+    surfaces_in: [5, 7]
+    persona: maya
+
+turn_outline:
+  - turn: 1
+    speaker: maya
+    accomplishes: "Opens by sharing that she found a great article about compostable trays and thinks it could be the solution for their project on plastic waste"
+
+  - turn: 2
+    speaker: jordan
+    accomplishes: "Shows interest but asks where the article is from and what kind of research it's based on"
+
+  - turn: 3
+    speaker: maya
+    accomplishes: "Describes what the article said enthusiastically and concludes that 'the research shows' compostable trays are the way to go — presenting her one article as if it represents broad scientific consensus"
+
+  - turn: 4
+    speaker: jordan
+    accomplishes: "Asks how many studies or schools the article actually looked at, and whether there were any that tried it and had problems"
+
+  - turn: 5
+    speaker: maya
+    accomplishes: "Says she looked at a bunch of sources and they all said compostable trays are great — then zeroes in on the story of one specific school that switched and saw their waste drop by 40%, presenting this as the proof that it works"
+
+  - turn: 6
+    speaker: jordan
+    accomplishes: "Points out that one school's experience might not mean it would work the same way at their school — asks if there could be differences like cost or cafeteria size"
+
+  - turn: 7
+    speaker: maya
+    accomplishes: "Explains that none of the sources she found mentioned any problems — every article was positive — so she's confident there aren't real downsides to worry about"
+
+  - turn: 8
+    speaker: jordan
+    accomplishes: "Acknowledges the unanswered questions but says Maya seems really sure and they need to keep the project moving — agrees to go along with it rather than hold things up"
+
+  - turn: 9
+    speaker: maya
+    accomplishes: "Enthusiastically agrees and suggests they present compostable trays as a 'proven solution' in their project"
+
+  - turn: 10
+    speaker: jordan
+    accomplishes: "Agrees to go with it, saying they can always look for more evidence later if they need to"

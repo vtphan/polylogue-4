@@ -58,18 +58,33 @@ Three quality gates catch problems at different stages:
 
 3. **Evaluator** (post-generation) — "Did the target flaws surface? Are they too subtle or too obvious?" Produces per-flaw quality assessment with recommendations (usable as-is, consider regeneration, needs new plan).
 
-### What data the system produces
+### Scenario artifacts
 
-Each scenario generates research-valuable artifacts:
+Each scenario produces 8 artifacts in `registry/{scenario_id}/`, organized by the pipeline stage that creates them. Together they form a complete record of how a scenario was designed, generated, refined, assessed, and prepared for classroom use.
 
-| Artifact | What it contains | Research value |
-|---|---|---|
-| `scenario.yaml` | Plan: personas, target flaws, turn outline | How flaws are designed — the "ground truth" |
-| `script.yaml` | Final transcript with enumerated turns and sentences | The stimulus students respond to |
-| `pedagogical_review.yaml` | Quality score (1-5), explanation, revision strategy | Pipeline quality metrics |
-| `evaluation.yaml` | All flaw annotations, quality assessment, facilitation guide | AI's "answer key" (one perspective, not ground truth) |
-| `evaluation_student.yaml` | Student-visible annotations only | What students see in Phase 4 |
-| `cheat_sheet.md` | Printable facilitation reference | Teacher's in-class tool |
+**Stage 1: Scenario design** (`/create_scenario`)
+
+- **`scenario.yaml`** — The scenario plan. Contains the topic, instructional goals, persona definitions (with strengths and weaknesses), target flaw-behavior combinations (with the specific turns where each should surface), a turn-by-turn outline with `accomplishes` steering fields, and a narrative discussion arc. This is the "ground truth" for the scenario — what flaws were designed, where, and through which persona. Research value: enables analysis of the relationship between designed intent and generated output.
+
+**Stage 2: Transcript generation** (`/create_script`)
+
+- **`script_raw.yaml`** — The dialog writer's raw output. The writer never sees the flaw taxonomy or target flaws (the information barrier) — it only sees persona characters and the `accomplishes` fields. This is the unedited transcript before any pedagogical refinement. Research value: comparing `script_raw.yaml` to `script_pre.yaml` reveals what the instructional designer changed and why — how much editorial intervention was needed to make flaws detectable.
+
+- **`script_pre.yaml`** — The instructional designer's polished version. Signal moments have been sharpened for 6th-grade detectability, above-grade language simplified, and rambling turns tightened. This is the version the pedagogical reviewer assesses. Research value: the intermediate step between raw generation and final product — shows the refinement process.
+
+- **`pedagogical_review.yaml`** — The pedagogical reviewer's scored assessment (1-5) of whether the transcript works as a teaching tool. Covers six criteria: flaw detectability, group dynamics, compromise quality, signal variety, discussion potential, and naturalism. Includes per-flaw assessments rating each target as `yes` / `with_scaffolding` / `too_subtle` / `too_obvious`, with narrative explanations. If score is 3 or below, includes a `revision_strategy` naming the upstream change needed. Research value: pipeline quality metrics — tracks how often transcripts pass on the first attempt, which flaw types are hardest to generate effectively, and what kinds of revisions are needed.
+
+- **`script.yaml`** — The final enumerated transcript. Identical content to `script_pre.yaml` but with turn IDs (`turn_01`, `turn_02`, ...) and sentence IDs (`turn_01.s01`, `turn_01.s02`, ...) added. This is the stimulus students read in the app and the version all downstream artifacts reference. Personas are stripped to `persona_id`, `name`, and `role` only (no strengths/weaknesses visible to students). Research value: the canonical stimulus — all student annotation data references sentence IDs from this file.
+
+**Stage 3: Evaluation** (`/evaluate_script`)
+
+- **`evaluation.yaml`** — The full evaluation. Contains annotations for every flaw identified (both planned targets and emergent ones), each with: location (turn and sentence IDs), argument flaw (canonical pattern ID, detection act, 6th-grade explanation framed as "The AI thinks..."), thinking behavior (canonical pattern ID, explanation, plausible alternatives), and whether the flaw was planned or emergent. Also contains a summary (counts), a quality assessment (whether all targets surfaced, any issues with detectability), and a complete facilitation guide (timing, what-to-expect map, and per-phase scaffolding prompts). Research value: the AI's perspective on the transcript — not ground truth, but a structured analytical lens. Comparing AI annotations to student annotations is a core research question.
+
+- **`evaluation_student.yaml`** — The student-facing subset of the evaluation. Contains only: `scenario_id`, `annotation_id`, `location`, `argument_flaw` (pattern, detection act, explanation), and `thinking_behavior` (pattern, explanation). Strips all teacher/operator fields: `planned`, `plausible_alternatives`, `summary`, `quality_assessment`, `facilitation_guide`. This is what students see in Phase 4 — the AI's perspective presented as one viewpoint to agree or disagree with, not as the answer. Research value: the exact information students receive when comparing their annotations to the AI's.
+
+- **`cheat_sheet.md`** — A printable facilitation reference for the teacher. Renders the facilitation guide from `evaluation.yaml` into a scannable format: timing per phase, a what-to-expect map of all flaws (with difficulty ratings), and ready-to-use prompts for Phases 1, 2, and 4. Phase 3 scaffolds are generic across all scenarios. Research value: documents the instructional support available to the teacher during each session.
+
+### Research data from the app
 
 The app additionally produces per-student data: annotations (with timestamps, revision history, hint usage), reflection responses, and session activity logs. All stored in SQLite — queryable directly or exportable.
 

@@ -1,0 +1,98 @@
+scenario_id: cafeteria_compostable_trays
+
+overall_score: 4
+
+explanation: |
+  This transcript is an effective teaching tool with minor weaknesses. Here is
+  what works and what falls slightly short across the six criteria.
+
+  Flaw Detectability: Both target flaws are accessible to 6th graders. The
+  big_claim_little_evidence flaw in turn 3 lands well — Maya says "The research
+  proves that compostable trays are the best option for any school" and then
+  immediately admits "It was one article but it covered pretty much everything we
+  need to know." That juxtaposition between "the research proves" and "one
+  article" is exactly the kind of signal a 12-year-old can catch without
+  specialist knowledge. The one_example_as_proof flaw surfaces clearly in turn 5
+  with the Oregon school example and the leap "if it worked there, it'll work at
+  our school too." Turn 7 adds the echo chamber dimension — Maya argues that
+  because none of her sources mentioned problems, problems must not exist. Both
+  instances are strong.
+
+  Group Dynamics: The conversation reads as genuine back-and-forth. Jordan
+  responds directly to what Maya says (asking about the article source in turn 2,
+  pushing back on the Oregon example in turn 6). There is real friction through
+  turns 2-7. The weakness is that Jordan's pushback collapses quickly in turn 8
+  — the transition from pointed questions to "you did spend more time on this
+  than I did" is a bit abrupt. One more beat of hesitation or a half-formed
+  objection before capitulating would strengthen the arc.
+
+  Compromise Quality: There is no formal Act 5 flaw in the scenario plan, but
+  Jordan's capitulation in turns 8 and 10 functions similarly. Jordan's reasons
+  for backing down are concrete — time pressure, Maya's greater investment — which
+  makes the giving-in feel motivated rather than arbitrary. A student could
+  reasonably notice that Jordan had good questions that never got answered.
+
+  Signal Variety: The two instances of one_example_as_proof (turns 5 and 7) are
+  well differentiated. Turn 5 uses a specific data point (the Oregon school,
+  40 percent), while turn 7 shifts to a broader echo chamber argument (every
+  source was positive, so problems must not exist). These feel like different
+  moves rather than repetitions of the same mistake. This is a strength.
+
+  Discussion Potential: The transcript provides good material for student debate.
+  Turn 7 is particularly rich — a student could argue that Maya's reasoning is
+  flawed (she only looked at sources that agreed with her) but could also argue
+  that if multiple sources agree, that counts for something. This ambiguity will
+  generate productive Phase 3-4 discussion. Turn 3 is slightly less debatable
+  since Maya openly admits it is one article, which makes the flaw almost too
+  self-evident. Still, students may disagree about whether one thorough article
+  can be enough.
+
+  Naturalism: The dialog reads like real 6th graders. Maya's enthusiasm ("Okay
+  so I found this really good article last night") and Jordan's hedging ("I mean,
+  maybe") feel authentic. The voices are distinguishable — Maya is confident and
+  forward-moving, Jordan is cautious and question-oriented. The flaw placement
+  emerges naturally from Maya's character as someone who found something exciting
+  and wants to run with it. One small stiffness: Maya's line "If there were real
+  problems, at least one of my sources would have mentioned it" in turn 7 sounds
+  slightly more sophisticated than a typical 6th grader's phrasing, though it is
+  within range.
+
+revision_strategy: null
+
+flaw_assessments:
+  - flaw_pattern: big_claim_little_evidence
+    thinking_behavior: confirmation_bias
+    detectable_by_6th_graders: "yes"
+    expression_quality: |
+      The signal moment in turn 3 is effective. Maya says "The research proves
+      that compostable trays are the best option for any school that wants to
+      reduce waste" and then in the very next sentence concedes "It was one
+      article but it covered pretty much everything we need to know." The
+      overconfident framing ("the research proves," "best option for any school")
+      colliding with the admission that it is a single article creates a clear
+      gap that a 6th grader can spot. The confirmation bias dimension is present
+      but secondary — Maya treats the article as comprehensive because it
+      confirms what she already wants to propose. Jordan's follow-up in turn 4
+      ("how many studies did the article actually look at?") effectively
+      underlines the problem without solving it for the student. Natural and
+      well-calibrated.
+
+  - flaw_pattern: one_example_as_proof
+    thinking_behavior: echo_chamber
+    detectable_by_6th_graders: "yes"
+    expression_quality: |
+      Turn 5 delivers the flaw with a concrete, memorable data point — one
+      school in Oregon, 40 percent waste reduction, and the leap "if it worked
+      there, it'll work at our school too." The specificity of the number makes
+      the claim feel persuasive on first read, which is exactly right: a student
+      should initially be impressed and then realize the jump from one school to
+      all schools is unjustified. Jordan's pushback in turn 6 (cafeteria size,
+      cost differences) models the right kind of questioning without giving the
+      answer away. Turn 7 extends the flaw into echo chamber territory — Maya
+      claims all her sources agreed and uses that unanimity as evidence. This is
+      a slightly more subtle signal because a student has to recognize that
+      finding only agreeable sources might reflect the search, not the truth.
+      Still, the language "every single article was positive" is strong enough
+      to prompt a 6th grader's suspicion, especially after Jordan has already
+      raised doubts. The two instances are well differentiated in tone and
+      mechanism, which prevents signal fatigue.

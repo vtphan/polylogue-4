@@ -1,0 +1,98 @@
+scenario_id: "cafeteria_compostable_trays"
+personas:
+- persona_id: "maya"
+  name: "Maya"
+  role: "Lead researcher on plastic waste solutions"
+- persona_id: "jordan"
+  name: "Jordan"
+  role: "Data tracker for the group's research"
+turns:
+- turn_id: "turn_01"
+  speaker: maya
+  sentences:
+  - id: "turn_01.s01"
+    text: "Okay so I found this really good article last night about compostable trays."
+  - id: "turn_01.s02"
+    text: "Some schools have already switched and it's working really well."
+  - id: "turn_01.s03"
+    text: "I think we should tell the class that our school should do the same thing."
+- turn_id: "turn_02"
+  speaker: jordan
+  sentences:
+  - id: "turn_02.s01"
+    text: "Oh cool, that sounds interesting."
+  - id: "turn_02.s02"
+    text: "Where's the article from though?"
+  - id: "turn_02.s03"
+    text: "Is it from a science website or just like someone's blog?"
+- turn_id: "turn_03"
+  speaker: maya
+  sentences:
+  - id: "turn_03.s01"
+    text: "It was from this environmental news site, and it talked about how compostable trays break down way faster than\
+      \ plastic and don't sit in landfills forever."
+  - id: "turn_03.s02"
+    text: "The research proves that compostable trays are the best option for any school that wants to reduce waste."
+  - id: "turn_03.s03"
+    text: "It was one article but it covered pretty much everything we need to know."
+- turn_id: "turn_04"
+  speaker: jordan
+  sentences:
+  - id: "turn_04.s01"
+    text: "Okay but how many studies did the article actually look at?"
+  - id: "turn_04.s02"
+    text: "Did they mention any schools where it didn't work out, or was it only good examples?"
+- turn_id: "turn_05"
+  speaker: maya
+  sentences:
+  - id: "turn_05.s01"
+    text: "I looked at a bunch of stuff online and everything I found said compostable trays are great."
+  - id: "turn_05.s02"
+    text: "And there was this one school in Oregon that switched last year and their cafeteria waste went down by 40 percent."
+  - id: "turn_05.s03"
+    text: "That's a huge drop — if it worked there, it'll work at our school too."
+- turn_id: "turn_06"
+  speaker: jordan
+  sentences:
+  - id: "turn_06.s01"
+    text: "Forty percent is a lot, but that's just one school."
+  - id: "turn_06.s02"
+    text: "What if their cafeteria is way smaller than ours, or what if compostable trays cost a lot more?"
+  - id: "turn_06.s03"
+    text: "It might not work the same way here."
+- turn_id: "turn_07"
+  speaker: maya
+  sentences:
+  - id: "turn_07.s01"
+    text: "None of the sources I found said anything bad about compostable trays though."
+  - id: "turn_07.s02"
+    text: "Every single article was positive."
+  - id: "turn_07.s03"
+    text: "If there were real problems, at least one of my sources would have mentioned it."
+- turn_id: "turn_08"
+  speaker: jordan
+  sentences:
+  - id: "turn_08.s01"
+    text: "I mean, maybe."
+  - id: "turn_08.s02"
+    text: "You did spend more time on this than I did, and I don't want to be the one slowing us down."
+  - id: "turn_08.s03"
+    text: "We still have to make the slides and everything."
+- turn_id: "turn_09"
+  speaker: maya
+  sentences:
+  - id: "turn_09.s01"
+    text: "Exactly, and we're running out of time."
+  - id: "turn_09.s02"
+    text: "Let's just present compostable trays as a proven solution — we have the data from that Oregon school."
+  - id: "turn_09.s03"
+    text: "It's going to be a really strong presentation."
+- turn_id: "turn_10"
+  speaker: jordan
+  sentences:
+  - id: "turn_10.s01"
+    text: "Okay yeah, let's go with it."
+  - id: "turn_10.s02"
+    text: "If we need more evidence we can always find some before the final version."
+  - id: "turn_10.s03"
+    text: "Let's start on the slides."
