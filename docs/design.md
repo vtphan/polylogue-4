@@ -596,6 +596,7 @@ detection_acts:
   - act_id: string                    # e.g., "somethings_wrong"
     name: string                      # e.g., "Something's wrong"
     student_question: string          # e.g., "That's not right / That's not how it works"
+    reading_strategy_hint: string     # e.g., "Read each turn and ask: is that actually true?"
     patterns:
       - pattern_id: string            # canonical ID, e.g., "factual_error"
         plain_language: string        # e.g., "That's not true"

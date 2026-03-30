@@ -408,7 +408,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 
    | Table | Source | Notes |
    |-------|--------|-------|
-   | `DetectionAct` | `detection_act_library.yaml` | act_id, name, student_question |
+   | `DetectionAct` | `detection_act_library.yaml` | act_id, name, student_question, reading_strategy_hint |
    | `FlawPattern` | `detection_act_library.yaml` | pattern_id, plain_language, description, FK to DetectionAct |
    | `ThinkingBehavior` | `thinking_behavior_library.yaml` | behavior_id, name, description, formal_term |
    | `Scenario` | `scenario.yaml` | scenario_id, topic, context, instructional_goals (JSON), personas (JSON), target_flaws (JSON — teacher-only), turn_outline (JSON — teacher-only), discussion_arc |
@@ -606,7 +606,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 
 3. **DetectionActPicker component.** Implement per `uiux-app.md > Component > DetectionActPicker`:
    - Radio buttons rendering from `DetectionAct` table (5 acts)
-   - Each shows: `name` + `student_question` in smaller text + reading strategy hint below (reference: `uiux-app.md > Scaffolds` reading strategy hints table)
+   - Each shows: `name` + `student_question` in smaller text + `reading_strategy_hint` below (from `DetectionAct` table, seeded from detection act library)
    - On select: expands to show `FlawPattern` records for that act — `plain_language` and `description`. Informational only, not a required sub-selection.
    - Single selection. Output: `act_id` string.
 

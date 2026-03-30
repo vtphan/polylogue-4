@@ -36,6 +36,11 @@ fields:
           required: true
           description: "The question a student asks when this act applies (e.g., \"That's not right / That's not how it works\")."
 
+        reading_strategy_hint:
+          type: string
+          required: true
+          description: "One-line tip on how to read the transcript for this detection act (e.g., \"Read each turn and ask: is that actually true?\"). Displayed as secondary text in the DetectionActPicker and the Phase 1 empty state."
+
         patterns:
           type: list
           required: true

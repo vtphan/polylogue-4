@@ -193,17 +193,9 @@ This gives students the same background the personas have. Without it, students 
 
 ### Reading Strategy Hints
 
-Each detection act in the picker includes a one-line reading strategy hint — not just the question, but *how to read* for it:
+Each detection act in the picker includes a one-line reading strategy hint — not just the question, but *how to read* for it. Hints appear as secondary text below each detection act option in both the empty state reference list and the annotation form's detection act picker.
 
-| Detection act | Question | Reading strategy hint |
-|---|---|---|
-| Something's wrong | "That's not right" | Read each turn and ask: is that actually true? |
-| Not enough support | "How do they know that?" | When someone sounds really sure, check: how much evidence do they have? |
-| Something's missing | "They didn't think about ___" | After reading the plan, ask: what would you need to know to actually do this? |
-| Doesn't fit together | "That doesn't match" | Compare what they said at the beginning to what they concluded at the end |
-| Not really resolved | "They agreed but didn't solve it" | Follow one person's turns in order — did anyone change their mind? Why? |
-
-Hints appear as secondary text below each detection act option in both the empty state reference list and the annotation form's detection act picker. They are static text derived from the detection act library, not generated per scenario.
+**Data source:** `detection_act_library.yaml` → `reading_strategy_hint` field on each detection act. These are static text seeded into the database alongside `name`, `student_question`, and `patterns[]`. Not generated per scenario.
 
 ### Guided First Detection
 
@@ -1374,11 +1366,12 @@ Content follows the exact format from design doc lines 867-902, with the additio
 
 **Purpose:** Radio selection of one of the five detection acts.
 
-**Schema:** `detection_act_library.yaml` — renders `detection_acts[]`, each with `act_id`, `name`, `student_question`, and `patterns[]` (each with `pattern_id`, `plain_language`, `description`).
+**Schema:** `detection_act_library.yaml` — renders `detection_acts[]`, each with `act_id`, `name`, `student_question`, `reading_strategy_hint`, and `patterns[]` (each with `pattern_id`, `plain_language`, `description`).
 
 **Display:** Each act shows:
 - `name` field (e.g., "Not enough support")
 - `student_question` field in smaller text (e.g., "How do they know that?")
+- `reading_strategy_hint` field as secondary text below (e.g., "When someone sounds really sure, check: how much evidence do they have?")
 - When selected: expands to show `patterns[]` as informational reference — each pattern displays `plain_language` (e.g., "They're saying a lot based on very little") and `description`. The `pattern_id` is not displayed (canonical IDs are internal). This is not a required sub-selection.
 
 **Output:** The selected act's `act_id` (e.g., `"not_enough_support"`), stored in the annotation's `detection_act` field.

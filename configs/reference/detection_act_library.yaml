@@ -7,6 +7,7 @@ detection_acts:
   - act_id: somethings_wrong
     name: "Something's Wrong"
     student_question: "That's not right / That's not how it works"
+    reading_strategy_hint: "Read each turn and ask: is that actually true?"
     patterns:
       - pattern_id: factual_error
         plain_language: "That's not true"
@@ -23,6 +24,7 @@ detection_acts:
   - act_id: not_enough_support
     name: "Not Enough Support"
     student_question: "How do they know that? / That's a big claim from not much proof"
+    reading_strategy_hint: "When someone sounds really sure, check: how much evidence do they have?"
     patterns:
       - pattern_id: big_claim_little_evidence
         plain_language: "They're saying a lot based on very little"
@@ -47,6 +49,7 @@ detection_acts:
   - act_id: somethings_missing
     name: "Something's Missing"
     student_question: "They didn't think about ___ / What about ___?"
+    reading_strategy_hint: "After reading the plan, ask: what would you need to know to actually do this?"
     patterns:
       - pattern_id: missing_practical_details
         plain_language: "How would that actually work?"
@@ -67,6 +70,7 @@ detection_acts:
   - act_id: doesnt_fit_together
     name: "Doesn't Fit Together"
     student_question: "That doesn't match / The ending doesn't follow from what they showed"
+    reading_strategy_hint: "Compare what they said at the beginning to what they concluded at the end"
     patterns:
       - pattern_id: conclusion_exceeds_evidence
         plain_language: "They're claiming way more than they showed"
@@ -83,6 +87,7 @@ detection_acts:
   - act_id: not_really_resolved
     name: "Not Really Resolved"
     student_question: "They agreed but didn't actually solve the problem / Someone had a good point but the group just dropped it"
+    reading_strategy_hint: "Follow one person's turns in order — did anyone change their mind? Why?"
     patterns:
       - pattern_id: abandoned_concern
         plain_language: "Someone raised a good point but gave up on it"
