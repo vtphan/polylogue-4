@@ -1,0 +1,84 @@
+scenario_id: wolf_river_greenway_trees
+annotations:
+- annotation_id: ann_01
+  location:
+    turn: turn_03
+    sentences:
+    - turn_03.s01
+    - turn_03.s02
+    - turn_03.s03
+  argument_flaw:
+    pattern: wrong_cause
+    detection_act: somethings_wrong
+    explanation: The AI thinks Jayla might be giving the wrong reason for why trees cool down a neighborhood. She says trees
+      absorb CO2, and since CO2 traps heat, removing it should cool things down. That makes sense for the whole planet over
+      a long time — but a few hundred trees on one greenway can't really change how much CO2 is in the entire atmosphere.
+      The actual reason it feels cooler under trees is mostly shade and water evaporating from leaves, not CO2 removal. So
+      she's pointing to a real thing (trees do absorb CO2) but saying it's the reason for something it doesn't really cause
+      at the neighborhood level.
+  thinking_behavior:
+    pattern: tunnel_vision
+    explanation: The AI thinks Jayla might have gotten so focused on the CO2-and-greenhouse-gas part of her research that
+      she stopped considering other explanations. She learned that trees absorb CO2 and that CO2 causes warming, and she locked
+      onto that as the whole story. When DeShawn brought up shade, she dismissed it instead of thinking about whether both
+      things could be true.
+- annotation_id: ann_02
+  location:
+    turn: turn_05
+    sentences:
+    - turn_05.s01
+    - turn_05.s02
+    - turn_05.s03
+  argument_flaw:
+    pattern: wrong_cause
+    detection_act: somethings_wrong
+    explanation: The AI thinks Jayla is doing the same thing again here — saying that CO2 absorption is 'removing the root
+      cause of why it's hot.' But the root cause of why a sidewalk in Memphis feels hot on a summer day isn't really the greenhouse
+      effect by itself. It's the sun heating up pavement and buildings. Trees help mostly by blocking that sun and releasing
+      water vapor, not by pulling a tiny bit of CO2 out of the air. She's confusing why the whole planet is warming with why
+      one spot feels hot.
+  thinking_behavior:
+    pattern: tunnel_vision
+    explanation: The AI thinks Jayla is still stuck on her one explanation even after DeShawn asked a really good question
+      in turn 4 about whether a few hundred trees could change the whole atmosphere. Instead of thinking about that, she just
+      repeated her same idea with more confidence. She only focused on the CO2 part and missed the bigger picture of how trees
+      actually cool an area.
+- annotation_id: ann_03
+  location:
+    turn: turn_06
+    sentences:
+    - turn_06.s01
+    - turn_06.s02
+    - turn_06.s03
+  argument_flaw:
+    pattern: abandoned_concern
+    detection_act: not_really_resolved
+    explanation: The AI thinks DeShawn had a really good point in turn 4 — he asked how a few hundred trees could change the
+      whole atmosphere, which is exactly the right question. But here he gives up on that point. He says Jayla's explanation
+      'sounds more scientific' and he doesn't 'know enough to argue with it.' His concern was never actually answered — Jayla
+      never explained why shade wouldn't be the main thing, and DeShawn even says that himself. But he drops it anyway.
+  thinking_behavior:
+    pattern: overreliance_on_authority
+    explanation: The AI thinks DeShawn might have backed down because Jayla's answer used big science words like 'greenhouse
+      effect' and 'CO2,' which made it sound more official. He says her explanation 'sounds more scientific,' which suggests
+      he's judging it by how it sounds rather than whether it actually answers his question. He trusted the scientific-sounding
+      words instead of trusting his own good reasoning.
+- annotation_id: ann_04
+  location:
+    turn: turn_08
+    sentences:
+    - turn_08.s01
+    - turn_08.s02
+    - turn_08.s03
+  argument_flaw:
+    pattern: harmony_over_accuracy
+    detection_act: not_really_resolved
+    explanation: The AI thinks DeShawn is agreeing just to keep things moving, not because he actually changed his mind. He
+      says 'I still kinda think shade is doing more than you give it credit for' — so he hasn't really been convinced. But
+      then he says 'I don't want to hold us up, so let's just use your idea.' He's choosing to go along with something he
+      doesn't fully believe because he wants to avoid slowing down the group.
+  thinking_behavior:
+    pattern: groupthink
+    explanation: The AI thinks DeShawn went along with the group instead of thinking for himself. He had his own idea about
+      shade, and he even says he still believes it, but he gave in because he didn't want to be the one holding things up.
+      That's the kind of thinking where keeping the group happy feels more important than getting the right answer.
