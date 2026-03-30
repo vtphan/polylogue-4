@@ -107,3 +107,13 @@ Before saving, verify:
 - [ ] Turn count is appropriate for the scenario's complexity (no filler turns, maximum 20)
 - [ ] The discussion is about one thing — no tangential threads after the main question resolves
 - [ ] Each persona speaks multiple times with natural back-and-forth
+
+## What's Next
+
+The scenario plan is saved. Now generate the transcript:
+
+```
+/create_script
+```
+
+Provide the `scenario_id` from this scenario (e.g., `ocean_plastic_campaign`). The command will invoke the dialog writer, run structural checks, polish with the instructional designer, and assess pedagogical quality. If the pedagogical reviewer scores the transcript 4 or above, it proceeds to enumeration. If 3 or below, the command halts with a revision strategy — review it and decide whether to revise the plan or adjust prompt guidance.

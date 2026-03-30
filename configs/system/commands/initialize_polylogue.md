@@ -73,3 +73,13 @@ cp configs/system/commands/initialize_polylogue.md .claude/commands/
 ```
 
 Then run `/initialize_polylogue` to sync everything else.
+
+## What's Next
+
+After initialization, you're ready to generate scenarios. Run:
+
+```
+/create_scenario
+```
+
+Provide a topic, context, instructional goals, and target flaw-behavior combinations. See `docs/scenario-sequence.md` for ready-to-use prompts with a designed progression from easy to hard.

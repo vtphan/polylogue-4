@@ -135,3 +135,24 @@ This command does NOT trigger regeneration automatically.
 - `registry/{scenario_id}/evaluation.yaml` — full evaluation (operator + teacher)
 - `registry/{scenario_id}/evaluation_student.yaml` — student-facing annotations only
 - `registry/{scenario_id}/cheat_sheet.md` — printable facilitation cheat sheet
+
+## What's Next
+
+This scenario is complete. All artifacts are in `registry/{scenario_id}/`.
+
+**Review the quality assessment.** If `all_targets_surfaced` is true and there are no issues, the scenario is ready for classroom use. If there are issues:
+- **usable_as_is**: Minor issues, transcript works as-is
+- **consider_regeneration**: Re-run `/create_script` with the same plan
+- **needs_new_plan**: Revise the plan via `/create_scenario`
+
+**Review the cheat sheet** (`cheat_sheet.md`) before class. It takes 2 minutes to scan and tells you everything you need to facilitate the session.
+
+**To generate the next scenario**, run `/create_scenario` again with the next prompt from `docs/scenario-sequence.md`.
+
+**Full workflow reference:**
+```
+/initialize_polylogue  →  (one-time setup)
+/create_scenario       →  (design the plan)
+/create_script         →  (generate the transcript)
+/evaluate_script       →  (annotate and produce facilitation materials)
+```
