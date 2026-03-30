@@ -1122,6 +1122,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - If advancing to Phase 4: call `takeSnapshot(sessionId, 4)`
      - Update `active_phase`, record `PhaseTransition`
    - Reflection activation: after Phase 4 discussion, a separate "Start Reflection" button sets `reflection_active: true`
+   - "End Session" button: archives the session early. Confirmation dialog: "End this session? Students will no longer be able to make changes. You can still view the data." On confirm: sets `status: "archived"`. Students see notification and UI becomes read-only. Server Action: `endSession(sessionId)` — sets status to archived.
 
 5. **Detail panel.** Context-dependent right panel:
    - Default: cheat sheet summary (what-to-expect section from facilitation guide)
@@ -1293,7 +1294,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 1. **Session creation** (`/teacher/session/new`). Reference: `uiux-app.md > Teacher > Create Session`:
    - Requires teacher/researcher login (enforced by middleware from Phase 2)
-   - Scenario dropdown: lists imported scenarios from `Scenario` table
+   - Scenario dropdown: lists imported scenarios from `Scenario` table. At selection time, verify the scenario's required data is intact (transcript has turns, evaluation has annotations, facilitation guide has timing). Show inline error if data is corrupt or incomplete — "This scenario is missing [transcript/evaluation] data. Re-import it from the dashboard."
    - "Show guided first detection" checkbox (default checked) → sets `guided_first_detection`
    - Lifeline budget input (default: computed from scenario flaw_count + persona_count, teacher-overridable) → sets `lifeline_budget`
    - Group assignment: teacher types full student names into groups. Groups of 4-5. Add/remove groups and students. **Duplicate name validation:** no two students in the same session can have the same full name — inline error if a duplicate is entered (if two students genuinely share a name, the teacher adds a middle initial to distinguish them). Optional "Auto-assign" button to randomly distribute unassigned students across groups (borrowed from CrossCheck's pattern — useful when the teacher has many students to assign quickly).

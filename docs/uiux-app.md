@@ -51,6 +51,7 @@ This document is a **reference specification** for the Perspectives app. It desc
 | `Interactions > Annotation Lifecycle` | Interaction Patterns > Annotation Lifecycle | Draft → submitted → revised states |
 | `Interactions > Phase Transitions` | Interaction Patterns > Phase Transitions | Transition behavior, polling detection |
 | `Interactions > Polling` | Interaction Patterns > Polling Behavior | Intervals, what's polled |
+| `Teacher > Dashboard > Discussion Arc` | Teacher Flow > Dashboard Home, Active Session | `discussion_arc` display in scenario list and session header |
 | `Tablet` | Tablet Interaction Model | Device targets, portrait mode, keyboard, gestures, typography |
 
 ---
@@ -1084,7 +1085,7 @@ Each AI annotation card renders fields from `evaluation_student.yaml` (not the f
 
 This is a powerful engagement moment — it reinforces that the AI is not the authority and that the student's observations have value. The inverse is also shown in the Comparison tab: locations the AI marked that no student in the group marked.
 
-**The Comparison tab** now includes AI annotations in the comparison alongside student and peer annotations. AI annotations are shown in the same card structure but marked as "AI" rather than a student name. The comparison logic treats AI annotations the same way it treats peer annotations — matching by sentence ID overlap, then detection act, then thinking behavior.
+**The Comparison tab** now includes AI annotations in the comparison alongside student and peer annotations. AI annotations are shown in the same card structure but marked as "AI" rather than a student name, using the distinct AI marker color (gray/purple) instead of a group member color. The comparison logic treats AI annotations the same way it treats peer annotations — matching by sentence ID overlap, then detection act, then thinking behavior. **AI group membership:** The AI is not a group member. The ComparisonView receives AI annotations via the `aiAnnotations` prop (null in Phase 3, populated in Phase 4) and includes them in the comparison algorithm alongside group members' annotations. The AI is labeled "AI" in cards, not a student name.
 
 **My Annotations tab** remains editable. Students can still revise after seeing the AI perspective. Revisions are tracked with `phase: 4` in the revision history. A gentle prompt appears at the top: "Now that you've seen the AI's perspective, is there anything you'd change or add?"
 
@@ -1131,6 +1132,8 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 
 **Session auto-archive.** Sessions automatically archive 2 hours after creation. Active sessions appear at the top; archived sessions collapse into a "Past Sessions" section (expandable to view historical sessions). Sessions are within a single class period — 2 hours provides generous buffer beyond typical 45-55 minute periods.
 
+**Manual session end.** An "End Session" button on the active session view (next to the phase controls) lets the teacher archive a session early. Confirmation dialog: "End this session? Students will no longer be able to make changes. You can still view the data." On confirm, session status is set to `archived`. Students currently in the session see a notification: "Your teacher has ended this session. Your work has been saved." Student UI becomes read-only (annotations visible but not editable).
+
 **Available scenarios** lists scenarios that have been imported from the pipeline registry into the database. Each shows the scenario ID, flaw count, persona count, and pedagogical review score (if available). The `discussion_arc` field from `scenario.yaml` is shown as a one-line summary beneath each scenario — giving teachers a quick sense of how the discussion unfolds before selecting it.
 
 **Import Scenario** dropdown lists unimported scenario directories from `REGISTRY_PATH` (researcher-configured). Selecting a directory imports its YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and optionally `pedagogical_review.yaml`). A "Upload Files" fallback option allows file upload for scenarios not in the registry. Validation errors (missing required files, malformed YAML) are shown inline with specific messages per file.
@@ -1171,7 +1174,7 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Group assignment.** Teacher types student full names directly (e.g., "Amaya Torres"). Groups of 4-5. Teacher can add/remove groups and students. **Duplicate name validation:** no two students in the same session can have the same full name — inline error if a duplicate is entered (if two students genuinely share a name, the teacher adds a middle initial to distinguish them). No class roster import for MVP — manual entry only. The app derives display names (first name + last initial) automatically.
+**Group assignment.** Teacher types student full names directly (e.g., "Amaya Torres"). Groups of 4-5. Teacher can add/remove groups and students. An optional "Auto-assign" button randomly distributes unassigned students across groups — useful when the teacher has many students to assign quickly. **Duplicate name validation:** no two students in the same session can have the same full name — inline error if a duplicate is entered (if two students genuinely share a name, the teacher adds a middle initial to distinguish them). No class roster import for MVP — manual entry only. The app derives display names (first name + last initial) automatically.
 
 **Session code.** Auto-generated on creation. Teacher shares it verbally or writes it on the board. Students use it to join.
 
@@ -1296,7 +1299,7 @@ A single-page view rendering the `facilitation_guide` from `evaluation.yaml`, su
 |----------------|-------------|-----------------|
 | TIMING | `facilitation_guide.timing` | `phase_1_minutes`, `phase_2_minutes`, `phase_3_minutes`, `phase_4_minutes` — displayed as "Phase 1: ~12 min \| Phase 2: ~8 min \| ..." |
 | WHAT TO EXPECT | `facilitation_guide.what_to_expect[]` | Each entry: `flaw` (pattern name), `turns` (where to look), `signal` (what students should notice), `difficulty` ("most will catch it" / "harder to spot" / "easy to miss") |
-| WHY THIS FLAW WORKS | `pedagogical_review.flaw_assessments[]` | Each target flaw's `expression_quality` — a narrative explanation of how the flaw manifests in the transcript and why it's detectable by 6th graders. Helps the teacher understand the reasoning behind each flaw, not just the scaffolding prompts. Collapsible — collapsed by default to keep the cheat sheet scannable, expandable for teachers who want deeper preparation. Only shown if `PedagogicalReview` data is available. |
+| WHY THIS FLAW WORKS | `pedagogical_review.flaw_assessments[]` | Each target flaw's `expression_quality` — a narrative explanation of how the flaw manifests in the transcript and why it's detectable by 6th graders. Helps the teacher understand the reasoning behind each flaw, not just the scaffolding prompts. Collapsible — collapsed by default to keep the cheat sheet scannable, expandable for teachers who want deeper preparation. **If `PedagogicalReview` data is absent** (the file is optional), this entire section is omitted from the cheat sheet — no placeholder or empty state. The remaining sections (TIMING, WHAT TO EXPECT, PHASE 1-4 scaffolds) render normally without it. |
 | PHASE 1 scaffolds | `facilitation_guide.phase_1[]` | Each entry: `prompt` (ready-to-use teacher prompt) + `targets` (which flaw this helps surface) |
 | PHASE 2 scaffolds | `facilitation_guide.phase_2[]` | Each entry: `flaw` (which flaw), `narrowed_options[]` (2-3 behaviors from `plausible_alternatives` — a subset of the library for the teacher to offer), `perspective_prompt` (empathy-based prompt) |
 | PHASE 2 — VALID ALTERNATIVES | `annotations[].thinking_behavior.plausible_alternatives` from `evaluation.yaml` | For each flaw, the full list of plausible alternative thinking behaviors (resolved to plain-language names). Shown beneath the Phase 2 scaffold for that flaw. Helps the teacher distinguish productive disagreements (student picked a plausible alternative) from confused ones (student picked something not on the list). Formatted as: "Also defensible: [behavior 1], [behavior 2]." |
@@ -1515,7 +1518,7 @@ The student app polls the server at a regular interval:
 
 | What's polled | Interval | Used by |
 |--------------|----------|---------|
-| Active phase | 5 seconds | Student: detect phase transitions |
+| Active phase + reflection_active | 5 seconds | Student: detect phase transitions and reflection activation |
 | Student activity | 10 seconds | Teacher: monitoring dashboard |
 
 Peer annotations are **not polled**. The Phase 3 comparison view operates on a snapshot taken at the Phase 2→3 transition. A fresh snapshot (including Phase 3 revisions) is taken at the Phase 3→4 transition. See design.md Phase 3 comparison logic.
