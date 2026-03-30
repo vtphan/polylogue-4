@@ -36,7 +36,6 @@ This document is a **reference specification** for the Perspectives app. It desc
 | `Teacher > Monitor > Student Monitor` | Teacher Flow > Active Session > Student Monitor | Per-student status indicators, annotation counts |
 | `Teacher > Monitor > Phase Controls` | Teacher Flow > Active Session > Phase Controls | Advance confirmation dialog, force-advance |
 | `Teacher > Cheat Sheet` | Teacher Flow > Cheat Sheet Page | Facilitation guide rendering, schema field mapping |
-| `Onboarding` | Onboarding Flow | Warm-up micro-scenario, tutorial status bar messages |
 | `Component > TranscriptView` | Component Specifications > TranscriptView | Props, schema, behavior |
 | `Component > AnnotationPanel` | Component Specifications > AnnotationPanel | Modes, fields, schema mapping |
 | `Component > DetectionActPicker` | Component Specifications > DetectionActPicker | Schema fields, display, output |
@@ -247,12 +246,9 @@ Students receive a limited number of **lifelines** per scenario — voluntary hi
 
 **Lifeline count:** Configurable per session by the teacher (default: 3). Stored in the session configuration as `lifelines_per_student: integer`. Resets each scenario.
 
-**Lifeline button:** A persistent button in the Phase 1 and Phase 2 work panels, showing remaining count: "Lifelines: 2 remaining." Tapping opens the next hint level for the current target flaw.
+**Lifeline button:** A persistent button in the Phase 1 and Phase 2 work panels, showing remaining count: "Lifelines: 2 remaining."
 
-**Targeting logic — which flaw gets hinted:**
-- If the student has 0 annotations → hint toward the `most_will_catch` flaw (from `facilitation_guide.what_to_expect`)
-- If the student has 1+ annotations → hint toward the next most detectable *unfound* flaw (by difficulty rating, skipping flaws where the student already has an overlapping annotation)
-- If the student has selected sentences and is mid-annotation → hint relates to the nearest annotated flaw at that location
+**Targeting logic — student-directed:** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with three options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system then targets the nearest unfound flaw in the selected region (by comparing the flaw's `turn_ids` from `facilitation_guide.what_to_expect[]` against the region boundaries). If no unfound flaw exists in that region, the app suggests trying a different region: "Nothing new to find there — try another section."
 
 **Graduated hint levels:**
 
@@ -270,8 +266,6 @@ Students receive a limited number of **lifelines** per scenario — voluntary hi
 **Lifeline exhaustion.** When all lifelines are used, the button shows "No lifelines remaining" (disabled). A supportive message appears: "You've used all your lifelines. Keep reading and trying — your teacher can help too." The teacher dashboard flags students who have exhausted lifelines with 0 or few annotations as needing direct intervention.
 
 **Schema addition.** Each student annotation tracks hint usage: `hints_used: integer` (how many lifeline levels were revealed for this annotation, 0 if none). This is research-valuable data — which flaws need the most hints across students and scenarios.
-
-**Lifelines and the warm-up.** If the warm-up scenario is used, lifelines are disabled (`lifelines_per_student: 0`) since the teacher is guiding the class through the activity live.
 
 ### Inline Perspective Prompts (Phase 2)
 
@@ -360,7 +354,7 @@ Every UI component consumes data produced by the pipeline. This section maps UI 
 
 | Artifact | Schema | Produced by | Consumed by |
 |----------|--------|-------------|-------------|
-| Student annotations | `configs/app/schemas/student_annotations.yaml` | Student annotation flow (Phases 1-4) | ComparisonView, teacher detail panel, research export |
+| Student annotations | `configs/app/schemas/student_annotations.yaml` | Student annotation flow (Phases 1-4) | ComparisonView, teacher detail panel |
 | Session configuration | `configs/app/schemas/session_configuration.yaml` | Teacher session creation + runtime updates | Phase controls, student monitor, phase transitions |
 
 ### Sentence ID Format
@@ -465,9 +459,13 @@ The student enters a session using a code provided by the teacher.
 - "Join" button
 
 **Behavior:**
-- Validates session code exists and is active
+- Validates session code exists and session is active (not archived)
 - Validates student name against the pre-assigned list (case-insensitive, whitespace-trimmed). Error message if no match: "We don't see that name in this session. Check with your teacher."
 - On success: redirects to the activity view, Phase 1
+
+**Late-arriving students.** Students always enter Phase 1 regardless of the session's current phase. A student who arrives when the class is in Phase 2 or 3 works through Phase 1 at their own pace. At the next teacher phase advance, they are force-submitted and snapshotted like everyone else — their annotations may be incomplete (no thinking behaviors assigned) and this is handled gracefully in comparison views.
+
+**Reconnection.** If a student's browser has a valid session cookie (JWT), navigating to `/student` redirects them directly to their active session without re-entering credentials. If the cookie has expired (e.g., device restart, cleared cookies), re-entering the same session code + name re-authenticates into their existing session state with all annotations preserved.
 
 **No account creation.** Students are pre-assigned to groups by the teacher. The join screen authenticates them into their assigned slot. The session code + full name combination is the authentication mechanism.
 
@@ -558,7 +556,7 @@ The empty state uses inviting language and tells the student exactly what to do 
 
 The five detection questions are always visible as a reference list, rendered from `detection_act_library.yaml`. Each is an expandable accordion showing the act's `name` and `student_question`. Tapping expands it to show the act's `patterns` array (each pattern's `plain_language` name and `description`). This is a reference — it does not create an annotation.
 
-**Reading nudge.** If a student has been reading for 3+ minutes with 0 annotations, a gentle prompt appears at the top of the work panel: "Try re-reading turns 1-4. Use one of the questions below as a lens — for example, read it while asking 'How do they know that?'" This prompt is dismissible and does not reappear once dismissed. **This is a client-side computation** — the client starts a local timer when Phase 1 renders and tracks the annotation count from its own state (the client created the annotations, so it knows the count without polling). No server call or `student_activity` polling is needed for this nudge. The server-side `student_activity` fields serve the teacher dashboard, not the student's own UI.
+**Reading nudge.** If a student has been reading for 3+ minutes with 0 annotations, a gentle prompt appears at the top of the work panel: "Try re-reading the discussion from the beginning. Use one of the questions below as a lens — for example, read it while asking 'How do they know that?'" This prompt is dismissible and does not reappear once dismissed. **This is a client-side computation** — the client starts a local timer when Phase 1 renders and tracks the annotation count from its own state (the client created the annotations, so it knows the count without polling). No server call or `student_activity` polling is needed for this nudge. The server-side `student_activity` fields serve the teacher dashboard, not the student's own UI.
 
 When sentences are selected, the work panel switches to annotation creation:
 
@@ -762,6 +760,7 @@ This is the same expand-on-select pattern used in the DetectionActPicker — con
 - Confirmation dialog: "Once you submit, you can't change your answers until Phase 3. Ready?"
 - On confirm: all annotations marked as `submitted: true`, locked from editing
 - Work panel transitions to a "Submitted!" state with a satisfying visual moment: a smooth checkmark animation and a brief summary: "You marked [N] moments and explained the thinking behind each one. Your teacher will let you know when it's time to see what your group found."
+- **30-second undo window:** A prominent "Undo" button appears in the submitted state. Tapping it reverts `submitted` to false on all annotations and returns to the checklist. After 30 seconds, the undo button disappears and submission is final. This prevents regret from accidental or premature submission without undermining the submission mechanic.
 
 **Students who haven't submitted by Phase 2→3 transition** are force-submitted. The app sets `submitted: true` on all their annotations and records the transition in `session_configuration.yaml` → `phase_transitions[]`. Annotations are auto-submitted with whatever state they're in — `thinking_behavior` may be null for annotations where the student hadn't assigned one yet, and `behavior_explanation` may be null. These incomplete annotations display normally in Phase 3 peer comparison, with "No thinking behavior assigned" shown where the behavior would appear. A brief notification appears: "Your teacher moved to the next phase. Your work has been submitted."
 
@@ -1051,12 +1050,9 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 │  │ 28 of 30 students active        12 submitted      │  │
 │  └────────────────────────────────────────────────────┘  │
 │                                                          │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │ Warm-up: Four-Day Week          Phase 4  ▸        │  │
-│  │ Completed earlier today                            │  │
-│  └────────────────────────────────────────────────────┘  │
-│                                                          │
 │  [+ Create New Session]                                  │
+│                                                          │
+│  ▸ Past Sessions (2)                                     │
 │                                                          │
 │  ─────────────────────────────────────────────────────   │
 │  Available Scenarios                                     │
@@ -1067,16 +1063,17 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 │  • ocean_pollution_v1 — 2 flaws, 3 personas  ★4/5       │
 │    Starts collaborative, one voice dominates,             │
 │    concern raised then abandoned.                         │
-│  • warmup_four_day_week — 1 flaw, 2 personas (tutorial)  │
 │                                                          │
-│  [Import New Scenario]                                   │
+│  [Import Scenario ▾]                                     │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
 ```
 
+**Session auto-archive.** Sessions automatically archive 2 hours after creation. Active sessions appear at the top; archived sessions collapse into a "Past Sessions" section (expandable to view historical sessions). Sessions are within a single class period — 2 hours provides generous buffer beyond typical 45-55 minute periods.
+
 **Available scenarios** lists scenarios that have been imported from the pipeline registry into the database. Each shows the scenario ID, flaw count, persona count, and pedagogical review score (if available). The `discussion_arc` field from `scenario.yaml` is shown as a one-line summary beneath each scenario — giving teachers a quick sense of how the discussion unfolds before selecting it.
 
-**Import New Scenario** opens a file upload or path input for importing a scenario's YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and optionally `pedagogical_review.yaml`).
+**Import Scenario** dropdown lists unimported scenario directories from the `registry/` folder on the server. Selecting a directory imports its YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and optionally `pedagogical_review.yaml`). A "Upload Files" fallback option allows file upload for scenarios not in the registry. Validation errors (missing required files, malformed YAML, schema violations) are shown inline with specific messages per file.
 
 ---
 
@@ -1089,7 +1086,6 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 │  Create New Session                                      │
 │                                                          │
 │  Scenario:  [dropdown: available scenarios]               │
-│  □ This is a warm-up/tutorial session                    │
 │                                                          │
 │  ─────────────────────────────────────────────────────   │
 │  Student Groups                                          │
@@ -1115,7 +1111,7 @@ This is a powerful engagement moment — it reinforces that the AI is not the au
 └──────────────────────────────────────────────────────────┘
 ```
 
-**Group assignment.** Teacher types student full names directly (e.g., "Amaya Torres"). Groups of 4-5. Teacher can add/remove groups and students. No class roster import for MVP — manual entry only. The app derives display names (first name + last initial) automatically.
+**Group assignment.** Teacher types student full names directly (e.g., "Amaya Torres"). Groups of 4-5. Teacher can add/remove groups and students. **Duplicate name validation:** no two students in the same session can have the same full name — inline error if a duplicate is entered (if two students genuinely share a name, the teacher adds a middle initial to distinguish them). No class roster import for MVP — manual entry only. The app derives display names (first name + last initial) automatically.
 
 **Session code.** Auto-generated on creation. Teacher shares it verbally or writes it on the board. Students use it to join.
 
@@ -1184,7 +1180,7 @@ This is the teacher's primary screen during class. Two-panel layout:
 - Not started (circle outline): `student_activity.first_opened` is null — student hasn't opened the transcript
 - Active (solid circle): `student_activity.first_opened` is non-null — student has opened the transcript
 - Submitted (checkmark): annotation's `submitted` field is true
-- May need help (warning): `student_activity.last_active` is >5 minutes ago with `student_activity.annotation_count` at 0, or >8 minutes with fewer annotations than peers in their group
+- May need help (warning): active for >80% of the scenario's `facilitation_guide.timing.phase_1_minutes` with 0 annotations, or >100% of phase time with fewer annotations than group average (thresholds are derived from the facilitation guide timing for this scenario, not hardcoded)
 
 **Annotation count** displays `student_activity.annotation_count`. Updates via polling (every 5-10 seconds).
 
@@ -1216,6 +1212,8 @@ The "Advance to Phase X" button is prominently placed in the header. It shows th
 ```
 
 The confirmation dialog shows how many students have/haven't submitted and what the transition does. This helps the teacher make an informed decision about timing.
+
+**Low-submission warning.** When fewer than 50% of students have submitted, the dialog shows a prominent color-coded warning (orange/red text): "Only [N] of [M] have submitted. Most students' work will be auto-submitted incomplete." The "Advance Now" button still works — the warning is informational, not blocking.
 
 #### Detail Panel (right)
 
@@ -1255,28 +1253,6 @@ Styled for readability and printability:
 - A "Print" button and a "Back to Session" link
 
 Content follows the exact format from design doc lines 867-902, with the additions of flaw assessment detail and plausible alternatives.
-
----
-
-## Onboarding Flow
-
-### Warm-Up Session
-
-The warm-up session is optional. If used, the teacher creates a session with the warm-up micro-scenario (`is_warmup: true`). The warm-up artifacts are hand-crafted to the same schemas as pipeline-produced scenarios and stored at `configs/reference/warmup/`. They are imported into the database the same way as any other scenario. If the warm-up is skipped, students learn the tool on their first real scenario — the guided first detection mechanic (`Scaffolds > Guided First`) and reading strategy hints (`Scaffolds`) provide onboarding without a separate tutorial session. Lifelines are disabled for warm-up sessions (`lifelines_per_student: 0`).
-
-The app behavior for warm-up sessions is identical to a regular session, with these additions:
-
-**Phase indicator** shows a "Tutorial" badge next to the phase numbers.
-
-**Status bar messages** are more instructional:
-- Phase 1: "Tutorial: Let's practice! Read this short discussion. When something seems off, select it and tell us what you notice."
-- Phase 2: "Tutorial: Now think about WHY they said it that way. Pick a thinking habit from the list."
-- Phase 3: "Tutorial: Look at what your group found. Did you notice the same things?"
-- Phase 4: "Tutorial: Here's what the AI noticed. Do you agree?"
-
-**Teacher walks the class through each phase.** The warm-up is designed for guided walkthrough, not independent work. The teacher advances phases at a faster pace, pausing to explain each step.
-
-After the warm-up, the teacher creates a new session with the real scenario. Students already know the workflow.
 
 ---
 
@@ -1424,7 +1400,7 @@ The following algorithm operates on a uniform annotation shape (student, peer, a
 **Display:** Grouped by group. Each group header shows flaw coverage indicator (e.g., "◆◆○ (2/3)"). Each student shows:
 - Status indicator (not started / active / submitted / may need help)
 - Annotation count (`student_activity.annotation_count`)
-- Time since first opened (computed from `student_activity.first_opened` — for "may need help" detection)
+- Time since first opened (computed from `student_activity.first_opened` — "may need help" thresholds use the scenario's `facilitation_guide.timing` rather than hardcoded values)
 
 **Polling:** Refreshes every 5-10 seconds via API call. Flaw coverage is included in the same polling response to avoid extra requests.
 
@@ -1439,7 +1415,7 @@ The following algorithm operates on a uniform annotation shape (student, peer, a
 - **Multi-select.** Multiple sentences can be selected at once. No drag-to-select (unreliable on touch devices). Each sentence is tapped individually.
 - **Cross-turn selection.** Sentences across different turns can be selected together (for cross-turn flaws like Act 4 and Act 5).
 - **Selection persistence.** When the student saves an annotation, the selection clears and the annotated sentences show annotation markers instead of selection highlight.
-- **Selection while annotation markers exist.** Students can select sentences that already have annotations. This starts a new annotation at that location.
+- **Selection while annotation markers exist.** Students can select sentences that already have annotations. A subtle tooltip appears: "You already marked this — tap the marker to edit, or continue to create a new annotation." This prevents accidental duplicates while still allowing intentional new annotations at the same location (legitimate for different detection acts).
 
 ### Annotation Lifecycle
 
@@ -1457,8 +1433,8 @@ Phase 4: AI revealed → can still revise
 
 **Key states:**
 - **Draft:** Created in Phase 1 or 2, not yet submitted. Editable.
-- **Submitted:** After Phase 2 submit. Locked until Phase 3.
-- **Unlocked for revision:** Phase 3 and 4. Editable again. Changes tracked.
+- **Submitted:** After Phase 2 submit (with 30-second undo window). Locked until Phase 3.
+- **Unlocked for revision:** Phase 3 and 4. Editable again. Changes tracked. The unlock is a client-side phase check (`activePhase >= 3` enables the Edit button); the server validates the session's phase before accepting updates.
 
 ### Phase Transitions
 
@@ -1522,7 +1498,7 @@ Polling starts when the student joins the session and stops when they close the 
 └──────────────────────────────────┘
 ```
 
-When a student selects a sentence in "Read" mode, the app automatically switches to "Work" mode to show the annotation form. When the student saves or cancels, it switches back to "Read" mode. This maintains the two-panel mental model without requiring side-by-side space.
+When a student selects a sentence in "Read" mode, the app automatically switches to "Work" mode to show the annotation form (200ms slide transition animation for spatial continuity). When the student saves or cancels, it switches back to "Read" mode. This maintains the two-panel mental model without requiring side-by-side space.
 
 **Orientation change handling.** If a student rotates their iPad during a session, the layout adapts without losing state — selected sentences remain selected, the work panel retains its current view, scroll position is preserved.
 

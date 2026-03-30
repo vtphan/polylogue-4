@@ -108,7 +108,7 @@ The teacher controls phase advancement, monitors student progress, and uses pre-
 |------|--------------|-------------|
 | **Student** | Transcript, their own annotations, peer annotations (visible after the teacher advances the class to Phase 3 — students submit individually during Phase 2, but unsubmitted students are force-submitted at the Phase 2→3 transition), AI annotations (Phase 4) | Annotate, categorize, explain, compare, revise |
 | **Teacher** | Everything students see + student activity monitoring + facilitation cheat sheet + phase controls | Create sessions, assign groups, advance phases, monitor progress, facilitate discussion |
-| **Researcher** | Everything + raw data access | Export data, compare across scenarios, analyze annotation patterns |
+| **Researcher** | Everything + raw data access | Access data, compare across scenarios, analyze annotation patterns |
 
 ---
 
@@ -124,7 +124,7 @@ The primary criterion for stack selection is **LLM-developability**: the stack s
 |-------|--------|---------------|
 | **Framework** | Next.js (App Router) | Most heavily represented full-stack React framework in LLM training data. File-based routing provides clear conventions — the LLM knows where to put things. Server Components and Server Actions eliminate the need for a separate API layer, keeping the codebase in one project. |
 | **Language** | TypeScript | Single language across frontend and backend. Type safety constrains LLM output and catches errors at build time rather than runtime. LLMs generate better TypeScript than JavaScript because types provide structural guardrails. |
-| **Database** | SQLite via Prisma | A single file on the server — no database server to install or manage. Handles the concurrent load of 60 users easily (thousands of writes/second with WAL mode). Prisma provides type-safe queries and is well-known to LLMs. Research data export is trivial: copy the database file, or query with any SQLite tool. |
+| **Database** | SQLite via Prisma | A single file on the server — no database server to install or manage. Handles the concurrent load of 60 users easily (thousands of writes/second with WAL mode). Prisma provides type-safe queries and is well-known to LLMs. |
 | **Real-time updates** | Polling (5-10 second interval) | 60 concurrent users is trivial load. Teacher monitoring (who's active, annotation counts, phase readiness) doesn't need sub-second latency. Polling is far simpler than WebSocket or SSE infrastructure and sufficient for this scale. Can upgrade to SSE later if needed without architectural changes. |
 | **Styling** | Tailwind CSS | LLMs generate Tailwind fluently. Co-located with components (no separate CSS files). Utility-first approach means consistent styling without design system overhead. |
 | **Deployment** | Single Node.js process on university server | `next start` on a port, reverse-proxied with nginx. No containers, no orchestration, no cloud services. The entire app is self-contained on one machine. |
@@ -194,7 +194,6 @@ Reference libraries (one-time seed)
 └─────────────────────────┘
     │
     ▼
-Research export: query SQLite directly, or copy the .db file
 ```
 
 The app does not read YAML at runtime. YAML is the pipeline-to-app interface; SQLite is the app's internal data store. This separation means:
@@ -403,7 +402,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    | Table | Notes |
    |-------|-------|
    | `User` | id, displayName, username (auto-derived), passwordHash (nullable — null for students), role (teacher/researcher/student), createdAt. Teachers and researchers seeded from `seed.yaml`; students created when teacher assigns them to a session. |
-   | `Session` | session_id, scenario_id (FK), teacher_id (FK to User), lifelines_per_student, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), created_at |
+   | `Session` | session_id, scenario_id (FK), teacher_id (FK to User), lifelines_per_student, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), status (`active`/`archived`, default `active`), created_at. Auto-archives 2 hours after `created_at` (checked on dashboard load and via a periodic server check). |
    | `Group` | group_id, session_id (FK) |
    | `GroupMember` | user_id (FK to User, role=student), group_id (FK) |
    | `StudentActivity` | user_id (FK), session_id (FK), first_opened, last_active, annotation_count |
@@ -429,6 +428,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
      - `/teacher/*` requires `role` = `teacher` or `researcher`
      - `/student/session/*` requires `role` = `student` with valid session membership
      - `/student` (join page) and `/auth/login` are public
+     - Students with a valid JWT cookie for an active session are redirected from `/student` (join page) directly to their active session — no re-entry of credentials needed
    - `src/app/auth/login/page.tsx` — Teacher/researcher login form (name + password)
 
 6. **Write seed YAML and seed script.**
@@ -446,8 +446,9 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
 7. **Write YAML import logic.** `src/lib/import.ts`:
    - `importReferenceLibraries(detectionActPath, thinkingBehaviorPath)` — one-time seed. Parses YAML, upserts `DetectionAct`, `FlawPattern`, `ThinkingBehavior` records.
-   - `importScenario(scenarioDir)` — per-scenario import. Reads `scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and `pedagogical_review.yaml` from a directory. Creates `Scenario`, `Transcript`, `AIAnnotation`, `TeacherEvaluation`, `PedagogicalReview` records. `pedagogical_review.yaml` is optional — if absent, no `PedagogicalReview` record is created. Validates file existence before import (except optional files). Returns the scenario_id.
-   - Both functions are idempotent — re-importing overwrites existing records (upsert by primary key).
+   - `importScenario(scenarioDir)` — per-scenario import. Reads `scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and `pedagogical_review.yaml` from a directory. Creates `Scenario`, `Transcript`, `AIAnnotation`, `TeacherEvaluation`, `PedagogicalReview` records. `pedagogical_review.yaml` is optional — if absent, no `PedagogicalReview` record is created. Validates file existence before import (except optional files). Returns structured validation errors (missing files, malformed YAML, schema violations) rather than throwing, so the UI can display them inline. Returns the scenario_id on success.
+   - `listUnimportedScenarios(registryPath)` — scans the `registry/` directory for scenario directories not yet imported into the database (comparing directory names against existing `Scenario.scenario_id` values). Returns a list of importable directories.
+   - Both import functions are idempotent — re-importing overwrites existing records (upsert by primary key).
 
 8. **Write database seed script.** `prisma/seed.ts`:
    - Seeds reference libraries from `configs/reference/`
@@ -538,7 +539,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    - Work panel (right, ~40%): content changes per phase
    - Status bar (bottom): one sentence describing current phase task
    - Portrait/narrow mode (<1200px): single-panel with Read/Work tab bar at bottom (reference: `uiux-app.md > Tablet`)
-   - Auto-switch from Read to Work when sentences are selected in portrait mode
+   - Auto-switch from Read to Work when sentences are selected in portrait mode (200ms slide transition animation for spatial continuity)
 
 2. **TranscriptView component.** Implement per `uiux-app.md > Component > TranscriptView`:
    - Render turns as distinct blocks with persona header (name + role), left-border accent color per persona
@@ -547,6 +548,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
    - Tap to select (highlight with selection color), tap again to deselect
    - Multi-select: multiple sentences, contiguous or non-contiguous, within or across turns
    - Annotation markers in left margin: solid colored dots for own annotations, positioned by matching `location.sentences` to sentence `id` fields
+   - When selecting sentences that already have an annotation marker, show a subtle tooltip: "You already marked this — tap the marker to edit, or continue to create a new annotation"
    - Tapping annotation marker opens annotation in work panel
    - Visual gap between turns, generous padding (16px block, 12px gap)
    - Transcript text: 17px, line-height 1.7, max ~65 characters per line
@@ -644,13 +646,14 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
    c. **Behavior assignment view:** Shows the annotation context (location, quoted text, detection act, student's description), then ThinkingBehaviorBrowser, then explanation field (appears only after behavior selection, min 15 chars). Save returns to checklist. Reference: `uiux-app.md > Student > Phase 2 > Work Panel` behavior assignment wireframe.
 
-   d. **Submit button:** "Submit My Work" at bottom. Disabled until all annotations have a thinking behavior. Disabled text: "Assign all thinking behaviors to submit." On tap: confirmation dialog ("Once you submit, you can't change your answers until Phase 3. Ready?"). On confirm: all annotations set to `submitted: true`, work panel transitions to "Submitted!" state with checkmark animation and summary.
+   d. **Submit button:** "Submit My Work" at bottom. Disabled until all annotations have a thinking behavior. Disabled text: "Assign all thinking behaviors to submit." On tap: confirmation dialog ("Once you submit, you can't change your answers until Phase 3. Ready?"). On confirm: all annotations set to `submitted: true`, work panel transitions to "Submitted!" state with checkmark animation and summary. A prominent "Undo" button appears for 30 seconds — tapping it reverts `submitted` to false and returns to the checklist. After 30 seconds, the undo button disappears and submission is final.
 
 4. **Force-submission at Phase 2→3 transition.** When the teacher advances to Phase 3:
    - All unsubmitted annotations are auto-submitted (`submitted: true`) regardless of completion state
    - `thinking_behavior` may be null for incomplete annotations — these display "No thinking behavior assigned" in Phase 3
    - Brief notification: "Your teacher moved to the next phase. Your work has been submitted."
    - Server Action: `forceSubmitAll(sessionId)` — bulk update
+   - **Late-arriving students** who are still in Phase 1 are also force-submitted and snapshotted. Their annotations may have no thinking behaviors — this is expected and handled the same as any incomplete submission.
 
 5. **New annotations in Phase 2.** Students can still create new annotations after Phase 2 opens (sentence selection still works). New annotations require both detection act and thinking behavior before they can be included in the submission.
 
@@ -658,11 +661,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
    a. **Lifeline button:** Persistent in Phase 1 and Phase 2 work panels. Shows: "Lifelines: N remaining." Disabled when 0 remaining ("No lifelines remaining" + supportive message).
 
-   b. **Targeting logic (which flaw to hint):**
-   - 0 annotations → `most_will_catch` flaw from `facilitation_guide.what_to_expect`
-   - 1+ annotations → next most detectable *unfound* flaw (by difficulty order: `most_will_catch` > `harder_to_spot` > `easy_to_miss`). A flaw is "found" if the student has an annotation with sentence ID overlap with the flaw's location.
-   - Mid-annotation (sentences selected) → nearest annotated flaw at that location
-   - Data source: `TeacherEvaluation` → `facilitation_guide` fields
+   b. **Targeting logic (student-directed):** When the student taps the lifeline button, a prompt appears: "Which part of the discussion do you want help with?" with options mapping to regions of the transcript (beginning / middle / end, derived by splitting the transcript's turn count into thirds). The system then targets the nearest unfound flaw in the selected region (by sentence ID overlap with `facilitation_guide.what_to_expect[].turn_ids`). If no unfound flaw exists in that region, the system suggests trying a different region. Data source: `TeacherEvaluation` → `facilitation_guide` fields.
 
    c. **Graduated hint levels:** Each tap reveals the next level for the target flaw:
    - Level 1 (Character): Primary source: `facilitation_guide.phase_2[].character_hint` — a pre-written, 6th-grade-friendly prompt about the persona's character trait relevant to this flaw (e.g., "Think about Mia. She's really passionate about this topic. How might that affect what she says?"). Fallback: if `character_hint` is absent (e.g., for emergent flaws the evaluator didn't generate a hint for), derive one from `scenario.yaml` persona weaknesses using a template: "Think about [name]. [weakness rephrased as question]." If neither source produces a usable hint, skip Level 1 and start at Level 2.
@@ -672,7 +671,7 @@ All phases are sequential. Each phase is scoped to one Claude Code working sessi
 
    d. **Phase 2 lifelines:** Same pool. Hints narrow thinking behavior options (from `facilitation_guide.phase_2[].narrowed_options`) or offer perspective prompt (from `facilitation_guide.phase_2[].perspective_prompt`).
 
-   e. **Server Actions:** `useLifeline(studentId, sessionId)` — creates/updates `StudentLifeline` record, returns the hint text. `getLifelineState(studentId, sessionId)` — returns remaining count and current hint states.
+   e. **Server Actions:** `useLifeline(studentId, sessionId, region)` — accepts the student's chosen region (beginning/middle/end), creates/updates `StudentLifeline` record, returns the hint text for the targeted flaw. `getLifelineState(studentId, sessionId)` — returns remaining count and current hint states.
 
    f. **Zero lifelines:** If `lifelines_per_student: 0`, lifeline button is hidden.
 
@@ -791,7 +790,7 @@ PART 3: EDGE CASES
    - 0 annotations: empty state with welcoming text and detection questions
    - Annotation with no thinking behavior at force-submit: displays correctly in Phase 3
    - Network failure on save: retry logic, error message shown
-   - Student joins mid-Phase 2: can still create annotations and submit
+   - Late-arriving student: enters Phase 1 regardless of class phase, works at own pace, gets force-submitted/snapshotted at next teacher phase advance
 
 9. LIFELINE EDGE CASES
    - All lifelines exhausted: button disabled, supportive message shown
@@ -856,7 +855,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
    a. **Tab 1: Comparison (default):** ComparisonView showing group findings. Data source: `AnnotationSnapshot` records for `snapshot_phase: 3` + this student's group. The comparison view reads snapshots, not live annotations.
 
-   b. **Tab 2: My Annotations:** Student's own annotations, now editable again. "You can update your work based on your discussion. It's okay to change your mind!" Edit opens same form as Phase 1/2, pre-filled. Save appends to `revision_history` with `phase: 3, change_type: "revision"`. "+ Add new annotation" button creates with `phase_created: 3`, appends `revision_history` with `change_type: "new"`. Revised annotations show "Updated in Phase 3" badge.
+   b. **Tab 2: My Annotations:** Student's own annotations, now editable again (client-side phase check: the Edit button is enabled when `activePhase >= 3`; the server validates the session's phase before accepting updates). "You can update your work based on your discussion. It's okay to change your mind!" Edit opens same form as Phase 1/2, pre-filled. Save appends to `revision_history` with `phase: 3, change_type: "revision"`. "+ Add new annotation" button creates with `phase_created: 3`, appends `revision_history` with `change_type: "new"`. Revised annotations show "Updated in Phase 3" badge.
 
 6. **Discovery moments.** Reference: `uiux-app.md > Engagement` discovery moments:
    - "Only you caught this!" — unique annotation card uses distinct visual treatment (subtle glow or badge) + encouraging language
@@ -969,10 +968,11 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 **Tasks:**
 
 1. **Dashboard home** (`/teacher`). Reference: `uiux-app.md > Teacher > Dashboard`:
-   - Active sessions list: each shows scenario topic, current phase, student count, submission count
+   - Active sessions list: sessions with `status: "active"`. Each shows scenario topic, current phase, student count, submission count.
+   - Past sessions: collapsed "Past Sessions" section showing sessions with `status: "archived"`. Sessions auto-archive 2 hours after `created_at`. Auto-archive is checked on dashboard load and via a periodic server-side check (e.g., a Next.js API route called by a cron or on each dashboard poll).
    - Available scenarios list: each shows scenario_id, flaw count, persona count, pedagogical review score (if available), and `discussion_arc` as a one-line summary beneath each scenario
    - "Create New Session" button (routes to session creation — Phase 8)
-   - "Import New Scenario" button: opens file upload for scenario YAML artifacts (`scenario.yaml`, `script.yaml`, `evaluation.yaml`, `evaluation_student.yaml`, and optionally `pedagogical_review.yaml`). Uses `importScenario()` from `src/lib/import.ts`.
+   - "Import Scenario" dropdown: lists unimported scenario directories from the registry (via `listUnimportedScenarios()`). Selecting a directory imports it using `importScenario()`. A "Upload Files" fallback allows file upload for scenarios not in the registry. Validation errors (missing required files, malformed YAML, schema violations) are shown inline with specific messages per file.
    - Teacher design language: compact layout, smaller type, professional aesthetic
 
 2. **Active session view** (`/teacher/session/[id]`). Two-panel layout:
@@ -989,7 +989,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - Not started (○): `first_opened` is null
      - Active (●): `first_opened` is non-null
      - Submitted (✓): all annotations have `submitted: true`
-     - May need help (⚠): active >5 min with 0 annotations, or >8 min with fewer annotations than group average
+     - May need help (⚠): active for >80% of `facilitation_guide.timing.phase_1_minutes` with 0 annotations, or >100% of phase time with fewer annotations than group average (thresholds are derived from the scenario's facilitation guide timing, not hardcoded)
      - Lifelines exhausted (flag): student has used all lifelines AND has 0-1 annotations
    - Class-level summary: total active, submitted count, and how many target flaws have been found by at least one group
    - Tapping student name opens their annotations in detail panel (read-only)
@@ -998,6 +998,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 4. **Phase controls.** "Advance to Phase [N]" button opens confirmation dialog per `uiux-app.md > Teacher > Monitor > Phase Controls`:
    - Shows: submitted count, unsubmitted count
+   - **Low-submission warning:** When fewer than 50% of students have submitted, the dialog shows a prominent color-coded warning (orange/red): "Only [N] of [M] have submitted. Most students' work will be auto-submitted incomplete."
    - Shows: what will happen (auto-submit, peer visibility, lock editing, etc.)
    - "Advance Now" / "Wait" buttons
    - Server Action: `advancePhase(sessionId, toPhase)`:
@@ -1071,8 +1072,8 @@ PART 1: STUDENT FLOW (end-to-end with test data)
    - Checklist shows all annotations with status
    - ThinkingBehaviorBrowser progressive disclosure works
    - Explanation field appears only after behavior selection
-   - Submit locks annotations
-   - Force-submission handles incomplete annotations
+   - Submit locks annotations (30-second undo window works correctly)
+   - Force-submission handles incomplete annotations (including late-arriving students)
 
 3. PHASE 3: Compare with peers. Verify:
    - Snapshot taken at transition (comparison is stable)
@@ -1111,8 +1112,9 @@ PART 2: TEACHER FLOW
 
 8. PHASE CONTROLS: Verify:
    - Confirmation dialog shows correct counts
+   - Low-submission warning (<50%) shows color-coded alert
    - Advance triggers force-submit + snapshot + phase update
-   - All students detect phase change via polling
+   - All students detect phase change via polling (including late-arriving students in earlier phases)
    - Reflection activation button works after Phase 4
 
 9. CHEAT SHEET: Verify:
@@ -1177,7 +1179,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - Scenario dropdown: lists imported scenarios from `Scenario` table
    - "Show guided first detection" checkbox (default checked) → sets `guided_first_detection`
    - Lifeline count input (default 3) → sets `lifelines_per_student`
-   - Group assignment: teacher types full student names into groups. Groups of 4-5. Add/remove groups and students. Optional "Auto-assign" button to randomly distribute unassigned students across groups (borrowed from CrossCheck's pattern — useful when the teacher has many students to assign quickly).
+   - Group assignment: teacher types full student names into groups. Groups of 4-5. Add/remove groups and students. **Duplicate name validation:** no two students in the same session can have the same full name — inline error if a duplicate is entered (if two students genuinely share a name, the teacher adds a middle initial to distinguish them). Optional "Auto-assign" button to randomly distribute unassigned students across groups (borrowed from CrossCheck's pattern — useful when the teacher has many students to assign quickly).
    - "Create Session" button:
      - Auto-generates 6-character alphanumeric session code (uppercase, no ambiguous characters like O/0, I/1)
      - Creates `User` records for each student (role=student, no password) if they don't already exist (upsert by displayName — same student can appear in multiple sessions)
@@ -1191,12 +1193,14 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - Session code exists and session is active
      - Student name matches a `User` record that is a `GroupMember` in this session (case-insensitive, whitespace-trimmed)
      - Error: "We don't see that name in this session. Check with your teacher."
-   - On success: authenticate as student via NextAuth (session code + name credentials), redirect to `/student/session/[id]` — student enters Phase 1
+   - On success: authenticate as student via NextAuth (session code + name credentials), redirect to `/student/session/[id]`
+   - **Late-arriving students** always enter Phase 1 regardless of the session's current `active_phase`. They work through Phase 1 at their own pace. At the next teacher phase advance, they are force-submitted and snapshotted like everyone else — their annotations may be incomplete (no thinking behaviors) and this is handled gracefully.
+   - **Reconnection:** Re-entering the same session code + name re-authenticates into the existing session state (all annotations preserved). If the student's browser has a valid JWT cookie, navigating to `/student` redirects directly to their active session without re-entering credentials.
    - Display names: full name stored, first name + last initial displayed everywhere (derived by `src/lib/utils.ts`)
 
 3. **Session code display.** After creation, the session code is shown prominently on the active session page header. The teacher reads it aloud or writes it on the board.
 
-4. **Multiple sessions.** A teacher can have multiple active sessions. The dashboard lists all sessions with their status. Sessions have no explicit "end" state for MVP — the teacher simply stops using them. Completed sessions remain visible on the dashboard as historical records.
+4. **Multiple sessions.** A teacher can have multiple active sessions. Sessions auto-archive 2 hours after creation — archived sessions move to the collapsed "Past Sessions" section on the dashboard. The teacher does not need to manually end sessions.
 
 **Outputs:**
 - Session creation page at `/teacher/session/new` (auth-protected)
@@ -1272,7 +1276,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
    - How to seed teacher/researcher credentials
    - How to import new scenarios from `registry/`
    - How to create sessions and share codes
-   - How to back up / export the SQLite database for research
+   - How to back up the SQLite database
    - Troubleshooting: server restart, database reset, re-import
 
 **Outputs:**
@@ -1310,7 +1314,7 @@ Decisions resolved during Phase 1 (spec alignment) and pipeline implementation:
    - **Students:** Session code + full student name (no password). Teacher pre-assigns student names to groups during session creation. Students enter the code + their full name to join (case-insensitive, whitespace-trimmed match). The app displays first name + last initial everywhere. Simple enough for 6th graders.
    - **Researcher:** Same credentials mechanism as teacher, with `role: "researcher"`. The researcher seeds their own credentials alongside teacher credentials. For MVP, the researcher uses the teacher dashboard — no separate researcher routes.
 
-2. ~~**YAML import workflow.**~~ **Decided.** Teacher imports scenarios through the dashboard UI, as specified in `uiux-app.md > Teacher > Dashboard`. File upload or path input for the scenario's YAML artifacts. This keeps the workflow self-contained in the app — the researcher doesn't need CLI access during class. A CLI import script can be added later if bulk import is needed.
+2. ~~**YAML import workflow.**~~ **Decided.** Teacher imports scenarios through the dashboard UI, as specified in `uiux-app.md > Teacher > Dashboard`. Primary mechanism: a dropdown listing unimported scenario directories from the `registry/` folder on the server. Fallback: file upload for scenarios not in the registry. Validation errors are shown inline. This keeps the workflow self-contained in the app.
 
 3. ~~**Phase 3 real-time needs.**~~ **Decided.** Snapshot at Phase 2→3 transition. The comparison view operates on a frozen snapshot of submitted annotations; revisions during Phase 3 update only the student's own "My Annotations" tab. A fresh snapshot is taken at the Phase 3→4 transition to include Phase 3 revisions. See `design.md` Phase 3 comparison logic. **Implementation:** `AnnotationSnapshot` table with `snapshot_phase` (3 or 4) and `snapshot_data` (JSON). See Phase 1 task 6.
 
