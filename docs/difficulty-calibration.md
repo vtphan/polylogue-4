@@ -26,7 +26,7 @@ Not all flaws are equally hard to spot:
 
 Fewer target flaws also means easier. A 1-flaw scenario lets students focus; a 3-flaw scenario demands sustained attention across the transcript.
 
-Some flaw-behavior pairings are more intuitive than others. `big_claim_little_evidence` + `confirmation_bias` is the most accessible combination (chosen for the warm-up scenario). Pairings like `parts_contradict` + `anchoring_bias` require more abstract reasoning.
+Some flaw-behavior pairings are more intuitive than others. `big_claim_little_evidence` + `confirmation_bias` is the most accessible combination. Pairings like `parts_contradict` + `anchoring_bias` require more abstract reasoning.
 
 **Flaw-type diversity matters for difficulty and learning transfer.** When targeting 2+ flaws, mixing an individual flaw (Acts 1-3) with an interaction flaw (Acts 4-5) is harder than two individual flaws — but it forces students to evaluate the group's reasoning process, not just individual claims. Two individual flaws let students work speaker-by-speaker in isolation; adding an interaction flaw requires tracking cross-turn dynamics. See `create_scenario` guidance for details.
 
@@ -40,7 +40,7 @@ The `accomplishes` field in the turn outline controls how overtly a persona over
 | Moderate | "Present your research findings and draw a conclusion" | The gap exists but requires closer reading |
 | Subtle | "Mention your research and share your perspective" | The flaw is present but blends into natural speech |
 
-The warm-up scenario should use strong signal moments. Later scenarios can dial back as students develop their evaluation skills.
+Early scenarios should use strong signal moments. Later scenarios can dial back as students develop their evaluation skills.
 
 ### 3. Instructional Designer Calibration (`create_script` -- polish pass)
 

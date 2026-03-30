@@ -58,11 +58,6 @@ All phases are sequential. Phase 6.1 follows Review B and addresses findings fro
    └── shared/
        └── scripts/
    ```
-   Also under `configs/reference/`:
-   ```
-   configs/reference/
-   └── warmup/              # Hand-crafted onboarding micro-scenario (Phase 7)
-   ```
 2. Create `registry/` directory
 3. Write `CLAUDE.md` at repo root with project conventions
 4. Write `configs/reference/detection_act_library.yaml` — all 19 argument flaw patterns organized by 5 detection acts, with canonical IDs, plain-language names, and descriptions

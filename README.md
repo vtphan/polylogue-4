@@ -364,7 +364,7 @@ The skills you practice here — asking "how do they know that?", noticing what'
 polylogue-4/
 ├── docs/                    # Design and implementation documents
 ├── configs/                 # Pipeline configuration (schemas, commands, agents, scripts)
-│   ├── reference/           # Flaw and behavior libraries + warm-up scenario
+│   ├── reference/           # Flaw and behavior libraries
 │   ├── scenario/            # create_scenario command, learning scientist
 │   ├── script/              # create_script command, dialog writer, instructional designer,
 │   │                        #   pedagogical reviewer

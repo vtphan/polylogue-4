@@ -26,17 +26,16 @@ For each scenario below, you'll find:
 
 | # | Difficulty | Detection acts | Topic | Key skill |
 |---|-----------|---------------|-------|-----------|
-| 1 | Tutorial | Act 2 | Recycling competition | Learn the tool |
-| 2 | Easy | Act 1 | Trees on the Wolf River Greenway | Spot factual errors |
-| 3 | Easy | Act 2 | Compostable cafeteria trays | Evaluate evidence |
-| 4 | Moderate | Acts 2+3 | Community gardens on vacant lots | Notice what's missing |
-| 5 | Moderate | Acts 2+3 | Park cleanup day | Different absence types |
-| 6 | Moderate-hard | Acts 3+5 | Plastic bag ban | Track group dynamics |
-| 7 | Hard | Acts 3+4 | Solar panels vs. insulation | Cross-turn reasoning |
+| 1 | Easy | Act 1 | Trees on the Wolf River Greenway | Spot factual errors |
+| 2 | Easy | Act 2 | Compostable cafeteria trays | Evaluate evidence |
+| 3 | Moderate | Acts 2+3 | Community gardens on vacant lots | Notice what's missing |
+| 4 | Moderate | Acts 2+3 | Park cleanup day | Different absence types |
+| 5 | Moderate-hard | Acts 3+5 | Plastic bag ban | Track group dynamics |
+| 6 | Hard | Acts 3+4 | Solar panels vs. insulation | Cross-turn reasoning |
 
 **Skill progression:**
 
-| Sessions 1-3 (Warm-up + Easy) | Sessions 4-5 (Moderate) | Sessions 6-7 (Hard) |
+| Sessions 1-2 (Easy) | Sessions 3-4 (Moderate) | Sessions 5-6 (Hard) |
 |------|------|------|
 | Evaluate individual claims | Notice absences | Evaluate group reasoning |
 | Acts 1-2 | Acts 2+3 | Acts 3+4, 3+5 |
@@ -45,30 +44,7 @@ For each scenario below, you'll find:
 
 ---
 
-## Scenario 1: Warm-Up (Hand-Crafted)
-
-**This scenario is hand-crafted, not pipeline-generated.** It teaches the four-phase workflow with an intentionally obvious flaw.
-
-| | |
-|---|---|
-| **Topic** | Whether the school should run a recycling competition between homerooms |
-| **Target flaws** | 1 flaw: `big_claim_little_evidence` + `confirmation_bias` |
-| **Detection acts** | Act 2 |
-| **Personas** | 2 |
-| **Turns** | 5-6 |
-
-**Purpose:** Students learn the mechanics — how to select text, choose a detection act, describe what they noticed, identify a thinking behavior, and submit. The flaw is intentionally obvious so the tool doesn't get in the way of learning the process.
-
-**Hand-crafting notes:**
-- Signal moments should be stronger than real scenarios (e.g., "everyone agrees recycling competitions work" immediately after "I read one poster in the hallway")
-- All artifacts must conform to the same schemas as pipeline-produced scenarios
-- Save to `configs/reference/warmup/`
-
-**What students learn:** How to use Perspectives. What it feels like to identify a flaw and explain your reasoning.
-
----
-
-## Scenario 2: Easy — Act 1
+## Scenario 1: Easy — Act 1
 
 ### Operator Prompt
 
@@ -102,19 +78,19 @@ correct it. The discussion should be short and focused on this one question.
 
 **Why this topic:** Memphis summers regularly exceed 100°F — students feel this personally. The Wolf River Greenway is a real place many have visited. Misconceptions about how trees cool cities (shade vs. evapotranspiration vs. reducing heat islands) surface naturally from 6th-grade-level understanding.
 
-**Why Act 1:** This is the simplest detection act — "that's not right." Students identify one factual or conceptual error. After the warm-up's obvious Act 2 flaw, this introduces a different detection question while keeping the difficulty low.
+**Why Act 1:** This is the simplest detection act — "that's not right." Students identify one factual or conceptual error. Starting with a single detection question keeps the difficulty low for students' first scenario.
 
 **What students learn:** Act 1 detection: "That's not right" / "That's not how it works." The difference between a persona being confident and a persona being correct.
 
 ### Design Notes
 
-- Only 1 flaw — keep it focused. This is students' first real scenario.
+- Only 1 flaw — keep it focused. This is students' first scenario.
 - The factual/conceptual error should be something a 6th grader could catch with general knowledge — not something requiring specialized science knowledge.
 - The other persona should briefly question the misconception, creating contrast that makes the error visible. Total silence from the other persona makes the flaw harder to notice.
 
 ---
 
-## Scenario 3: Easy — Act 2
+## Scenario 2: Easy — Act 2
 
 ### Operator Prompt
 
@@ -149,7 +125,7 @@ Keep it focused and concise.
 
 **Why this topic:** Every student eats in the cafeteria. They have direct experience with the trays. Evidence claims about composting impact are easy to overstate from a single source or one school's experience.
 
-**Why Act 2 again:** Students practiced this detection act in the warm-up with training wheels. Now they apply it to natural language with realistic signal moments. The optional second flaw lets students who are ready find more without overwhelming others.
+**Why Act 2:** This is the second most accessible detection act — "how do they know that?" Students evaluate whether the evidence supports the claim. The optional second flaw lets students who are ready find more without overwhelming others.
 
 **What students learn:** Act 2 detection with realistic signal moments. The difference between "they found something interesting" and "they proved something." If two flaws are targeted, students start noticing that a discussion can have multiple problems.
 
@@ -157,11 +133,11 @@ Keep it focused and concise.
 
 - The optional second flaw (`one_example_as_proof`) should only be included if the plan supports it naturally. Don't force both.
 - The skeptical persona should ask at least one probing question about the evidence before accepting it — this creates the contrast that makes the thin evidence visible.
-- Signal moments should be present but not as obvious as the warm-up. Mia-from-the-warm-up said "everyone agrees" — here, the overconfidence should be subtler.
+- Signal moments should be present but not heavy-handed. Overconfident language should be realistic, not cartoonish.
 
 ---
 
-## Scenario 4: Moderate — Acts 2+3
+## Scenario 3: Moderate — Acts 2+3
 
 ### Operator Prompt
 
@@ -217,7 +193,7 @@ publicize it, or what other groups are doing.
 
 ---
 
-## Scenario 5: Moderate — Acts 2+3 (Different Pairing)
+## Scenario 4: Moderate — Acts 2+3 (Different Pairing)
 
 ### Operator Prompt
 
@@ -271,7 +247,7 @@ projects, or school-wide campaigns.
 
 ---
 
-## Scenario 6: Moderate-Hard — Acts 3+5
+## Scenario 5: Moderate-Hard — Acts 3+5
 
 ### Operator Prompt
 
@@ -335,7 +311,7 @@ alternative policies, what other cities did, or how to publicize the ban.
 
 ---
 
-## Scenario 7: Hard — Acts 3+4
+## Scenario 6: Hard — Acts 3+4
 
 ### Operator Prompt
 

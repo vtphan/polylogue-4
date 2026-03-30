@@ -33,7 +33,7 @@ Read these documents in this order depending on what you're working on:
 polylogue-4/
 ├── docs/                    # Design and implementation documents
 ├── configs/                 # Pipeline configuration (schemas, commands, agents, scripts)
-│   ├── reference/           # Flaw and behavior libraries + warm-up micro-scenario
+│   ├── reference/           # Flaw and behavior libraries
 │   ├── system/              # initialize_polylogue command + sync script
 │   ├── scenario/            # create_scenario command, learning scientist agent, schemas
 │   ├── script/              # create_script command, dialog writer + instructional designer agents, schemas
