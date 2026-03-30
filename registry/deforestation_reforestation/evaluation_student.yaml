@@ -8,50 +8,88 @@ annotations:
     - turn_05.s02
     - turn_05.s03
     - turn_05.s04
-    - turn_07.s01
-    - turn_07.s02
-    - turn_07.s03
-    - turn_08.s01
-    - turn_08.s02
-    - turn_08.s03
   argument_flaw:
     pattern: missing_downsides
     detection_act: somethings_missing
-    explanation: The AI thinks Sofia might only be showing one side of the story here. She talks about all the great things
-      reforestation programs did — communities coming together, animals coming back, cool before-and-after photos — but she
-      never mentions any downsides. She doesn't talk about how long the trees take to grow, what happens if cutting continues,
-      or whether planting can actually keep up with deforestation. Marcus keeps asking about these things, but Sofia keeps
-      steering back to the positives.
+    explanation: The AI thinks Sofia might be only telling the good side of the story here. She talks about how many trees
+      were planted, how communities got involved, and how it created jobs — but she doesn't mention any problems or limitations
+      at all. She even says 'I don't see any downsides,' which is a big hint that she's not looking at the full picture.
   thinking_behavior:
     pattern: tunnel_vision
-    explanation: The AI thinks Sofia might be so focused on how exciting and inspiring reforestation is that she's missing
-      the bigger picture. She found all these amazing success stories and got so locked in on the positive side that she can't
-      see the parts that don't fit her vision — like the 20-year timeline or the fact that cutting is still happening.
+    explanation: The AI thinks Sofia might be so focused on the exciting parts of tree planting that she's missing the bigger
+      picture. She found this amazing program and got really into all the good parts — but she's not thinking about what could
+      go wrong, how long it takes, or whether planting alone actually solves the problem.
 - annotation_id: ann_02
+  location:
+    turn: turn_07
+    sentences:
+    - turn_07.s01
+    - turn_07.s02
+    - turn_07.s03
+  argument_flaw:
+    pattern: missing_downsides
+    detection_act: somethings_missing
+    explanation: The AI thinks Sofia is doing it again here. Marcus just asked a really specific question — what happens during
+      the 20 years while people keep cutting old forests? Instead of answering that, Sofia just says 'at least they're doing
+      something' and goes back to talking about how great the presentation will be. She still hasn't mentioned a single downside.
+  thinking_behavior:
+    pattern: tunnel_vision
+    explanation: The AI thinks Sofia is still locked in on her one idea. Marcus gave her a real fact — it took 20 years —
+      and instead of thinking about what that means, she brushed it off and went right back to talking about the positives.
+      It's like she can only see the part she's excited about.
+- annotation_id: ann_03
+  location:
+    turn: turn_08
+    sentences:
+    - turn_08.s01
+    - turn_08.s02
+    - turn_08.s03
+    - turn_08.s04
+  argument_flaw:
+    pattern: missing_downsides
+    detection_act: somethings_missing
+    explanation: The AI thinks Sofia keeps piling on more positives without ever stopping to address Marcus's concerns. She's
+      now planning before-and-after photos and a call to action — all great stuff — but she still hasn't talked about any
+      risks, limitations, or what happens if deforestation keeps going. It's all good stuff and zero bad stuff.
+  thinking_behavior:
+    pattern: tunnel_vision
+    explanation: The AI thinks Sofia has completely tunneled into presentation planning mode. She's so excited about the visuals
+      and the call to action that she's moved past Marcus's questions as if they were never asked. She's only seeing the part
+      of the story she wants to tell.
+- annotation_id: ann_04
   location:
     turn: turn_11
     sentences:
-    - turn_09.s01
-    - turn_09.s02
-    - turn_09.s03
     - turn_11.s01
     - turn_11.s02
     - turn_11.s03
+  argument_flaw:
+    pattern: abandoned_concern
+    detection_act: not_really_resolved
+    explanation: The AI thinks Marcus might be giving up his point here, not because Sofia proved him wrong, but because he
+      doesn't want to slow things down. He says 'I guess you have a point' and 'I don't want to hold us up' — but his original
+      concern about downsides was never actually answered. Sofia never explained why it's okay to leave out the downsides.
+      Marcus just stopped asking.
+  thinking_behavior:
+    pattern: groupthink
+    explanation: The AI thinks Marcus might be going along with Sofia instead of thinking for himself. He had a really good
+      point — that their presentation should be honest about the downsides — but he gave in because he didn't want to be the
+      one still disagreeing. He cared more about keeping things moving than about getting it right.
+- annotation_id: ann_05
+  location:
+    turn: turn_13
+    sentences:
     - turn_13.s01
     - turn_13.s02
     - turn_13.s03
   argument_flaw:
     pattern: abandoned_concern
     detection_act: not_really_resolved
-    explanation: The AI thinks Marcus raised a really important point that never got answered. In turn 9, he says that only
-      showing the good parts of reforestation 'isn't really honest' and that the audience 'deserves the full picture.' That's
-      a strong argument. But by turn 11, he gives in — not because Sofia proved him wrong, but because he doesn't want to
-      hold things up. And in turn 13, he actually starts to bring it up again ('I still kinda think we should say something
-      about how planting can't keep up with the cutting') but then stops himself and says 'never mind, it's fine.' His concern
-      was dropped, not answered.
+    explanation: The AI thinks this is the clearest sign that Marcus gave up his point without being convinced. He starts
+      to bring it up again — 'I still think we should maybe' — and then stops himself mid-sentence and says 'never mind, it's
+      fine.' That's not someone who changed their mind. That's someone who decided it wasn't worth fighting about anymore.
   thinking_behavior:
     pattern: groupthink
-    explanation: The AI thinks Marcus might have gone along with Sofia's plan not because he changed his mind, but because
-      disagreeing felt uncomfortable. He even says 'I don't want to hold us up' — which sounds like he cares more about keeping
-      things moving and not being difficult than about saying what he really thinks. In turn 13 he literally starts to speak
-      up and then stops himself.
+    explanation: The AI thinks Marcus is choosing peace over honesty here. He literally starts to say his concern out loud,
+      catches himself, and gives up. He's going along with Sofia's plan even though he still disagrees, because disagreeing
+      again feels too uncomfortable.

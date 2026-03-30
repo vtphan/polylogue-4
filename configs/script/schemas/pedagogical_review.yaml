@@ -1,0 +1,70 @@
+# Schema: Pedagogical Review
+# Produced by: pedagogical reviewer subagent
+# Consumed by: create_script (quality gate before enumeration)
+# Introduced in Phase 6.3
+
+schema:
+  name: pedagogical_review
+  description: Assessment of whether a polished transcript works as a teaching tool for 6th graders. Scored 1-5 with narrative explanation and actionable revision strategy.
+
+fields:
+  scenario_id:
+    type: string
+    required: true
+    description: "Matches the scenario plan's scenario_id."
+
+  overall_score:
+    type: integer
+    required: true
+    description: "1-5 assessment of pedagogical effectiveness."
+    constraints:
+      min: 1
+      max: 5
+      # 1 = not usable — fundamental problems
+      # 2 = significant weaknesses — unlikely to teach effectively
+      # 3 = usable with heavy scaffolding — operator should consider revision
+      # 4 = effective — minor weaknesses, ready for classroom use
+      # 5 = strong teaching tool — flaws land naturally, discussion potential is high
+
+  explanation:
+    type: string
+    required: true
+    description: "What the transcript scored and why. References specific turns and criteria. Covers flaw detectability, group dynamics, naturalism, discussion potential, signal variety, and compromise quality. Written for an operator who may not be an instructional designer."
+
+  revision_strategy:
+    type: string
+    required: false
+    description: "If score <= 3: what specific upstream change would improve the transcript. Names the level of intervention (plan structure, flaw selection, prompt wording, accomplishes field steering) and the specific change recommended. Null if score >= 4."
+
+  flaw_assessments:
+    type: list
+    required: true
+    description: "Per-target-flaw assessment of detectability and expression quality."
+    items:
+      type: object
+      fields:
+        flaw_pattern:
+          type: string
+          required: true
+          description: "Canonical ID of the target flaw being assessed."
+
+        thinking_behavior:
+          type: string
+          required: true
+          description: "Canonical ID of the paired thinking behavior."
+
+        detectable_by_6th_graders:
+          type: string
+          required: true
+          description: "Whether a 6th grader reading naturally would notice this flaw."
+          constraints:
+            enum:
+              - "yes"
+              - "with_scaffolding"
+              - "too_subtle"
+              - "too_obvious"
+
+        expression_quality:
+          type: string
+          required: true
+          description: "How this flaw reads in the actual transcript — signal moment effectiveness, naturalism, whether the flaw emerges from character or feels performed."

@@ -56,6 +56,8 @@ For each issue, provide:
 
 If there are no issues, the issues list should be empty and `all_targets_surfaced` should be true.
 
+**Act 5 detectability criterion:** For Act 5 flaws (abandoned_concern, fake_agreement, steamrolled, harmony_over_accuracy), apply an additional detectability test: does the resolution sound reasonable to a 6th grader? If a compromise is offered that sounds adequate — even if the underlying concern was never actually addressed — *and* no other signal in the surrounding turns makes the abandonment visible (e.g., visible capitulation language, self-interruption, giving-in-for-social-reasons language), rate the flaw as `too_subtle`. The test is not whether the concern was analytically abandoned, but whether a 12-year-old reader would perceive the discussion as unresolved.
+
 ### 4. Facilitation Guide
 
 Produce a complete facilitation guide the teacher can use to run the 50-minute class session:

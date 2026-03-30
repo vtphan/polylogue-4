@@ -6,7 +6,7 @@ This plan covers implementation of the Polylogue 4 pipeline: the system that gen
 
 **Build order:** Schemas first, then subagent prompts and commands, then the first end-to-end scenario run, then formalized scripts. This follows the design document's stated sequence and ensures the most important architectural decisions are validated early.
 
-**Structure:** 7 implementation phases and 2 review phases. Each implementation phase is scoped to one Claude Code working session. Review A catches schema issues before anything is built on them. Review B checks the full pipeline — technical integration, prompt quality, and pedagogical quality — against actual generated output.
+**Structure:** 6 implementation phases (plus 3 refinement phases: 6.1, 6.2, 6.3) and 2 review phases. Each implementation phase is scoped to one Claude Code working session. Review A catches schema issues before anything is built on them. Review B checks the full pipeline — technical integration, prompt quality, and pedagogical quality — against actual generated output. Phases 6.1-6.3 address findings from Review B and subsequent pedagogical analysis. Scenario generation is a separate operator activity documented in `docs/scenario-sequence.md`.
 
 **How reviews work:** Each review phase includes a review prompt. The operator runs this prompt with a separate agent, analyzes the feedback, and forwards relevant findings to the developing agent. The operator controls the gate — not every piece of feedback needs to become a revision.
 
@@ -15,11 +15,10 @@ This plan covers implementation of the Polylogue 4 pipeline: the system that gen
 ## Phase Map
 
 ```
-Phase 1 → Phase 2 → REVIEW A → Phase 3 → Phase 4 → Phase 5 ─┬─→ Phase 6 → REVIEW B → Phase 6.1 → Phase 6.2
-                                                              └─→ Phase 7 (parallel)
+Phase 1 → Phase 2 → REVIEW A → Phase 3 → Phase 4 → Phase 5 → Phase 6 → REVIEW B → Phase 6.1 → Phase 6.2 → Phase 6.3
 ```
 
-All phases are sequential except Phases 6 and 7, which can run in parallel after Phase 5. Phase 6.1 follows Review B and addresses findings from both the internal review and an external pedagogical review of the first scenario. Phase 6.2 generates a second scenario under the revised guidance and compares it against the first.
+All phases are sequential. Phase 6.1 follows Review B and addresses findings from both the internal review and an external pedagogical review of the first scenario. Phase 6.2 generates a second scenario under the revised guidance and compares it against the first. Phase 6.3 introduces the pedagogical reviewer subagent, refines Act 5 expression guidance in three existing prompts, and validates by regenerating the second scenario's transcript. After Phase 6.3, the pipeline is complete — scenario generation is an operator activity guided by `docs/scenario-sequence.md`.
 
 ---
 
@@ -584,36 +583,199 @@ Evaluate the second scenario against the first on the three dimensions the exter
 
 ---
 
-## Phase 7: Warm-Up Micro-Scenario
+## Phase 6.3: Pedagogical Reviewer and Subagent Prompt Refinements
 
-**Objective:** Hand-craft the onboarding micro-scenario used to teach the four-phase workflow.
+**Objective:** Introduce a pedagogical reviewer subagent as a post-generation quality gate, refine three existing subagent prompts for Act 5 flaw expression, and validate everything by regenerating the second scenario's transcript.
+
+**Why this phase exists:** Phases 6.1 and 6.2 addressed *plan-level* problems — flat group dynamics, flaw-type diversity, turn outline anti-patterns. This phase addresses *expression-level* problems identified in the Phase 6.2 transcript: reasonable-sounding compromises that obscure Act 5 flaws, and repeated capitulation signals that flatten into agreement. It also fills a structural gap in the pipeline — no agent currently assesses whether a generated transcript is pedagogically effective for 6th graders.
 
 **Inputs:**
-- Design doc: "First-Session Onboarding" (lines 723-729)
-- All schemas from Phase 2
-- Reference libraries from Phase 1
-- Scenario outputs from Phase 5 and Phase 6.2 (quality reference)
+- Phase 6.2 scenario outputs in `registry/deforestation_reforestation/` (comparison baseline)
+- All existing subagent prompts in `configs/*/agents/`
+- All existing schemas in `configs/*/schemas/`
+- Design doc: signal moment principles (lines 196-232), create_script process (lines 333-397)
+
+### Part 1: New Subagent — Pedagogical Reviewer
+
+**The gap:** The learning scientist validates the plan *before* generation ("will this plan produce detectable flaws?"). The evaluator annotates the transcript *after* generation ("what flaws are present?"). No agent asks the question in between: "will this transcript teach 6th graders effectively?" The pipeline can produce a transcript that is technically correct — all schemas validate, all target flaws surface — while being pedagogically flat. Review B and the external reviewer both caught problems that no agent in the pipeline would have flagged.
+
+**The agent:** A dedicated pedagogical reviewer, invoked by `create_script` after the instructional designer's polish pass and before enumeration. It reads the polished pre-enumeration transcript and the full scenario plan (including `target_flaws`), and produces a structured assessment of whether the transcript works as a teaching tool for 6th graders.
+
+**Why a new agent, not a second mode of the learning scientist:** Different inputs (plan vs. transcript + plan), different criteria (plan viability vs. transcript effectiveness), different stage in the pipeline (`create_scenario` vs. `create_script`). Giving a single agent two modes invites confusion about which role is active. Five subagents, each with one clear job, is a cleaner architecture than four subagents where one does double duty.
+
+**New files:**
+
+| File | Purpose |
+|------|---------|
+| `configs/script/agents/pedagogical_reviewer.md` | Subagent prompt. Assesses transcript-level pedagogical effectiveness. |
+| `configs/script/schemas/pedagogical_review.yaml` | Schema for the assessment output. |
+
+The agent and schema live in `configs/script/` because the pedagogical reviewer is invoked by `create_script`, alongside the dialog writer and instructional designer.
+
+**Why this position in the pipeline:** The pedagogical reviewer runs after the instructional designer, not after the dialog writer. This means a `not_ready` result discards work from two LLM calls (dialog writer + instructional designer). The alternative — running before the instructional designer — would be cheaper to discard but would produce false negatives: a pre-polish transcript may look too subtle simply because the instructional designer hasn't sharpened it yet. The reviewer must assess the polished transcript to give an accurate judgment.
+
+**Schema design:**
+
+```yaml
+scenario_id: string
+overall_score: integer              # 1-5, where:
+                                    #   1 = not usable — fundamental problems
+                                    #   2 = significant weaknesses — unlikely to teach effectively
+                                    #   3 = usable with heavy scaffolding — operator should consider revision
+                                    #   4 = effective — minor weaknesses, ready for classroom use
+                                    #   5 = strong teaching tool — flaws land naturally, discussion potential is high
+
+explanation: string                 # What the transcript scored and why. References
+                                    # specific turns, specific criteria, what works
+                                    # well and what doesn't. Covers all assessment
+                                    # criteria (flaw detectability, group dynamics,
+                                    # naturalism, discussion potential, signal variety,
+                                    # compromise quality). Written for an operator who
+                                    # may not be an instructional designer.
+
+revision_strategy: string           # If score <= 3: what specific upstream change
+                                    # would improve the transcript. Names the level
+                                    # of intervention (plan structure, flaw selection,
+                                    # prompt wording, accomplishes field steering) and
+                                    # the specific change recommended.
+                                    # Null if score >= 4.
+
+flaw_assessments:                   # per target flaw
+  - flaw_pattern: string
+    thinking_behavior: string
+    detectable_by_6th_graders: yes | with_scaffolding | too_subtle | too_obvious
+    expression_quality: string      # how this flaw reads in the actual transcript
+```
+
+The schema uses a scored assessment (1-5) rather than a binary (ready/not_ready). The operator knows their students — a score of 3 might be acceptable for an experienced class but not for a first session. The `explanation` field covers all assessment criteria in a single narrative, making per-criterion numerical scores unnecessary. The `revision_strategy` field is the actionable output: it tells the operator not just what's wrong but what upstream change would fix it and at what level (plan, prompt, or flaw selection).
+
+**Assessment criteria for the pedagogical reviewer prompt:**
+
+| Criterion | What it checks | Why it matters |
+|-----------|---------------|----------------|
+| Flaw detectability | Can a 6th grader reading naturally notice each flaw? Not "is the flaw analytically present?" but "would a 12-year-old pause here?" | Flaws that are present but invisible don't teach anything |
+| Group dynamics | Is there genuine disagreement, or do personas agree throughout? Does the discussion read as a conversation or as parallel monologues? | Flat discussions let students evaluate individuals in isolation — they miss group reasoning skills |
+| Compromise quality | For Act 5 flaws, does the resolution sound adequate to a 6th grader? A compromise that sounds fair makes the flaw invisible regardless of its analytical presence. | The external reviewer and Phase 6.2 analysis both identified this as a recurring failure mode |
+| Signal variety | Are signal moments differentiated across turns? Do capitulation signals progress (reluctant → uncomfortable → self-interrupting) or repeat? | Repeated identical signals flatten into noise |
+| Discussion potential | Are there moments students will genuinely disagree about in Phases 3-4? Is the AI's perspective one a student could reasonably push back on? | Transcripts where every flaw is obvious and unambiguous leave nothing to discuss |
+| Naturalism | Does the conversation feel like real 6th graders, or does it feel scripted? | Students won't take the activity seriously if the discussion feels artificial |
+
+**Pipeline flow change (create_script):**
+
+```
+Steps 1-6: unchanged
+Step 7: Pedagogical reviewer → assessment (saved to registry/{scenario_id}/pedagogical_review.yaml)
+         ├─ score >= 4 → proceed to Step 8
+         └─ score <= 3 → halt, display explanation and revision_strategy to operator
+Step 8: enumerate_turns.py → final transcript     (renumbered from 7)
+Step 9: Validate and save                          (renumbered from 8)
+```
+
+**Low scores halt — no revision loop.** The operator reads the explanation and revision_strategy, then decides what to do: revise the plan, adjust prompt guidance, accept the transcript despite the score, or try a different flaw selection. Regenerating with the same prompts will produce similar quality — the revision_strategy points to what needs to change upstream. If the pedagogical reviewer consistently flags the same issue, that's evidence the prompts need better guidance, which the operator addresses between sessions.
+
+**LLM call impact:**
+
+| Path | Before | After |
+|------|--------|-------|
+| Happy path | 3 (dialog writer + instructional designer + evaluator) | 4 (+pedagogical reviewer) |
+| One structural failure | 4 | 5 |
+| Max failures | 5 | 6 |
+
+One additional call per scenario. Negligible for a per-topic operation.
+
+### Part 2: Subagent Prompt Refinements
+
+Three prose additions to existing subagent prompts, encoding Act 5 expression craft knowledge identified in the Phase 6.2 analysis. No schema changes, no new scripts, no changes to `create_scenario` or the pipeline's orchestration.
+
+**A. Dialog writer (`configs/script/agents/dialog_writer.md`) — Act 5 expression guidance:**
+
+Add to the "Signal Moments" section:
+
+1. *Compromise calibration:* When a persona offers a compromise to end a disagreement, the compromise should be visibly smaller than what the other persona was asking for. The gap between what was requested and what was offered should be concrete — a student should be able to say "they wanted X but only got Y." A compromise that sounds fair makes the discussion feel resolved.
+
+2. *Capitulation variety:* When a persona yields over multiple turns, each moment should feel different. A progression — reluctant agreement → visible discomfort → self-interruption — is more readable than the same giving-in tone repeated. The reader should see someone being gradually worn down, not someone who already decided to agree.
+
+**B. Instructional designer (`configs/script/agents/instructional_designer.md`) — Act 5 expression checks:**
+
+Add to the "Sharpen Signal Moments" section:
+
+1. *Compromise check:* For Act 5 flaws where one persona offers a compromise, verify the compromise is visibly lopsided. If it sounds adequate to a 6th grader, adjust the language to widen the gap between what was asked for and what was offered.
+
+2. *Capitulation variety check:* For Act 5 flaws where capitulation spans multiple turns, verify each capitulation moment uses a different signal type. If two use the same tone, differentiate them.
+
+**C. Evaluator (`configs/evaluation/agents/evaluator.md`) — Act 5 detectability criterion:**
+
+Add to the quality assessment section:
+
+For Act 5 flaws, apply an additional detectability test: does the resolution sound reasonable to a 6th grader? If a compromise sounds adequate *and* no other signal in the surrounding turns makes the abandonment visible, rate as `too_subtle`. The test is not whether the concern was analytically abandoned, but whether a 12-year-old would perceive the discussion as unresolved.
+
+### Part 3: Validation — Regenerate Second Scenario Transcript
+
+Regenerate the `deforestation_reforestation` transcript using the updated dialog writer and instructional designer prompts, then assess with the new pedagogical reviewer. This isolates the prompt changes — same plan, different expression.
 
 **Tasks:**
-1. Choose a universal topic (e.g., whether the school should switch to a four-day week) — no domain knowledge required
-2. Hand-write scenario plan: 2 personas, 1 target flaw (Act 2: `big_claim_little_evidence` + `confirmation_bias`)
-3. Hand-write transcript: 5-6 turns with one obvious signal moment (stronger than a real scenario — the point is teaching the workflow)
-4. Hand-write evaluation: annotations, quality assessment, facilitation guide tailored to the walkthrough context
-5. Run `export_for_app.py` to produce student-facing extract and cheat sheet
-6. Validate all artifacts against schemas with `validate_schema.py`
+
+1. Update all three subagent prompts (dialog writer, instructional designer, evaluator) per Part 2.
+2. Write the pedagogical reviewer agent prompt and schema per Part 1.
+3. Update `create_script` command to include the pedagogical reviewer step.
+4. Sync all updated agents and commands to `.claude/commands/` and `.claude/agents/`.
+5. Regenerate the `deforestation_reforestation` transcript using the updated pipeline.
+6. Compare the regenerated transcript against the Phase 6.2 version on Act 5 expression quality:
+
+| Dimension | Phase 6.2 version (baseline) | Phase 6.3 version (expected improvement) |
+|-----------|-------|--------|
+| Compromise quality | Does the compromise sound fair and resolved? | Compromise should be visibly lopsided — student can see the gap |
+| Capitulation variety | Do capitulation signals repeat the same tone? | Each capitulation should feel different — progression, not repetition |
+| Pedagogical reviewer score | N/A (reviewer didn't exist) | Should score >= 4 |
+
+7. Run the full evaluation pipeline (`evaluate_script`) on the regenerated transcript.
+8. **Regression check on first scenario.** Re-run `evaluate_script` on `ocean_plastic_campaign` with the updated evaluator prompt. This is lightweight (one LLM call, no regeneration) and verifies the Act 5 detectability criterion doesn't produce unintended side effects on Act 2-3 flaw assessment. Compare the new evaluation against the existing `evaluation.yaml` — annotations and quality assessment should be substantively the same.
+9. Verify no regression on dimensions from Phase 6.2: persona disagreement, cross-turn flaw detection, information barrier, persona voice, language level.
 
 **Outputs:**
-- `configs/reference/warmup/scenario.yaml`
-- `configs/reference/warmup/script.yaml`
-- `configs/reference/warmup/evaluation.yaml`
-- `configs/reference/warmup/evaluation_student.yaml`
-- `configs/reference/warmup/cheat_sheet.md`
+
+- `configs/script/agents/pedagogical_reviewer.md` — new subagent prompt
+- `configs/script/schemas/pedagogical_review.yaml` — new schema
+- Updated `configs/script/agents/dialog_writer.md`
+- Updated `configs/script/agents/instructional_designer.md`
+- Updated `configs/evaluation/agents/evaluator.md`
+- Updated `configs/script/commands/create_script.md`
+- Regenerated `registry/deforestation_reforestation/` artifacts (with `_v2` suffix or replacing originals — operator's choice)
+- `registry/deforestation_reforestation/pedagogical_review.yaml` — first use of the new assessment
 
 **Notes:**
-- The flaw should be intentionally easy — `big_claim_little_evidence` with `confirmation_bias` is the most intuitive combination for first exposure.
-- The signal moment should be stronger than in real scenarios. Example: a persona says "the research proves it works" immediately after mentioning they read one blog post.
-- All artifacts must conform to the same schemas as pipeline-produced scenarios. The app handles one format, not two.
-- This is a hand-crafted artifact, not a pipeline product. It is written once and reused for every new class.
+- The first scenario (`ocean_plastic_campaign`) is not regenerated. It predates the pedagogical reviewer and stands as the Phase 5 baseline.
+- If the regenerated transcript still has Act 5 expression problems despite the prompt changes, the issue may be inherent to single-pass generation for interaction flaws. Document what failed and whether block generation (3-5 turns per call) should be tested.
+- The pedagogical reviewer's assessment for this validation run also serves as a test fixture for the assessment schema itself — verify the schema captures what the reviewer produces.
+
+### Summary of All Changes in Phase 6.3
+
+**New files (2):**
+
+| File | Type |
+|------|------|
+| `configs/script/agents/pedagogical_reviewer.md` | Subagent prompt |
+| `configs/script/schemas/pedagogical_review.yaml` | Schema (12th schema) |
+
+**Modified files (7):**
+
+| File | Change |
+|------|--------|
+| `configs/script/agents/dialog_writer.md` | Add Act 5 compromise calibration + capitulation variety guidance |
+| `configs/script/agents/instructional_designer.md` | Add Act 5 compromise check + capitulation variety check |
+| `configs/evaluation/agents/evaluator.md` | Add Act 5 detectability criterion |
+| `configs/script/commands/create_script.md` | Add pedagogical reviewer step (new Step 7), renumber Steps 7-8 to 8-9, update LLM call summary |
+| `docs/design.md` | Update subagent table (4 → 5), schema inventory (11 → 12), create_script process (3 steps → 4), LLM call counts, directory tree |
+| `docs/implementation-pipeline.md` | This phase description |
+| `.claude/commands/` and `.claude/agents/` | Synced copies |
+
+**Unchanged:**
+
+All existing schemas (11), all Python scripts (5), `create_scenario` command, `evaluate_script` command, `initialize_polylogue` command, reference libraries, learning scientist prompt, all registry artifacts from prior phases.
+
+---
+
+*Phase 7 has been replaced by `docs/scenario-sequence.md` — an operator guide with ready-to-use `create_scenario` prompts for the UMS pilot. The implementation pipeline ends at Phase 6.3. Scenario generation is an operator activity, not an implementation phase.*
 
 ---
 
@@ -631,4 +793,6 @@ Evaluate the second scenario against the first on the three dimensions the exter
 | **REVIEW B** | **Full integration review** | **Phase 6** | **Technical integration + prompt/command quality + pedagogical quality** |
 | 6.1 | Review B fixes + scenario plan guidance | Review B | Flat group dynamics, missing library flags, cross-turn annotation |
 | 6.2 | Second scenario — guidance validation | Phase 6.1 | Validates revised guidance produces richer group dynamics |
-| 7 | Warm-up scenario | Phase 5 | Onboarding artifact for first classroom use |
+| 6.3 | Pedagogical reviewer + prompt refinements | Phase 6.2 | Post-generation quality gate, Act 5 expression craft knowledge |
+
+*Scenario generation follows the implementation pipeline. See `docs/scenario-sequence.md` for operator prompts.*

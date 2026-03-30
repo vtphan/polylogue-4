@@ -76,8 +76,8 @@ fields:
     required: true
     description: "Turn-by-turn plan with speaker and accomplishes only."
     constraints:
-      min_length: 12
-      max_length: 16
+      min_length: 1
+      max_length: 20
     items:
       type: object
       fields:

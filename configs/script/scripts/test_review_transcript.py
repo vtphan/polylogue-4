@@ -40,15 +40,15 @@ class TestReviewTranscript(unittest.TestCase):
         issues = review(make_transcript(speakers), make_scenario(speakers))
         self.assertEqual(issues, [])
 
-    def test_turn_count_too_low(self):
-        speakers = ["mia", "jaylen"] * 5  # 10 turns
+    def test_short_transcript_ok(self):
+        speakers = ["mia", "jaylen"] * 4  # 8 turns
         issues = review(make_transcript(speakers), make_scenario(speakers))
-        self.assertTrue(any("too low" in i for i in issues))
+        self.assertEqual(issues, [])
 
-    def test_turn_count_too_high(self):
-        speakers = ["mia", "jaylen"] * 9  # 18 turns
+    def test_turn_count_exceeds_cap(self):
+        speakers = ["mia", "jaylen"] * 11  # 22 turns
         issues = review(make_transcript(speakers), make_scenario(speakers))
-        self.assertTrue(any("too high" in i for i in issues))
+        self.assertTrue(any("exceeds maximum" in i for i in issues))
 
     def test_invalid_speaker(self):
         speakers = ["mia", "jaylen"] * 6

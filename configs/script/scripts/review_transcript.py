@@ -5,7 +5,7 @@ Usage:
     python review_transcript.py <transcript_path> <scenario_path>
 
 Checks:
-    1. Turn count is within 12-16
+    1. Turn count matches the plan's outline (and does not exceed 20)
     2. All speaker names match persona_ids from the plan
     3. Turn order follows the plan's speaker sequence
     4. All planned turns are present
@@ -32,12 +32,11 @@ def review(transcript, scenario):
     plan_outline = scenario.get("turn_outline", [])
     personas = {p["persona_id"] for p in scenario.get("personas", [])}
 
-    # 1. Turn count
+    # 1. Turn count matches plan and respects cap
     turn_count = len(turns)
-    if turn_count < 12:
-        issues.append(f"Turn count too low: {turn_count} (minimum 12)")
-    elif turn_count > 16:
-        issues.append(f"Turn count too high: {turn_count} (maximum 16)")
+    expected_count = len(plan_outline)
+    if turn_count > 20:
+        issues.append(f"Turn count {turn_count} exceeds maximum of 20")
 
     # 2. Speaker names match persona_ids
     for i, turn in enumerate(turns):

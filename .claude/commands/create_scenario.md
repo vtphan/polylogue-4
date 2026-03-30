@@ -36,7 +36,9 @@ Based on the operator's input, generate a complete scenario plan:
    - Ensure the combination is detectable by 6th graders — not too subtle, not too obvious
    - **Prefer flaw-type diversity across detection acts.** When targeting 2+ flaws, mix an individual flaw (Acts 1-3: something wrong with what one person *says*) with an interaction flaw (Acts 4-5: something wrong with how the group *resolves*). Two individual flaws produce discussions where students evaluate speakers in isolation; adding an interaction flaw forces students to evaluate the group's reasoning process — the skill that transfers to their own PBL teamwork. This is a recommendation, not a hard rule — there are legitimate scenarios where two Act 2 flaws are the right choice — but the default should be to mix.
 
-4. **Write the turn outline** (12-16 turns):
+4. **Write the turn outline:**
+   - **Keep the discussion as short as possible while giving each target flaw room to surface naturally.** Every turn must earn its place — advancing the argument, creating tension, surfacing a flaw, or resolving/failing to resolve. Do not pad with filler conversation. Maximum 20 turns.
+   - **The discussion is about one thing.** One decision, one question, one problem. The outline ends when that thing is resolved or clearly fails to resolve. Do not add turns that open new threads, introduce tangential topics, or extend the conversation into related-but-separate questions. A discussion about whether to focus on reforestation ends when the group decides (or fails to decide) — it doesn't continue into escape room design or what other groups are doing.
    - Specify speaker and accomplishes for each turn
    - **The `accomplishes` field is the most important element.** For flaw-surfacing turns, it must steer the dialog writer toward producing the flaw WITHOUT naming the flaw or revealing pedagogical intent.
      - BAD: "Make a sweeping claim supported by insufficient evidence"
@@ -82,7 +84,7 @@ python configs/shared/scripts/validate_schema.py registry/{scenario_id}/scenario
 If the script is not available, verify manually:
 - All required fields from `configs/scenario/schemas/scenario_plan.yaml` are present
 - Canonical IDs match the reference libraries exactly
-- Turn count is 12-16
+- Turn count does not exceed 20
 - Each target flaw references a valid persona_id and valid turn numbers
 
 ## Output
@@ -102,5 +104,6 @@ Before saving, verify:
 - [ ] No 4+ consecutive turns of unchecked agreement
 - [ ] Omission flaws have at least one turn where a persona briefly surfaces the missing concern
 - [ ] Evidence claims are briefly challenged before being accepted
-- [ ] Turn count is 12-16
+- [ ] Turn count is appropriate for the scenario's complexity (no filler turns, maximum 20)
+- [ ] The discussion is about one thing — no tangential threads after the main question resolves
 - [ ] Each persona speaks multiple times with natural back-and-forth

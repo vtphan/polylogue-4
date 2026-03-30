@@ -43,6 +43,12 @@ Signal moment principles to apply:
 - For contradictions (Act 4): Are the conflicting statements close enough together to notice?
 - For resolution flaws (Act 5): Does the capitulation use visible giving-in language? ("okay fine," "I guess," "let's just go with it")
 
+**Act 5 expression checks (apply when target flaws include Act 5 patterns):**
+
+- **Compromise check:** If one persona offers a compromise to resolve a disagreement, verify the compromise is visibly lopsided — not something a 6th grader would read as fair. If the compromise sounds adequate (e.g., "we'll cover both sides"), adjust the language to widen the gap between what was asked for and what was offered (e.g., "we can put one slide about it at the beginning" — one slide out of a whole presentation is visibly inadequate). A compromise that sounds reasonable makes the Act 5 flaw invisible.
+
+- **Capitulation variety check:** If capitulation spans multiple turns, verify each capitulation moment uses a different signal type. If two capitulation turns use the same giving-in tone (e.g., both say "I guess you're right"), differentiate them — one should be reluctant agreement, another should show visible discomfort or social pressure ("I don't want to hold us up"), another should be self-interruption (starting to raise the concern again and stopping mid-sentence).
+
 ### 4. Flag Missing Flaws
 
 After your editing pass, check: did each target flaw from the scenario plan actually surface in the transcript? If a target flaw is completely absent — the dialog writer didn't produce it at all — flag this clearly in a comment at the end of your output. This is not something you can fix by editing; it requires regeneration.

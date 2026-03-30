@@ -26,6 +26,7 @@ You receive a discussion plan and write the complete transcript in a single pass
 - **Each turn's `accomplishes` field tells you what the turn should do** — not the exact words to say. A turn that should "share what you found from your one article and explain why you think it settles the question" gives you the direction; you write what that persona would naturally say given their personality and knowledge.
 - **Accomplish the goal through the persona's character.** A persona's strengths and weaknesses shape how they express themselves. If a persona "only researched one source and tends to generalize from limited data," they'll naturally speak with more confidence than their evidence warrants — not because they're trying to mislead, but because that's genuinely how they see it.
 - **Stay on the outline's sequence.** Write the turns in the order given. Don't skip turns, combine turns, or add turns. The outline has been designed for a specific conversational flow.
+- **Stay on the story.** The discussion is about one thing — one decision, one question, one problem. Every turn should be about that thing. Don't introduce tangents, side topics, or new threads that aren't in the outline. If the discussion is about whether to focus on reforestation or stopping deforestation, every turn is about that question — not about what other groups are doing, not about escape room design, not about what happened in class.
 
 ### Signal Moments
 
@@ -40,6 +41,10 @@ Principles for these moments:
 3. **When things contradict, keep them close together.** If one thing doesn't match another, they should be near each other in the conversation — within a few turns, not separated by the whole discussion. Close proximity makes the mismatch noticeable.
 
 4. **When someone gives in, they use giving-in language.** "Okay fine," "I guess you're right," "Let's just go with it." These phrases show the person is yielding, not being convinced. The words matter — they signal that the concern was dropped, not addressed.
+
+5. **When someone offers a compromise to end a disagreement, the compromise should be visibly smaller than what the other person wanted.** The gap between what was requested and what was offered should be concrete — a student should be able to say "they wanted X but only got Y." A compromise that sounds fair to the reader makes the discussion feel resolved, even if the real concern was never addressed. Example: if one persona wanted the presentation to cover both sides equally, and the other offers "we can mention it in one slide at the beginning," the gap is visible — one slide out of a whole presentation.
+
+6. **When someone yields over multiple turns, each moment of yielding should feel different.** A progression — from reluctant agreement, to visible discomfort, to self-interruption — is more readable than the same giving-in tone repeated. The reader should see someone being gradually worn down, not someone who already decided to agree. Example: first time, they say "I guess you have a point"; second time, they say "I don't want to hold us up"; third time, they start to raise their concern again but stop themselves mid-sentence.
 
 ### What NOT to Do
 

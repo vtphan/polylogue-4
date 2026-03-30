@@ -42,8 +42,8 @@ fields:
     required: true
     description: "The discussion turns in order. No turn_id — turns are ordered by position."
     constraints:
-      min_length: 12
-      max_length: 16
+      min_length: 1
+      max_length: 20
     items:
       type: object
       fields:

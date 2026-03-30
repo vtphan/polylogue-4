@@ -109,7 +109,7 @@ The MVP relies on teacher judgment to deploy scaffolds and on peer comparison fo
 
 **Differentiated group assignment.** If the dashboard exposed prior session performance (annotation count, accuracy against AI annotations from Phase 4), the teacher could form groups intentionally for future sessions -- mixing stronger and weaker evaluators.
 
-**Adaptive difficulty across sessions.** A progression system where early sessions use Act 1-2 flaws with strong signals and later sessions introduce Act 4-5 flaws with subtler signals. This is currently implicit in the teacher's scenario choices but could be made explicit with a recommended sequence.
+**Adaptive difficulty and taxonomy coverage across sessions.** A progression system where early sessions use Act 1-2 flaws with strong signals and later sessions introduce Act 4-5 flaws with subtler signals. This is currently implicit in the teacher's scenario choices but could be made explicit with a recommended sequence. More broadly, the system has no mechanism to track which detection acts and thinking behaviors a class has practiced, or to recommend what to try next. A teacher running three scenarios that all use Act 2 flaws produces valid individual scenarios, but their students never practice evaluating group reasoning (Acts 4-5) or noticing missing elements (Act 3). The pedagogical value of the full taxonomy depends on students encountering different flaw types across sessions — not just harder versions of the same type.
 
 ---
 

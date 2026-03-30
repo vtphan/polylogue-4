@@ -945,6 +945,8 @@ Grounded in: studying critical thinking development, measuring argumentation qua
 
 **MVP scope note:** Track development and Export require user accounts, persistent storage, and data infrastructure that are beyond MVP scope. For MVP, researcher access is through the registry files and teacher dashboard. Formal research tooling is a post-MVP investment.
 
+**Known gap: cross-session taxonomy coverage.** Each scenario is evaluated in isolation — the pedagogical reviewer assesses one transcript, the evaluator annotates one transcript, the learning scientist validates one plan. No component tracks which detection acts and thinking behaviors a class has encountered across sessions, or recommends what to cover next. A teacher who independently runs three Act 2 scenarios produces three individually sound activities, but their students never practice Acts 3-5. The system's pedagogical value depends on cumulative exposure to the full taxonomy. For MVP, this is the teacher's responsibility. Post-MVP, the teacher dashboard could track per-class coverage and surface recommendations (e.g., "This class has not yet practiced Act 5 flaws — consider a scenario targeting `abandoned_concern` or `fake_agreement`").
+
 ---
 
 ## Directory Structure

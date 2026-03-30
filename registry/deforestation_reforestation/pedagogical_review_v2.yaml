@@ -1,0 +1,66 @@
+scenario_id: deforestation_reforestation
+
+overall_score: 4
+
+explanation: |
+  This transcript is a solid teaching tool that handles both target flaws well
+  and reads naturally. The two personas have distinct voices — Sofia is enthusiastic,
+  fast-talking, and builds momentum; Marcus is more measured and questioning. You can
+  tell who is speaking without names, which is a strong sign of naturalism.
+
+  The missing_downsides flaw lands effectively across turns 5-8. Sofia's turn 5 is
+  the clearest signal: she rattles off benefits — wildlife, community involvement,
+  jobs, volunteers — and caps it with "I don't see any downsides," which is a
+  concrete, noticeable moment. A 6th grader reading that would likely pause,
+  especially since Marcus just asked about downsides in turn 4. Turns 7-8 continue
+  the pattern as Sofia acknowledges the 20-year timeline but immediately pivots back
+  to positives without engaging with the concern. The signal is slightly repetitive
+  across these turns (each one is basically "yes but look at the good stuff"), though
+  the content varies enough — timeline dismissal, then visual presentation ideas —
+  to avoid complete flatness.
+
+  The abandoned_concern flaw is the transcript's strongest moment. Turn 9 is Marcus
+  at his most direct: "if we only show the good parts, that's not really honest."
+  This is a clear, principled objection a student can latch onto. The capitulation
+  across turns 11 and 13 is well-differentiated: turn 11 is pragmatic surrender
+  ("I don't want to hold us up"), while turn 13 is the visible self-interruption
+  ("I still think we should maybe — actually, never mind, it's fine"). That
+  self-interruption in turn 13 is excellent — it makes the abandonment concrete and
+  unmistakable.
+
+  Group dynamics are genuinely strong. There is real friction in turns 2-4 and 6-9.
+  Marcus and Sofia are responding to each other's actual words. This is a
+  conversation, not parallel monologues.
+
+  The main weakness is that Sofia's turn 10 offer — "mention deforestation at the
+  very beginning, like one slide" — sounds like a reasonable compromise on its
+  surface. Most students would still catch the flaw because of turn 13's
+  self-interruption, but the compromise offer slightly muddies the water.
+
+  Discussion potential is good. Students could reasonably debate whether Sofia is
+  being unfair or just being strategic about persuasion, and whether Marcus gave up
+  or made a reasonable decision to move on.
+
+revision_strategy: null
+
+flaw_assessments:
+  - flaw_pattern: missing_downsides
+    thinking_behavior: tunnel_vision
+    detectable_by_6th_graders: "yes"
+    expression_quality: |
+      Most visible in turn 5, where Sofia lists benefits and concludes with "I don't
+      see any downsides." This works because Marcus just asked about downsides in
+      turn 4, so the absence is fresh. Turns 7-8 continue the pattern with timeline
+      dismissal and presentation visuals. The flaw feels natural — Sofia is genuinely
+      excited, not performing a mistake.
+
+  - flaw_pattern: abandoned_concern
+    thinking_behavior: groupthink
+    detectable_by_6th_graders: "yes"
+    expression_quality: |
+      Expressed through a clear three-beat progression: strong principled stand
+      (turn 9: "that's not really honest"), pragmatic surrender (turn 11: "I don't
+      want to hold us up"), and self-interruption (turn 13: "actually, never mind,
+      it's fine"). The self-interruption is the transcript's best pedagogical moment —
+      concrete and unmistakable. Marcus abandons his concern not because Sofia refuted
+      it but because disagreeing further feels socially costly.

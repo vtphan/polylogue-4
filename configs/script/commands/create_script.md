@@ -52,7 +52,7 @@ python configs/script/scripts/review_transcript.py registry/{scenario_id}/script
 ```
 
 If the script is not available, verify manually:
-- **Turn count**: Is it within 12-16 turns?
+- **Turn count**: Does it match the plan's outline and not exceed 20 turns?
 - **Speaker names**: Do all speakers match persona_ids from the plan?
 - **Turn order**: Does the speaker sequence follow the plan's turn outline?
 - **All turns present**: Are all planned turns accounted for?
@@ -90,7 +90,32 @@ Save the polished pre-enumeration transcript as an intermediate artifact:
 
 **Check for missing flaw flags.** If the instructional designer flags any target flaws as completely absent (in a comment block at the end), report this to the operator. A missing flaw requires regeneration (return to Step 3), not further editing.
 
-### Step 7: Enumerate turns
+### Step 7: Pedagogical review
+
+Invoke the **pedagogical reviewer** agent with:
+- The polished pre-enumeration transcript (`registry/{scenario_id}/script_pre.yaml`)
+- The **full** scenario plan (including `target_flaws`)
+
+The pedagogical reviewer assesses whether the transcript works as a teaching tool for 6th graders. It produces a scored assessment (1-5) covering flaw detectability, group dynamics, compromise quality, signal variety, discussion potential, and naturalism.
+
+Save the assessment to `registry/{scenario_id}/pedagogical_review.yaml`.
+
+If `configs/shared/scripts/validate_schema.py` exists:
+
+```bash
+python configs/shared/scripts/validate_schema.py registry/{scenario_id}/pedagogical_review.yaml configs/script/schemas/pedagogical_review.yaml
+```
+
+**Check the score:**
+- **Score >= 4**: Proceed to Step 8 (enumeration).
+- **Score <= 3**: **Halt.** Display the `explanation` and `revision_strategy` to the operator. Do not enumerate or save the final transcript. The operator decides what to do:
+  - Revise the scenario plan and re-run from `create_scenario`
+  - Accept the transcript despite the score (operator override)
+  - Adjust prompt guidance and regenerate
+
+Regenerating with the same prompts will produce similar quality. The `revision_strategy` names the upstream change needed.
+
+### Step 8: Enumerate turns
 
 If `configs/script/scripts/enumerate_turns.py` exists, run it:
 
@@ -103,7 +128,7 @@ If the script is not available, enumerate manually:
 - Assign `id` to each sentence within each turn: `turn_01.s01`, `turn_01.s02`, ...
 - Numbering is sequential, zero-padded to two digits
 
-### Step 8: Validate and save
+### Step 9: Validate and save
 
 Save the enumerated transcript to `registry/{scenario_id}/script.yaml`.
 
@@ -122,6 +147,7 @@ If the script is not available, verify manually:
 ## Output
 
 - `registry/{scenario_id}/script_pre.yaml` — polished pre-enumeration transcript (intermediate)
+- `registry/{scenario_id}/pedagogical_review.yaml` — pedagogical assessment
 - `registry/{scenario_id}/script.yaml` — final enumerated transcript
 
 ## Summary of LLM Calls
@@ -130,5 +156,6 @@ If the script is not available, verify manually:
 |------|-------|-------------|
 | 1 | Dialog writer | Generates raw transcript (may repeat up to 3x) |
 | 2 | Instructional designer | Polishes the accepted transcript |
+| 3 | Pedagogical reviewer | Assesses pedagogical effectiveness (score >= 4 to proceed) |
 
 Structural review and enumeration are scripts (or manual), not LLM calls.

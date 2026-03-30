@@ -1,0 +1,92 @@
+scenario_id: deforestation_reforestation
+
+personas:
+  - persona_id: sofia
+    name: Sofia
+    role: "Researcher focused on reforestation solutions"
+
+  - persona_id: marcus
+    name: Marcus
+    role: "Researcher focused on causes of deforestation"
+
+turns:
+  - speaker: sofia
+    sentences:
+      - text: "Okay so I found this really cool program in Ethiopia where they planted like 350 million trees in one day."
+      - text: "One day!"
+      - text: "And it actually worked — the areas that were all dried out started getting greener and animals came back."
+      - text: "I think we should totally make our presentation about reforestation because it's such a good story."
+
+  - speaker: marcus
+    sentences:
+      - text: "That is pretty cool, but I was reading about why deforestation happens in the first place."
+      - text: "Like, every year they cut down an area of forest the size of a whole country — mostly for farming and logging."
+      - text: "I feel like our presentation should talk about why trees are being cut down, because if we don't stop that, does planting new ones even matter?"
+
+  - speaker: sofia
+    sentences:
+      - text: "I mean, yeah, deforestation is bad, obviously."
+      - text: "But for our presentation I think reforestation is way better because it's actually something people can do."
+      - text: "Nobody wants to sit through a presentation that's just like 'everything is terrible,' you know?"
+
+  - speaker: marcus
+    sentences:
+      - text: "But that's kind of like filling up a bathtub while the drain is open."
+      - text: "If they keep cutting trees down faster than we plant them, we're not actually fixing anything."
+      - text: "Shouldn't we at least talk about the downsides of only planting trees?"
+
+  - speaker: sofia
+    sentences:
+      - text: "Okay but listen — the program I found planted 350 million trees and it brought back all this wildlife and the communities got involved and it even created jobs."
+      - text: "Like, whole villages were working together on it."
+      - text: "And some of these programs in other countries got thousands of volunteers — kids our age were planting trees too."
+      - text: "It's honestly so inspiring, I don't see any downsides."
+
+  - speaker: marcus
+    sentences:
+      - text: "I actually looked up that Ethiopia program too though."
+      - text: "It took like 20 years before the forests really came back."
+      - text: "So what happens during those 20 years while people are still cutting down the old forests?"
+
+  - speaker: sofia
+    sentences:
+      - text: "I mean, 20 years is a long time but at least they're doing something, right?"
+      - text: "That's better than just talking about how bad everything is."
+      - text: "Our presentation is going to be way more powerful if we show people there's a real solution."
+
+  - speaker: sofia
+    sentences:
+      - text: "Oh and we could have this whole section with before-and-after photos of the reforested areas."
+      - text: "Like, show the bare land and then the same spot years later with all the trees."
+      - text: "And we could end with a call to action about how our community could start a tree-planting project."
+      - text: "People would love that."
+
+  - speaker: marcus
+    sentences:
+      - text: "But Sofia, if we only show the good parts, that's not really honest."
+      - text: "Our audience is going to think tree planting just fixes everything, and it doesn't."
+      - text: "I think they deserve to know the full picture — like that it takes forever and it doesn't help if cutting keeps happening."
+
+  - speaker: sofia
+    sentences:
+      - text: "I get what you're saying, I really do."
+      - text: "But I genuinely think a positive message works better — people actually go out and do stuff when they feel hopeful."
+      - text: "How about we mention deforestation at the very beginning, like one slide that says 'here's the problem,' and then the whole rest of the presentation is about the solution?"
+
+  - speaker: marcus
+    sentences:
+      - text: "I guess you have a point about keeping it positive."
+      - text: "One slide at the beginning is... yeah, okay."
+      - text: "I don't want to hold us up, we still have to build the escape room part too."
+
+  - speaker: sofia
+    sentences:
+      - text: "Yes, perfect!"
+      - text: "So we'll do one quick slide on deforestation at the start and then the rest is all reforestation — the Ethiopia example, the before-and-after photos, the community stuff, and the call to action at the end."
+      - text: "This is going to be so good."
+
+  - speaker: marcus
+    sentences:
+      - text: "Yeah, sounds like a plan."
+      - text: "I still think we should maybe — actually, never mind, it's fine."
+      - text: "Let's just start working on the slides."

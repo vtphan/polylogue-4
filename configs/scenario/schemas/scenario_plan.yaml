@@ -116,10 +116,10 @@ fields:
   turn_outline:
     type: list
     required: true
-    description: "Turn-by-turn plan for the discussion."
+    description: "Turn-by-turn plan for the discussion. Length is determined by what the scenario needs — as short as possible while giving each target flaw room to surface naturally. Maximum 20 turns."
     constraints:
-      min_length: 12
-      max_length: 16
+      min_length: 1
+      max_length: 20
     items:
       type: object
       fields:

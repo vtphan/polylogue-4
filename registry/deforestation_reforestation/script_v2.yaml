@@ -1,0 +1,137 @@
+scenario_id: "deforestation_reforestation"
+personas:
+- persona_id: "sofia"
+  name: "Sofia"
+  role: "Researcher focused on reforestation solutions"
+- persona_id: "marcus"
+  name: "Marcus"
+  role: "Researcher focused on causes of deforestation"
+turns:
+- turn_id: "turn_01"
+  speaker: sofia
+  sentences:
+  - id: "turn_01.s01"
+    text: "Okay so I found this really cool program in Ethiopia where they planted like 350 million trees in one day."
+  - id: "turn_01.s02"
+    text: "One day!"
+  - id: "turn_01.s03"
+    text: "And it actually worked — the areas that were all dried out started getting greener and animals came back."
+  - id: "turn_01.s04"
+    text: "I think we should totally make our presentation about reforestation because it's such a good story."
+- turn_id: "turn_02"
+  speaker: marcus
+  sentences:
+  - id: "turn_02.s01"
+    text: "That is pretty cool, but I was reading about why deforestation happens in the first place."
+  - id: "turn_02.s02"
+    text: "Like, every year they cut down an area of forest the size of a whole country — mostly for farming and logging."
+  - id: "turn_02.s03"
+    text: "I feel like our presentation should talk about why trees are being cut down, because if we don't stop that, does\
+      \ planting new ones even matter?"
+- turn_id: "turn_03"
+  speaker: sofia
+  sentences:
+  - id: "turn_03.s01"
+    text: "I mean, yeah, deforestation is bad, obviously."
+  - id: "turn_03.s02"
+    text: "But for our presentation I think reforestation is way better because it's actually something people can do."
+  - id: "turn_03.s03"
+    text: "Nobody wants to sit through a presentation that's just like 'everything is terrible,' you know?"
+- turn_id: "turn_04"
+  speaker: marcus
+  sentences:
+  - id: "turn_04.s01"
+    text: "But that's kind of like filling up a bathtub while the drain is open."
+  - id: "turn_04.s02"
+    text: "If they keep cutting trees down faster than we plant them, we're not actually fixing anything."
+  - id: "turn_04.s03"
+    text: "Shouldn't we at least talk about the downsides of only planting trees?"
+- turn_id: "turn_05"
+  speaker: sofia
+  sentences:
+  - id: "turn_05.s01"
+    text: "Okay but listen — the program I found planted 350 million trees and it brought back all this wildlife and the communities\
+      \ got involved and it even created jobs."
+  - id: "turn_05.s02"
+    text: "Like, whole villages were working together on it."
+  - id: "turn_05.s03"
+    text: "And some of these programs in other countries got thousands of volunteers — kids our age were planting trees too."
+  - id: "turn_05.s04"
+    text: "It's honestly so inspiring, I don't see any downsides."
+- turn_id: "turn_06"
+  speaker: marcus
+  sentences:
+  - id: "turn_06.s01"
+    text: "I actually looked up that Ethiopia program too though."
+  - id: "turn_06.s02"
+    text: "It took like 20 years before the forests really came back."
+  - id: "turn_06.s03"
+    text: "So what happens during those 20 years while people are still cutting down the old forests?"
+- turn_id: "turn_07"
+  speaker: sofia
+  sentences:
+  - id: "turn_07.s01"
+    text: "I mean, 20 years is a long time but at least they're doing something, right?"
+  - id: "turn_07.s02"
+    text: "That's better than just talking about how bad everything is."
+  - id: "turn_07.s03"
+    text: "Our presentation is going to be way more powerful if we show people there's a real solution."
+- turn_id: "turn_08"
+  speaker: sofia
+  sentences:
+  - id: "turn_08.s01"
+    text: "Oh and we could have this whole section with before-and-after photos of the reforested areas."
+  - id: "turn_08.s02"
+    text: "Like, show the bare land and then the same spot years later with all the trees."
+  - id: "turn_08.s03"
+    text: "And we could end with a call to action about how our community could start a tree-planting project."
+  - id: "turn_08.s04"
+    text: "People would love that."
+- turn_id: "turn_09"
+  speaker: marcus
+  sentences:
+  - id: "turn_09.s01"
+    text: "But Sofia, if we only show the good parts, that's not really honest."
+  - id: "turn_09.s02"
+    text: "Our audience is going to think tree planting just fixes everything, and it doesn't."
+  - id: "turn_09.s03"
+    text: "I think they deserve to know the full picture — like that it takes forever and it doesn't help if cutting keeps\
+      \ happening."
+- turn_id: "turn_10"
+  speaker: sofia
+  sentences:
+  - id: "turn_10.s01"
+    text: "I get what you're saying, I really do."
+  - id: "turn_10.s02"
+    text: "But I genuinely think a positive message works better — people actually go out and do stuff when they feel hopeful."
+  - id: "turn_10.s03"
+    text: "How about we mention deforestation at the very beginning, like one slide that says 'here's the problem,' and then\
+      \ the whole rest of the presentation is about the solution?"
+- turn_id: "turn_11"
+  speaker: marcus
+  sentences:
+  - id: "turn_11.s01"
+    text: "I guess you have a point about keeping it positive."
+  - id: "turn_11.s02"
+    text: "One slide at the beginning is... yeah, okay."
+  - id: "turn_11.s03"
+    text: "I don't want to hold us up, we still have to build the escape room part too."
+- turn_id: "turn_12"
+  speaker: sofia
+  sentences:
+  - id: "turn_12.s01"
+    text: "Yes, perfect!"
+  - id: "turn_12.s02"
+    text: "So we'll do one quick slide on deforestation at the start and then the rest is all reforestation — the Ethiopia\
+      \ example, the before-and-after photos, the community stuff, and the call to action at the end."
+  - id: "turn_12.s03"
+    text: "This is going to be so good."
+- turn_id: "turn_13"
+  speaker: marcus
+  sentences:
+  - id: "turn_13.s01"
+    text: "Yeah, sounds like a plan."
+  - id: "turn_13.s02"
+    text: "I still think we should maybe — actually, never mind, it's fine."
+  - id: "turn_13.s03"
+    text: "Let's just start working on the slides."
