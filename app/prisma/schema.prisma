@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============================================================
+// Pipeline-imported models (from YAML artifacts)
+// ============================================================
+
+model DetectionAct {
+  actId              String        @id @map("act_id")
+  name               String
+  studentQuestion    String        @map("student_question")
+  readingStrategyHint String       @map("reading_strategy_hint")
+  patterns           FlawPattern[]
+
+  @@map("detection_act")
+}
+
+model FlawPattern {
+  patternId    String       @id @map("pattern_id")
+  plainLanguage String      @map("plain_language")
+  description  String
+  actId        String       @map("act_id")
+  detectionAct DetectionAct @relation(fields: [actId], references: [actId])
+
+  @@map("flaw_pattern")
+}
+
+model ThinkingBehavior {
+  behaviorId  String @id @map("behavior_id")
+  name        String
+  description String
+  formalTerm  String @map("formal_term")
+
+  @@map("thinking_behavior")
+}
+
+model Scenario {
+  scenarioId        String              @id @map("scenario_id")
+  topic             String
+  context           String
+  discussionArc     String              @map("discussion_arc")
+  instructionalGoals String             @map("instructional_goals") // JSON array
+  personas          String              // JSON array (full persona objects)
+  targetFlaws       String              @map("target_flaws") // JSON array (teacher-only)
+  turnOutline       String              @map("turn_outline") // JSON array (teacher-only)
+  transcript        Transcript?
+  aiAnnotations     AIAnnotation[]
+  teacherEvaluation TeacherEvaluation?
+  pedagogicalReview PedagogicalReview?
+  classSessions     ClassSession[]
+
+  @@map("scenario")
+}
+
+model Transcript {
+  id         Int      @id @default(autoincrement())
+  scenarioId String   @unique @map("scenario_id")
+  personas   String   // JSON array (name + role only)
+  turns      String   // JSON array (full turn objects with sentences)
+  scenario   Scenario @relation(fields: [scenarioId], references: [scenarioId])
+
+  @@map("transcript")
+}
+
+model AIAnnotation {
+  annotationId    String   @id @map("annotation_id")
+  scenarioId      String   @map("scenario_id")
+  location        String   // JSON: { turn, sentences[] }
+  argumentFlaw    String   @map("argument_flaw") // JSON: { pattern, detection_act, explanation }
+  thinkingBehavior String  @map("thinking_behavior") // JSON: { pattern, explanation }
+  scenario        Scenario @relation(fields: [scenarioId], references: [scenarioId])
+
+  @@map("ai_annotation")
+}
+
+model TeacherEvaluation {
+  id                Int      @id @default(autoincrement())
+  scenarioId        String   @unique @map("scenario_id")
+  annotations       String   // JSON array (full including planned, plausible_alternatives)
+  summary           String   // JSON
+  qualityAssessment String   @map("quality_assessment") // JSON
+  facilitationGuide String   @map("facilitation_guide") // JSON
+  scenario          Scenario @relation(fields: [scenarioId], references: [scenarioId])
+
+  @@map("teacher_evaluation")
+}
+
+model PedagogicalReview {
+  id               Int      @id @default(autoincrement())
+  scenarioId       String   @unique @map("scenario_id")
+  overallScore     Int      @map("overall_score")
+  explanation      String
+  revisionStrategy String?  @map("revision_strategy")
+  flawAssessments  String   @map("flaw_assessments") // JSON array
+  scenario         Scenario @relation(fields: [scenarioId], references: [scenarioId])
+
+  @@map("pedagogical_review")
+}
+
+// ============================================================
+// App-owned models (runtime)
+// ============================================================
+
+model User {
+  id           String   @id @default(cuid())
+  displayName  String   @map("display_name")
+  username     String   @unique // auto-derived: lowercase, spaces → dots
+  passwordHash String?  @map("password_hash") // null for students
+  role         String   // "teacher" | "researcher" | "student"
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Auth relations (BetterAuth)
+  sessions     Session[]
+  accounts     Account[]
+
+  // App relations
+  taughtSessions  ClassSession[]     @relation("teacher")
+  groupMemberships GroupMember[]
+  activities       StudentActivity[]
+  annotations      Annotation[]
+  hintUsages       StudentHintUsage[]
+  reflections      StudentReflection[]
+
+  @@map("user")
+}
+
+// BetterAuth required tables
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String   @id
+  userId                String   @map("user_id")
+  accountId             String   @map("account_id")
+  providerId            String   @map("provider_id")
+  accessToken           String?  @map("access_token")
+  refreshToken          String?  @map("refresh_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  idToken               String?  @map("id_token")
+  password              String?
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("verification")
+}
+
+model ClassSession {
+  sessionId           String   @id @default(cuid()) @map("session_id")
+  scenarioId          String   @map("scenario_id")
+  teacherId           String   @map("teacher_id")
+  sessionCode         String   @unique @map("session_code") // 6-char unique code
+  activePhase         Int      @default(1) @map("active_phase")
+  status              String   @default("active") // "active" | "archived"
+  lifelineBudget      Int      @map("lifeline_budget")
+  locationHintCap     Int      @map("location_hint_cap")
+  characterHintCap    Int      @map("character_hint_cap")
+  perspectiveHintCap  Int      @map("perspective_hint_cap")
+  narrowedHintCap     Int      @map("narrowed_hint_cap")
+  guidedFirstDetection Boolean @map("guided_first_detection")
+  reflectionActive    Boolean  @default(false) @map("reflection_active")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  scenario         Scenario           @relation(fields: [scenarioId], references: [scenarioId])
+  teacher          User               @relation("teacher", fields: [teacherId], references: [id])
+  groups           Group[]
+  phaseTransitions PhaseTransition[]
+  annotations      Annotation[]
+  snapshots        AnnotationSnapshot[]
+  hintUsages       StudentHintUsage[]
+  reflections      StudentReflection[]
+  activities       StudentActivity[]
+
+  @@map("class_session")
+}
+
+model Group {
+  groupId   String        @id @default(cuid()) @map("group_id")
+  sessionId String        @map("session_id")
+  session   ClassSession  @relation(fields: [sessionId], references: [sessionId])
+  members   GroupMember[]
+
+  @@map("group")
+}
+
+model GroupMember {
+  id      Int    @id @default(autoincrement())
+  userId  String @map("user_id")
+  groupId String @map("group_id")
+  user    User   @relation(fields: [userId], references: [id])
+  group   Group  @relation(fields: [groupId], references: [groupId])
+
+  @@unique([userId, groupId])
+  @@map("group_member")
+}
+
+model StudentActivity {
+  id              Int          @id @default(autoincrement())
+  userId          String       @map("user_id")
+  sessionId       String       @map("session_id")
+  firstOpened     DateTime?    @map("first_opened")
+  lastActive      DateTime?    @map("last_active")
+  annotationCount Int          @default(0) @map("annotation_count")
+  user            User         @relation(fields: [userId], references: [id])
+  session         ClassSession @relation(fields: [sessionId], references: [sessionId])
+
+  @@unique([userId, sessionId])
+  @@map("student_activity")
+}
+
+model PhaseTransition {
+  id            Int          @id @default(autoincrement())
+  sessionId     String       @map("session_id")
+  fromPhase     Int          @map("from_phase")
+  toPhase       Int          @map("to_phase")
+  transitionedAt DateTime   @default(now()) @map("transitioned_at")
+  session       ClassSession @relation(fields: [sessionId], references: [sessionId])
+
+  @@map("phase_transition")
+}
+
+model Annotation {
+  id                Int          @id @default(autoincrement())
+  userId            String       @map("user_id")
+  sessionId         String       @map("session_id")
+  phaseCreated      Int          @map("phase_created")
+  location          String       // JSON: { sentences: string[] }
+  detectionAct      String?      @map("detection_act") // act_id from library
+  description       String?
+  thinkingBehavior  String?      @map("thinking_behavior") // behavior_id or null
+  behaviorSource    String?      @map("behavior_source") // "library" | "own_words" | null
+  behaviorOwnWords  String?      @map("behavior_own_words")
+  behaviorExplanation String?    @map("behavior_explanation")
+  submitted         Boolean      @default(false)
+  revisionHistory   String       @default("[]") @map("revision_history") // JSON array
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  user     User         @relation(fields: [userId], references: [id])
+  session  ClassSession @relation(fields: [sessionId], references: [sessionId])
+  snapshots AnnotationSnapshot[]
+
+  @@map("annotation")
+}
+
+model AnnotationSnapshot {
+  id            Int          @id @default(autoincrement())
+  annotationId  Int          @map("annotation_id")
+  sessionId     String       @map("session_id")
+  snapshotPhase Int          @map("snapshot_phase") // 3 or 4
+  snapshotData  String       @map("snapshot_data") // JSON: full annotation state
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  annotation Annotation   @relation(fields: [annotationId], references: [id])
+  session    ClassSession @relation(fields: [sessionId], references: [sessionId])
+
+  @@map("annotation_snapshot")
+}
+
+model StudentHintUsage {
+  id        Int          @id @default(autoincrement())
+  userId    String       @map("user_id")
+  sessionId String       @map("session_id")
+  hintType  String       @map("hint_type") // "location" | "character" | "perspective" | "narrowed"
+  target    String       // flaw pattern for location/narrowed, persona_id for character/perspective
+  usedAt    DateTime     @default(now()) @map("used_at")
+
+  user    User         @relation(fields: [userId], references: [id])
+  session ClassSession @relation(fields: [sessionId], references: [sessionId])
+
+  @@map("student_hint_usage")
+}
+
+model StudentReflection {
+  id            Int          @id @default(autoincrement())
+  userId        String       @map("user_id")
+  sessionId     String       @map("session_id")
+  missedInsight String?      @map("missed_insight")
+  nextStrategy  String?      @map("next_strategy")
+  submittedAt   DateTime?    @map("submitted_at")
+
+  user    User         @relation(fields: [userId], references: [id])
+  session ClassSession @relation(fields: [sessionId], references: [sessionId])
+
+  @@unique([userId, sessionId])
+  @@map("student_reflection")
+}

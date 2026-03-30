@@ -1,0 +1,7 @@
+users:
+  - name: "Teacher Name"
+    password: "change-me"
+    role: teacher
+  - name: "Researcher Name"
+    password: "change-me"
+    role: researcher
