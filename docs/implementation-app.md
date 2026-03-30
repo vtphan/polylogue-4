@@ -308,7 +308,7 @@ These decisions are deferred until pipeline implementation is complete:
 
 3. **Offline resilience.** Does UMS have reliable campus network? If intermittent, the app may need optimistic updates and local state reconciliation. If reliable, polling is sufficient.
 
-4. **Phase 3 real-time needs.** During peer comparison, do students need to see each other's revisions in real-time, or is the comparison view a snapshot taken at Phase 2→3 transition? Snapshot is simpler; real-time requires polling the group's annotations.
+4. ~~**Phase 3 real-time needs.**~~ **Decided.** Snapshot at Phase 2→3 transition. The comparison view operates on a frozen snapshot of submitted annotations; revisions during Phase 3 update only the student's own "My Annotations" tab. A fresh snapshot is taken at the Phase 3→4 transition to include Phase 3 revisions. See `design.md` Phase 3 comparison logic.
 
 5. **Research data export format.** CSV? JSON? Direct SQLite access? Depends on what analysis tools the researcher uses.
 

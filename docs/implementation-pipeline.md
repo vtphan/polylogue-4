@@ -105,7 +105,7 @@ Write 11 schema files:
 | 7 | Evaluation (full) | `configs/evaluation/schemas/evaluation_full.yaml` | Lines 430-482 |
 | 8 | Evaluation (student-facing) | `configs/evaluation/schemas/evaluation_student.yaml` | Lines 631, 634-646 |
 | 9 | Session configuration | `configs/app/schemas/session_configuration.yaml` | Lines 681-699 (includes `student_activity` block for teacher monitoring) |
-| 10 | Student annotations | `configs/app/schemas/student_annotations.yaml` | Lines 653-675 |
+| 10 | Student annotations | `configs/app/schemas/student_annotations.yaml` | Lines 653-675 (includes `behavior_own_words` for free-text thinking behavior descriptions) |
 | 11 | Dialog writer input | `configs/script/schemas/dialog_writer_input.yaml` | Lines 344-349 |
 
 **Outputs:**

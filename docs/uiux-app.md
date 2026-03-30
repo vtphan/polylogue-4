@@ -576,8 +576,6 @@ This is the same expand-on-select pattern used in the DetectionActPicker — con
 
 **Library-first design.** The 8 library behaviors are presented first and prominently. The own-words option is last, styled as a fallback (smaller font, muted color, separated by a divider). This encourages library selection (which is structurally comparable in Phase 3) without preventing genuine novel observations. When a library behavior is selected, the annotation's `thinking_behavior` field is set to the `behavior_id`, `behavior_source` is set to `"library"`, and `behavior_own_words` is set to `null`. When own-words is used, `thinking_behavior` is set to `null`, `behavior_source` is set to `"own_words"`, and the free-text behavior description is stored in `behavior_own_words`. The `behavior_own_words` field stores what the student wrote to describe the thinking pattern (e.g., "she was just being stubborn about her idea"); this is distinct from `behavior_explanation`, which stores the connection between the behavior and the flaw.
 
-**Note: schema addition required.** The `behavior_own_words: string | null` field is not in the current `student_annotations.yaml` schema (design doc lines 653-675). It must be added during pipeline Phase 2 (schema authoring). The design doc's student annotation schema should be updated to include this field.
-
 **Explanation field.** Required free text, stored in the annotation's `behavior_explanation` field. Appears only after a thinking behavior is selected (progressive disclosure — don't show the explanation prompt until the student has picked a behavior). Prompt: "How does this thinking habit lead to the problem you noticed?" Minimum 15 characters.
 
 **Submission.** The "Submit My Work" button is at the bottom of the annotation checklist. Disabled until all annotations have a thinking behavior assigned (button shows "Assign all thinking behaviors to submit" when disabled). When tapped:
@@ -1281,8 +1279,9 @@ The student app polls the server at a regular interval:
 | What's polled | Interval | Used by |
 |--------------|----------|---------|
 | Active phase | 5 seconds | Student: detect phase transitions |
-| Peer annotations | 10 seconds | Student: Phase 3 comparison view updates |
 | Student activity | 10 seconds | Teacher: monitoring dashboard |
+
+Peer annotations are **not polled**. The Phase 3 comparison view operates on a snapshot taken at the Phase 2→3 transition. A fresh snapshot (including Phase 3 revisions) is taken at the Phase 3→4 transition. See design.md Phase 3 comparison logic.
 
 Polling starts when the student joins the session and stops when they close the tab. Lightweight requests — only changed data, not full re-fetches.
 

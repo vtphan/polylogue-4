@@ -47,5 +47,4 @@ polylogue-4/
 
 ## Notes
 
-- Pipeline schemas include a `behavior_own_words` field in the student annotation schema — this was added after the initial design to support free-text thinking behavior descriptions in the app's Phase 2 and comparison logic.
 - The app uses Next.js + SQLite (Prisma) + TypeScript + Tailwind CSS. See `docs/implementation-app.md` for tech stack details and multi-machine development setup.
