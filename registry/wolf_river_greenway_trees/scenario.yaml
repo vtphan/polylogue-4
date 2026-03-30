@@ -1,0 +1,69 @@
+scenario_id: wolf_river_greenway_trees
+topic: "Whether Memphis should plant more trees along the Wolf River Greenway to help with summer heat"
+context: "A 6th-grade STEM class is working on the PBL driving question: 'What are the major threats affecting our global environment, and what can our communities do to protect our ecosystems?' This group is researching urban heat and exploring whether planting trees along the Wolf River Greenway would help cool their neighborhoods during Memphis's hot summers."
+instructional_goals:
+  - "Practice recognizing when someone gives the wrong reason for why something happens, especially when they keep focusing on one explanation and ignore a better one"
+
+personas:
+  - persona_id: jayla
+    name: Jayla
+    role: "Researcher focused on climate change and trees"
+    perspective: "Believes planting trees along the Greenway will cool the area because trees absorb CO2, which is a greenhouse gas that traps heat — so removing CO2 from the air means less trapped heat and cooler temperatures"
+    strengths:
+      - "Researched the connection between trees and climate change and understands that trees absorb CO2"
+      - "Knows that CO2 is a greenhouse gas and can explain the basic greenhouse effect"
+    weaknesses:
+      - "Learned about the greenhouse effect and trees absorbing CO2, and jumped to the conclusion that this is how trees cool down a neighborhood — hasn't considered that CO2 absorption works on a global scale over decades, not on a street-level scale on a hot day"
+      - "Once she connected 'trees absorb greenhouse gas' to 'less greenhouse gas means cooler,' she stopped looking into other explanations for why it feels cooler under trees"
+
+  - persona_id: deshawn
+    name: DeShawn
+    role: "Researcher focused on urban heat islands"
+    perspective: "Thinks trees would help, but suspects the cooling comes from shade blocking the sun and pavement absorbing less heat — not from CO2 absorption"
+    strengths:
+      - "Has personal experience noticing how much cooler shaded areas feel compared to sunny pavement"
+      - "Researched urban heat islands and understands that dark surfaces like roads and rooftops absorb and radiate heat"
+    weaknesses:
+      - "Hasn't researched evapotranspiration or the specific science of how trees cool air, so he can't fully explain the mechanism behind what he observes"
+      - "When someone gives a confident scientific-sounding explanation, he tends to doubt his own instincts even when he's closer to being right"
+
+discussion_arc: "The discussion opens with Jayla sharing her research connecting trees, CO2, and cooling. DeShawn responds from his own experience and research on urban heat islands, suggesting shade is the real reason it feels cooler under trees. Jayla pushes back with a confident explanation about greenhouse gases — if trees remove the gas that traps heat, the area cools down. DeShawn questions whether a few trees along the Greenway could really absorb enough CO2 to matter, which is exactly the right instinct. But Jayla doubles down with a confident, scientific-sounding explanation that conflates global climate mechanisms with local cooling. DeShawn, unsure of his own understanding, accepts Jayla's reasoning even though his shade-based intuition was closer to correct. The discussion ends with both agreeing on a conclusion built on a misconception about why trees cool neighborhoods."
+
+target_flaws:
+  - flaw_pattern: wrong_cause
+    thinking_behavior: tunnel_vision
+    surfaces_in: [3, 5]
+    persona: jayla
+
+turn_outline:
+  - turn: 1
+    speaker: jayla
+    accomplishes: "Share what you learned about trees and climate change — explain that trees absorb CO2, CO2 is a greenhouse gas that traps heat, and planting trees along the Greenway would cool things down by removing that heat-trapping gas from the air"
+
+  - turn: 2
+    speaker: deshawn
+    accomplishes: "Respond with what you've noticed and researched — you've felt how much cooler it is under a tree on a hot day, and your research on urban heat islands says dark surfaces like roads absorb heat, so you think shade is the main reason trees cool an area"
+
+  - turn: 3
+    speaker: jayla
+    accomplishes: "Explain why you think DeShawn's shade idea is only part of the story — argue that the real science is about the greenhouse effect, that CO2 traps heat in the atmosphere, and since trees absorb CO2, they're actually removing the thing that makes it hot"
+
+  - turn: 4
+    speaker: deshawn
+    accomplishes: "Question Jayla's reasoning — point out that the greenhouse effect is about the whole planet's atmosphere, so how would a few hundred trees on one greenway change the temperature right here in Memphis, and ask whether shade is doing more of the work than CO2 absorption"
+
+  - turn: 5
+    speaker: jayla
+    accomplishes: "Respond confidently — say that every bit of CO2 removed helps, and that the greenhouse effect is the reason summers are getting hotter, so removing the cause of the heat is more scientific than just blocking the sun with shade"
+
+  - turn: 6
+    speaker: deshawn
+    accomplishes: "Admit that Jayla's explanation sounds more scientific than yours, even though she never actually explained why shade wouldn't be the main reason it feels cooler — say you know CO2 and the greenhouse effect are real, so maybe she's right"
+
+  - turn: 7
+    speaker: jayla
+    accomplishes: "Wrap up by saying shade is a nice bonus but the real science is the CO2 absorption — frame removing greenhouse gas as the main reason to plant trees along the Greenway, and suggest using this as their key argument for the project"
+
+  - turn: 8
+    speaker: deshawn
+    accomplishes: "Agree to go with Jayla's explanation for the project — say okay, that sounds good, even though you still have a nagging feeling that shade is doing more of the work than she thinks"

@@ -1,0 +1,59 @@
+scenario_id: wolf_river_greenway_trees
+
+personas:
+  - persona_id: jayla
+    name: Jayla
+    role: "Researcher focused on climate change and trees"
+
+  - persona_id: deshawn
+    name: DeShawn
+    role: "Researcher focused on urban heat islands"
+
+turns:
+  - speaker: jayla
+    sentences:
+      - text: "Okay so I found something really cool about trees and climate change."
+      - text: "Trees absorb CO2, right, and CO2 is a greenhouse gas that traps heat in the atmosphere."
+      - text: "So if we plant a bunch of trees along the Wolf River Greenway, they soak up that CO2 and it cools the whole area down because there's less heat-trapping gas."
+
+  - speaker: deshawn
+    sentences:
+      - text: "I mean yeah, trees definitely help, but I think it's more about the shade."
+      - text: "Like have you ever walked from a parking lot into the shade of a big tree on a really hot day — it feels like ten degrees cooler right away."
+      - text: "And I read about urban heat islands, where roads and buildings soak up the sun and make everything hotter, so shade is what stops all that from happening."
+
+  - speaker: jayla
+    sentences:
+      - text: "Shade is part of it, sure, but that's not the real reason it gets cooler."
+      - text: "The greenhouse effect is what's actually making summers hotter — CO2 traps heat like a blanket around the Earth."
+      - text: "So when trees absorb CO2, they're taking away the thing that causes the heat in the first place, not just blocking the sun for a little bit."
+
+  - speaker: deshawn
+    sentences:
+      - text: "But wait, the greenhouse effect is about the whole planet's atmosphere."
+      - text: "How would a couple hundred trees on one greenway in Memphis change how much CO2 is in the entire atmosphere?"
+      - text: "I feel like the shade is doing way more of the actual cooling right there on the ground where we can feel it."
+
+  - speaker: jayla
+    sentences:
+      - text: "Every tree that absorbs CO2 is helping fix the problem, that's what all the articles say."
+      - text: "The greenhouse effect is the reason it keeps getting hotter every summer, so if you take away the gas that causes it, you're taking away the heat."
+      - text: "That's the actual science — shade is just blocking the sun for a second, but CO2 absorption is removing the root cause of why it's hot."
+
+  - speaker: deshawn
+    sentences:
+      - text: "I guess your explanation does sound more scientific than mine."
+      - text: "Like the greenhouse effect and CO2 are real things we learned about, so maybe that is the bigger reason."
+      - text: "You never really explained why shade wouldn't be the main thing, but I don't know enough to argue with it."
+
+  - speaker: jayla
+    sentences:
+      - text: "Shade is a nice bonus, but the real reason to plant trees is the CO2 absorption."
+      - text: "For the project we should say that planting trees along the Greenway fights climate change by removing greenhouse gases, and that's what cools the neighborhood down."
+      - text: "That's way stronger than just saying trees make shade."
+
+  - speaker: deshawn
+    sentences:
+      - text: "Okay yeah, let's go with that."
+      - text: "I still kinda think shade is doing more than you give it credit for, but I don't have the research to back it up."
+      - text: "I don't want to hold us up, so let's just use your idea."

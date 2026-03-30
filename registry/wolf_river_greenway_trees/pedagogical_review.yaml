@@ -1,0 +1,27 @@
+scenario_id: wolf_river_greenway_trees
+
+overall_score: 4
+
+explanation: |
+  This transcript scores a 4 — effective with minor weaknesses, ready for classroom use.
+
+  FLAW DETECTABILITY: The wrong_cause flaw driven by tunnel_vision is detectable by 6th graders, though some students may need light scaffolding. The core mistake — Jayla insisting that a few hundred trees along one greenway will cool the neighborhood by removing CO2 from the global atmosphere — is something students can catch because DeShawn explicitly raises the right objection in Turn 4: "How would a couple hundred trees on one greenway in Memphis change how much CO2 is in the entire atmosphere?" That question is accessible and concrete. It names a scale problem a 12-year-old can grasp. The flaw surfaces clearly in Turn 3 ("when trees absorb CO2, they're taking away the thing that causes the heat in the first place") and again in Turn 5 ("CO2 absorption is removing the root cause of why it's hot"). Students who have felt the difference between standing in sun vs. shade will have their own experience pushing back against Jayla's reasoning, which lowers the knowledge barrier.
+
+  GROUP DYNAMICS: The discussion has genuine friction. DeShawn pushes back in Turns 2 and 4 with real counterarguments grounded in personal experience and research. The personas are clearly reacting to each other — DeShawn responds to Jayla's specific claims, and Jayla responds to DeShawn's specific objections. This is not parallel monologuing. The dynamic weakens in Turns 6-8, where DeShawn capitulates, but that capitulation is itself part of the flaw expression, so the flatness there is by design.
+
+  COMPROMISE QUALITY: There is no Act 5 flaw targeted in this scenario, but the resolution is still pedagogically relevant. DeShawn's capitulation in Turns 6 and 8 is visible — he says "I guess your explanation does sound more scientific than mine" and "I don't have the research to back it up." A student could notice that DeShawn gave in not because Jayla proved him wrong, but because her explanation sounded fancier. This is a strength of the transcript.
+
+  SIGNAL VARIETY: The two signal moments for wrong_cause (Turns 3 and 5) are differentiated. Turn 3 introduces the flawed reasoning — trees absorb CO2, CO2 causes heat, so removing CO2 removes heat. Turn 5 escalates it with more forceful language and a direct comparison: "shade is just blocking the sun for a second, but CO2 absorption is removing the root cause." The escalation keeps the second instance from feeling like a repeat. However, the phrasing in both turns follows a similar structure (shade is minor, CO2 is the real cause), which means a student who missed it the first time may also miss it the second time. This is a minor weakness.
+
+  DISCUSSION POTENTIAL: There is solid discussion potential. Students could genuinely disagree about whether Jayla is wrong — after all, trees do absorb CO2, and CO2 is a greenhouse gas. The flaw is not that Jayla's facts are wrong but that she applies a global mechanism to a local question. This creates a defensible-but-debatable moment: a student could argue Jayla is partially right (trees do absorb CO2) while another could argue the scale makes her reasoning wrong for this situation. DeShawn's capitulation also invites discussion — students may debate whether he should have pushed back harder or whether his instinct about shade was actually better supported.
+
+  NATURALISM: The conversation reads naturally for 6th graders. Jayla's confidence feels authentic rather than performed — she is a student who found an exciting connection in her research and is running with it, not a character deliberately making a mistake. DeShawn's voice is distinct: more tentative, experiential ("have you ever walked from a parking lot into the shade of a big tree"), and self-doubting. The minor weakness is that DeShawn's final capitulation in Turn 8 ("I don't want to hold us up, so let's just use your idea") is slightly on-the-nose — a real student might just go along without narrating their reason for doing so. But this is a small issue and the line still reads plausibly.
+
+revision_strategy: null
+
+flaw_assessments:
+  - flaw_pattern: wrong_cause
+    thinking_behavior: tunnel_vision
+    detectable_by_6th_graders: "yes"
+    expression_quality: |
+      The flaw lands well. Jayla's core error — treating CO2 absorption by a few hundred local trees as the mechanism that cools a neighborhood — is expressed through confident, specific language that a student can latch onto. The key signal in Turn 3 ("they're taking away the thing that causes the heat in the first place, not just blocking the sun for a little bit") sets up the wrong causal claim clearly. Turn 5 reinforces it with escalation ("CO2 absorption is removing the root cause of why it's hot"). The tunnel_vision behavior is visible: Jayla never engages with the scale objection DeShawn raises in Turn 4, instead repeating her greenhouse-gas reasoning with more force. This feels natural — she is a student who found a compelling explanation and cannot see past it, not a character performing stubbornness. The flaw emerges from her character (excited researcher who connected two real facts incorrectly) rather than from artificial script demands. One subtle strength: DeShawn's Turn 4 question about scale gives students a concrete foothold to notice the flaw even if they did not catch it independently in Turn 3.

@@ -1,0 +1,88 @@
+scenario_id: "wolf_river_greenway_trees"
+personas:
+- persona_id: "jayla"
+  name: "Jayla"
+  role: "Researcher focused on climate change and trees"
+- persona_id: "deshawn"
+  name: "DeShawn"
+  role: "Researcher focused on urban heat islands"
+turns:
+- turn_id: "turn_01"
+  speaker: jayla
+  sentences:
+  - id: "turn_01.s01"
+    text: "Okay so I found something really cool about trees and climate change."
+  - id: "turn_01.s02"
+    text: "Trees absorb CO2, right, and CO2 is a greenhouse gas that traps heat in the atmosphere."
+  - id: "turn_01.s03"
+    text: "So if we plant a bunch of trees along the Wolf River Greenway, they soak up that CO2 and it cools the whole area\
+      \ down because there's less heat-trapping gas."
+- turn_id: "turn_02"
+  speaker: deshawn
+  sentences:
+  - id: "turn_02.s01"
+    text: "I mean yeah, trees definitely help, but I think it's more about the shade."
+  - id: "turn_02.s02"
+    text: "Like have you ever walked from a parking lot into the shade of a big tree on a really hot day — it feels like ten\
+      \ degrees cooler right away."
+  - id: "turn_02.s03"
+    text: "And I read about urban heat islands, where roads and buildings soak up the sun and make everything hotter, so shade\
+      \ is what stops all that from happening."
+- turn_id: "turn_03"
+  speaker: jayla
+  sentences:
+  - id: "turn_03.s01"
+    text: "Shade is part of it, sure, but that's not the real reason it gets cooler."
+  - id: "turn_03.s02"
+    text: "The greenhouse effect is what's actually making summers hotter — CO2 traps heat like a blanket around the Earth."
+  - id: "turn_03.s03"
+    text: "So when trees absorb CO2, they're taking away the thing that causes the heat in the first place, not just blocking\
+      \ the sun for a little bit."
+- turn_id: "turn_04"
+  speaker: deshawn
+  sentences:
+  - id: "turn_04.s01"
+    text: "But wait, the greenhouse effect is about the whole planet's atmosphere."
+  - id: "turn_04.s02"
+    text: "How would a couple hundred trees on one greenway in Memphis change how much CO2 is in the entire atmosphere?"
+  - id: "turn_04.s03"
+    text: "I feel like the shade is doing way more of the actual cooling right there on the ground where we can feel it."
+- turn_id: "turn_05"
+  speaker: jayla
+  sentences:
+  - id: "turn_05.s01"
+    text: "Every tree that absorbs CO2 is helping fix the problem, that's what all the articles say."
+  - id: "turn_05.s02"
+    text: "The greenhouse effect is the reason it keeps getting hotter every summer, so if you take away the gas that causes\
+      \ it, you're taking away the heat."
+  - id: "turn_05.s03"
+    text: "That's the actual science — shade is just blocking the sun for a second, but CO2 absorption is removing the root\
+      \ cause of why it's hot."
+- turn_id: "turn_06"
+  speaker: deshawn
+  sentences:
+  - id: "turn_06.s01"
+    text: "I guess your explanation does sound more scientific than mine."
+  - id: "turn_06.s02"
+    text: "Like the greenhouse effect and CO2 are real things we learned about, so maybe that is the bigger reason."
+  - id: "turn_06.s03"
+    text: "You never really explained why shade wouldn't be the main thing, but I don't know enough to argue with it."
+- turn_id: "turn_07"
+  speaker: jayla
+  sentences:
+  - id: "turn_07.s01"
+    text: "Shade is a nice bonus, but the real reason to plant trees is the CO2 absorption."
+  - id: "turn_07.s02"
+    text: "For the project we should say that planting trees along the Greenway fights climate change by removing greenhouse\
+      \ gases, and that's what cools the neighborhood down."
+  - id: "turn_07.s03"
+    text: "That's way stronger than just saying trees make shade."
+- turn_id: "turn_08"
+  speaker: deshawn
+  sentences:
+  - id: "turn_08.s01"
+    text: "Okay yeah, let's go with that."
+  - id: "turn_08.s02"
+    text: "I still kinda think shade is doing more than you give it credit for, but I don't have the research to back it up."
+  - id: "turn_08.s03"
+    text: "I don't want to hold us up, so let's just use your idea."
