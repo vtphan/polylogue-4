@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import StudentSessionClient from "./client";
+import { getHintState, getGuidedDetectionData } from "@/actions/hints";
+import { getPeerComparisonData } from "@/actions/comparison";
+import { getAIAnnotations } from "@/actions/ai-annotations";
 
 interface Params {
   id: string;
@@ -30,6 +33,11 @@ export default async function StudentSessionPage({
   const detectionActs = await prisma.detectionAct.findMany({
     include: { patterns: true },
     orderBy: { actId: "asc" },
+  });
+
+  // Load thinking behaviors
+  const thinkingBehaviors = await prisma.thinkingBehavior.findMany({
+    orderBy: { behaviorId: "asc" },
   });
 
   // Load test student (for dev — will be replaced with auth)
@@ -69,14 +77,45 @@ export default async function StudentSessionPage({
     })),
   }));
 
-  // Map annotations to component format
+  // Map thinking behaviors to component format (exclude formal_term — teacher only)
+  const behaviors = thinkingBehaviors.map((b) => ({
+    behaviorId: b.behaviorId,
+    name: b.name,
+    description: b.description,
+  }));
+
+  // Map annotations to component format (include all fields for Phase 2)
   const annotationData = annotations.map((ann) => ({
     id: ann.id,
     location: ann.location,
     detectionAct: ann.detectionAct,
     description: ann.description,
+    thinkingBehavior: ann.thinkingBehavior,
+    behaviorSource: ann.behaviorSource,
+    behaviorOwnWords: ann.behaviorOwnWords,
+    behaviorExplanation: ann.behaviorExplanation,
     phaseCreated: ann.phaseCreated,
+    submitted: ann.submitted,
   }));
+
+  // Load hint state and guided detection data
+  const initialHintState = await getHintState(testStudent.id, sessionId);
+  const guidedDetection = await getGuidedDetectionData(sessionId);
+
+  // Load peer comparison data (for Phase 3+)
+  const peerData = session.activePhase >= 3
+    ? await getPeerComparisonData(testStudent.id, sessionId)
+    : null;
+
+  // Load AI annotations (for Phase 4)
+  const aiData = session.activePhase >= 4
+    ? await getAIAnnotations(session.scenarioId)
+    : null;
+
+  // Check if reflection already submitted
+  const existingReflection = await prisma.studentReflection.findUnique({
+    where: { userId_sessionId: { userId: testStudent.id, sessionId } },
+  });
 
   return (
     <StudentSessionClient
@@ -86,8 +125,16 @@ export default async function StudentSessionPage({
       turns={turns}
       personas={personas}
       detectionActs={acts}
+      thinkingBehaviors={behaviors}
       initialAnnotations={annotationData}
       scenarioTopic={session.scenario.topic}
+      scenarioContext={session.scenario.context}
+      initialHintState={initialHintState}
+      guidedDetection={guidedDetection}
+      peerData={peerData}
+      aiData={aiData}
+      reflectionActive={session.reflectionActive}
+      reflectionSubmitted={existingReflection?.submittedAt != null}
     />
   );
 }

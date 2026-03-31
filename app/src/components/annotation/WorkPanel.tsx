@@ -54,6 +54,7 @@ interface WorkPanelProps {
   onCancel: () => void;
   onEditAnnotation: (annotationId: number) => void;
   editingAnnotation: AnnotationData | null;
+  showGuidedFirstAnnotation?: boolean;
 }
 
 function formatLocation(
@@ -124,6 +125,7 @@ export default function WorkPanel({
   onCancel,
   onEditAnnotation,
   editingAnnotation,
+  showGuidedFirstAnnotation = false,
 }: WorkPanelProps) {
   const [selectedAct, setSelectedAct] = useState<string | null>(
     editingAnnotation?.detectionAct ?? null
@@ -187,6 +189,17 @@ export default function WorkPanel({
         <h2 className="text-[20px] font-bold text-gray-900">
           What did you notice?
         </h2>
+
+        {/* Guided first annotation */}
+        {showGuidedFirstAnnotation && (
+          <div className="px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl">
+            <p className="text-[15px] text-indigo-800 leading-relaxed">
+              Nice! You found something. Now:
+              <span className="font-semibold"> (1)</span> Pick which type of problem it is,
+              <span className="font-semibold"> (2)</span> Describe what you noticed in your own words.
+            </p>
+          </div>
+        )}
 
         {/* Selected location */}
         <div className="bg-amber-50 rounded-xl px-4 py-3">
