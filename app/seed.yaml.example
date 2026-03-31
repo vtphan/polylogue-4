@@ -1,7 +1,49 @@
 users:
-  - name: "Teacher Name"
-    password: "change-me"
-    role: teacher
-  - name: "Researcher Name"
-    password: "change-me"
+  - name: "Dr. Phan"
+    password: "researcher123"
     role: researcher
+  - name: "Ms. Johnson"
+    password: "teacher123"
+    role: teacher
+  - name: "Mr. Davis"
+    password: "teacher123"
+    role: teacher
+
+classes:
+  - name: "6th STEM Period 2"
+    teacher: "Ms. Johnson"
+    students:
+      - Maya Johnson
+      - DeAndre Williams
+      - Sophia Chen
+      - Marcus Thompson
+      - Aaliyah Davis
+      - Ethan Park
+      - Zara Okafor
+      - Logan Rivera
+      - Amara Washington
+      - Caleb Nguyen
+      - Priya Patel
+      - Jordan Blake
+      - Naomi Foster
+      - Tyler Reeves
+      - Isabella Gomez
+
+  - name: "6th STEM Period 5"
+    teacher: "Mr. Davis"
+    students:
+      - Elijah Carter
+      - Lily Tran
+      - Xavier Mitchell
+      - Chloe Ramirez
+      - Jayden Cooper
+      - Avery Kim
+      - Noah Sullivan
+      - Mia Okoro
+      - Aiden Brooks
+      - Fatima Al-Rashid
+      - Lucas Hernandez
+      - Grace Yamamoto
+      - Owen Phillips
+      - Samira Diallo
+      - Kai Nakamura

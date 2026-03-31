@@ -1,15 +1,14 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { authClient } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/teacher";
+  const explicitRedirect = searchParams.get("redirect");
 
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,15 +19,20 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const result = await authClient.signIn.email({
-        email: `${username}@perspectives.local`,
-        password,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, password }),
       });
 
-      if (result.error) {
-        setError("Invalid name or password.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Invalid name or password.");
       } else {
-        router.push(redirect);
+        const dest = explicitRedirect
+          || (data.role === "researcher" ? "/researcher/teachers" : "/teacher");
+        router.push(dest);
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -40,25 +44,25 @@ function LoginForm() {
   return (
     <div className="w-full max-w-sm p-8 bg-white rounded-lg shadow-md">
       <h1 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-        Perspectives — Teacher Login
+        Perspectives — Sign In
       </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
-            htmlFor="username"
+            htmlFor="name"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             Name
           </label>
           <input
-            id="username"
+            id="name"
             type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
             autoFocus
             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Your name"
+            placeholder="e.g., Ms. Johnson"
           />
         </div>
         <div>

@@ -108,19 +108,23 @@ model PedagogicalReview {
 // ============================================================
 
 model User {
-  id           String   @id @default(cuid())
-  displayName  String   @map("display_name")
-  username     String   @unique // auto-derived: lowercase, spaces → dots
-  passwordHash String?  @map("password_hash") // null for students
-  role         String   // "teacher" | "researcher" | "student"
-  createdAt    DateTime @default(now()) @map("created_at")
+  id            String    @id @default(cuid())
+  displayName   String    @map("display_name")
+  username      String    @unique // auto-derived: lowercase, spaces to dots
+  passwordHash  String?   @map("password_hash") // null for students
+  role          String    // "teacher" | "researcher" | "student"
+  createdById   String?   @map("created_by_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
 
-  // Auth relations (BetterAuth)
-  sessions     Session[]
-  accounts     Account[]
+  // Self-referential: who created this user
+  createdBy      User?    @relation("CreatedUsers", fields: [createdById], references: [id])
+  createdUsers   User[]   @relation("CreatedUsers")
 
   // App relations
-  taughtSessions  ClassSession[]     @relation("teacher")
+  ownedClasses     Class[]            @relation("ClassTeacher")
+  classEnrollments ClassStudent[]
+  taughtSessions   ClassSession[]     @relation("teacher")
   groupMemberships GroupMember[]
   activities       StudentActivity[]
   annotations      Annotation[]
@@ -130,55 +134,36 @@ model User {
   @@map("user")
 }
 
-// BetterAuth required tables
-model Session {
-  id        String   @id
-  userId    String   @map("user_id")
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
-  ipAddress String?  @map("ip_address")
-  userAgent String?  @map("user_agent")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Class {
+  id        String         @id @default(cuid())
+  name      String
+  teacherId String         @map("teacher_id")
+  createdAt DateTime       @default(now()) @map("created_at")
 
-  @@map("session")
+  teacher   User           @relation("ClassTeacher", fields: [teacherId], references: [id])
+  students  ClassStudent[]
+  sessions  ClassSession[]
+
+  @@unique([name, teacherId])
+  @@map("class")
 }
 
-model Account {
-  id                    String   @id
-  userId                String   @map("user_id")
-  accountId             String   @map("account_id")
-  providerId            String   @map("provider_id")
-  accessToken           String?  @map("access_token")
-  refreshToken          String?  @map("refresh_token")
-  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
-  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
-  scope                 String?
-  idToken               String?  @map("id_token")
-  password              String?
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model ClassStudent {
+  classId String @map("class_id")
+  userId  String @map("user_id")
 
-  @@map("account")
-}
+  class   Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user    User   @relation(fields: [userId], references: [id])
 
-model Verification {
-  id         String   @id
-  identifier String
-  value      String
-  expiresAt  DateTime @map("expires_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  @@map("verification")
+  @@id([classId, userId])
+  @@map("class_student")
 }
 
 model ClassSession {
   sessionId           String   @id @default(cuid()) @map("session_id")
   scenarioId          String   @map("scenario_id")
   teacherId           String   @map("teacher_id")
+  classId             String?  @map("class_id")
   sessionCode         String   @unique @map("session_code") // 6-char unique code
   activePhase         Int      @default(1) @map("active_phase")
   status              String   @default("active") // "active" | "archived"
@@ -193,6 +178,7 @@ model ClassSession {
 
   scenario         Scenario           @relation(fields: [scenarioId], references: [scenarioId])
   teacher          User               @relation("teacher", fields: [teacherId], references: [id])
+  class            Class?             @relation(fields: [classId], references: [id])
   groups           Group[]
   phaseTransitions PhaseTransition[]
   annotations      Annotation[]

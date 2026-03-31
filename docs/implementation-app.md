@@ -339,12 +339,12 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    ```
    The Phase 3 comparison view queries `AnnotationSnapshot` where `snapshot_phase = 3`, not the live `Annotation` table. This keeps comparisons stable while the "My Annotations" tab edits the live records. At the Phase 3→4 transition, a second snapshot is taken with `snapshot_phase = 4` (including Phase 3 revisions). The Phase 4 comparison view uses `snapshot_phase = 4`.
 
-7. **Define teacher authentication model.** Adapted from CrossCheck's pattern, using BetterAuth:
+7. **Define teacher authentication model.** Adapted from CrossCheck's pattern, using bcrypt + httpOnly cookie sessions:
    - A seed YAML file (`app/seed.yaml`) defines teacher and researcher credentials (display name + password).
    - A seed script (`app/scripts/seed-users.ts`) hashes passwords with bcrypt and upserts into a `User` table with `role` field (`teacher`, `researcher`, `student`).
-   - Authentication via BetterAuth with email+password plugin for teachers/researchers and a custom session-code plugin for students (session code + name, no password).
-   - Database-backed cookie sessions (BetterAuth default). Session includes `id`, `name`, `role`.
-   - Middleware protects `/teacher/*` routes — only `teacher` and `researcher` roles can access. Student routes require a valid session membership.
+   - Authentication via a custom `/api/auth/login` route: bcrypt password comparison, sets an httpOnly `teacher-session` cookie on success.
+   - Students authenticate via session code + full name (no password), receiving a `student-session` cookie.
+   - Next.js proxy (`src/proxy.ts`) protects `/teacher/*` routes — only requests with a valid `teacher-session` cookie can access. Student routes require a valid `student-session` cookie.
    - Define the Prisma model:
      ```
      User:
@@ -355,7 +355,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    - Students are created as `User` records with `role: "student"` and `passwordHash: null` when the teacher creates a session and assigns student names to groups.
 
 8. **Document resolved design decisions.** Update the Open Decisions section:
-   - Teacher authentication: seeded credentials with BetterAuth, database-backed cookie sessions
+   - Teacher authentication: seeded credentials with bcrypt, httpOnly cookie sessions
    - Guided first detection toggle: session-level boolean set by teacher at creation
    - Reflection storage: app-only Prisma model, not a pipeline schema
    - Hint tracking: per-use `StudentHintUsage` records with hint type and target
@@ -399,7 +399,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 2. **Install dependencies.**
    - `npm install prisma @prisma/client`
    - `npm install js-yaml @types/js-yaml` (for YAML import)
-   - `npm install better-auth bcryptjs @types/bcryptjs` (for auth)
+   - `npm install bcryptjs @types/bcryptjs` (for auth)
    - `npx prisma init --datasource-provider sqlite`
 
 3. **Design Prisma schema.** Map artifact structures + app-only models to database tables:
@@ -422,7 +422,7 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    | Table | Notes |
    |-------|-------|
    | `User` | id, displayName, username (auto-derived), passwordHash (nullable — null for students), role (teacher/researcher/student), createdAt. Teachers and researchers seeded from `seed.yaml`; students created when teacher assigns them to a session. Student upsert key: displayName (global). |
-   | `ClassSession` | session_id, scenario_id (FK), teacher_id (FK to User), lifeline_budget, location_hint_cap, character_hint_cap, perspective_hint_cap, narrowed_hint_cap, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), status (`active`/`archived`, default `active`), created_at. Hint caps computed at session creation from scenario flaw/persona counts. Auto-archives 2 hours after `created_at` (checked on dashboard load and via a periodic server check). Named `ClassSession` to avoid collision with BetterAuth's `session` table (auth sessions). |
+   | `ClassSession` | session_id, scenario_id (FK), teacher_id (FK to User), lifeline_budget, location_hint_cap, character_hint_cap, perspective_hint_cap, narrowed_hint_cap, guided_first_detection, active_phase, reflection_active, session_code (6-char unique), status (`active`/`archived`, default `active`), created_at. Hint caps computed at session creation from scenario flaw/persona counts. Auto-archives 2 hours after `created_at` (checked on dashboard load and via a periodic server check). Named `ClassSession` to distinguish from generic session concepts. |
    | `Group` | group_id, session_id (FK) |
    | `GroupMember` | user_id (FK to User, role=student), group_id (FK) |
    | `StudentActivity` | user_id (FK), session_id (FK), first_opened, last_active, annotation_count |
@@ -439,49 +439,18 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
 
 4. **Create Prisma client singleton.** `src/lib/db.ts` using the pattern from the Tech Stack section (globalForPrisma pattern for dev hot-reload).
 
-5. **Set up BetterAuth.** Two-tier authentication using BetterAuth with the Prisma adapter:
-   - `src/lib/auth.ts` — BetterAuth server configuration:
-     ```typescript
-     import { betterAuth } from "better-auth";
-     import { prismaAdapter } from "better-auth/adapters/prisma";
-     import { prisma } from "./db";
-
-     export const auth = betterAuth({
-       database: prismaAdapter(prisma, { provider: "sqlite" }),
-       emailAndPassword: { enabled: true },  // teachers/researchers
-       // Student auth: custom session-code strategy (see below)
-       user: {
-         additionalFields: {
-           role: { type: "string", required: true },       // teacher, researcher, student
-           displayName: { type: "string", required: true },
-         },
-       },
-       session: {
-         // Database-backed cookie sessions (BetterAuth default)
-         // Session object includes id, name, role
-       },
-     });
-     ```
-   - **Teacher/researcher auth:** Email+password (BetterAuth built-in). Teachers authenticate with displayName + password (bcrypt compare against stored hash). The `role` field on the user record gates route access.
-   - **Student auth:** Custom credential strategy. Students authenticate with session code + full name (look up `User` with `role: "student"` who is a `GroupMember` in a session matching the code). Implemented as a custom BetterAuth plugin or a thin Server Action that calls `auth.api` after validation.
-   - `src/lib/auth-client.ts` — BetterAuth client for React components:
-     ```typescript
-     import { createAuthClient } from "better-auth/react";
-     export const authClient = createAuthClient();
-     ```
-   - `src/app/api/auth/[...all]/route.ts` — Mount BetterAuth API handler:
-     ```typescript
-     import { auth } from "@/lib/auth";
-     import { toNextJsHandler } from "better-auth/next-js";
-     export const { GET, POST } = toNextJsHandler(auth);
-     ```
-   - `src/middleware.ts` — Route protection:
-     - `/teacher/*` requires `role` = `teacher` or `researcher`
-     - `/student/session/*` requires `role` = `student` with valid session membership
+5. **Set up authentication.** Two-tier authentication using bcrypt + httpOnly cookie sessions:
+   - `src/app/api/auth/login/route.ts` — Teacher/researcher login endpoint:
+     - Accepts `{ name, password }`, finds user by display name (case-insensitive), compares password with bcrypt.
+     - On success, sets an httpOnly `teacher-session` cookie (24h expiry) containing the user ID.
+   - **Teacher/researcher auth:** Teachers authenticate with displayName + password (bcrypt compare against stored hash). The `role` field on the user record gates route access.
+   - **Student auth:** Students authenticate with session code + full name (look up `User` with `role: "student"` who is a `GroupMember` in a session matching the code). On success, sets a `student-session` cookie.
+   - `src/proxy.ts` — Route protection (Next.js proxy, replaces middleware):
+     - `/teacher/*` requires a valid `teacher-session` cookie
+     - `/student/session/*` requires a valid `student-session` cookie
      - `/student` (join page) and `/auth/login` are public
      - Students with a valid session cookie for an active session are redirected from `/student` (join page) directly to their active session — no re-entry of credentials needed
-   - `src/app/auth/login/page.tsx` — Teacher/researcher login form (name + password)
-   - Run `npx @better-auth/cli generate` to generate BetterAuth's required database tables (session, account, verification), then merge with the app's Prisma schema. **Naming collision:** BetterAuth creates a `session` table (auth sessions); the app needs a `Session` table (classroom sessions). Rename the app's model to `ClassSession` in the Prisma schema to avoid conflict. BetterAuth's `user` table maps to the app's `User` model — extend it with `role`, `displayName`, and other app-specific fields via BetterAuth's `additionalFields` configuration.
+   - `src/app/auth/login/page.tsx` — Teacher/researcher login form (name + password), calls `/api/auth/login` directly
 
 6. **Write seed YAML and seed script.**
    - `app/seed.yaml` — defines teacher and researcher credentials:
@@ -532,13 +501,11 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    │   ├── scaffolds/         # Lifelines, guided detection, topic context, reflection
    │   └── dashboard/         # Teacher monitoring components
    ├── lib/
-   │   ├── auth.ts            # BetterAuth server configuration
-   │   ├── auth-client.ts     # BetterAuth client
    │   ├── db.ts              # Prisma client singleton
    │   ├── import.ts          # YAML import logic
    │   └── utils.ts           # Display name derivation, sentence ID parsing
    ├── actions/               # Server Actions (annotation CRUD, phase transitions, etc.)
-   └── middleware.ts           # Route protection (teacher/student role checks)
+   └── proxy.ts               # Route protection (cookie checks for teacher/student routes)
    ```
 
 11. **Verify setup.** Run the seed script and confirm:
@@ -549,10 +516,10 @@ After Phase 3b, the operator does a lightweight **spot-check** (not a formal rev
    - Query the database to verify data integrity
 
 **Outputs:**
-- Next.js project in `app/` with TypeScript, Tailwind, Prisma, BetterAuth configured
+- Next.js project in `app/` with TypeScript, Tailwind, Prisma configured
 - `prisma/schema.prisma` with all tables (including `User` with auth fields)
-- `src/lib/auth.ts`, `src/lib/auth-client.ts`, `src/lib/db.ts`, `src/lib/import.ts`
-- `src/middleware.ts` (route protection)
+- `src/app/api/auth/login/route.ts` (login endpoint), `src/lib/db.ts`, `src/lib/import.ts`
+- `src/proxy.ts` (route protection)
 - `src/app/auth/login/page.tsx` (teacher/researcher login)
 - `app/seed.yaml` + `app/scripts/seed-users.ts` (credential seeding)
 - `prisma/seed.ts` (reference libraries + scenarios + users)
@@ -1319,7 +1286,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
      - Session code exists and session is active
      - Student name matches a `User` record that is a `GroupMember` in this session (case-insensitive, whitespace-trimmed)
      - Error: "We don't see that name in this session. Check with your teacher."
-   - On success: authenticate as student via BetterAuth (session code + name credentials), redirect to `/student/session/[id]`
+   - On success: set `student-session` cookie, redirect to `/student/session/[id]`
    - **Late-arriving students** always enter Phase 1 regardless of the session's current `active_phase`. They work through Phase 1 at their own pace. At the next teacher phase advance, they are force-submitted and snapshotted like everyone else — their annotations may be incomplete (no thinking behaviors) and this is handled gracefully.
    - **Reconnection:** Re-entering the same session code + name re-authenticates into the existing session state (all annotations preserved). If the student's browser has a valid session cookie, navigating to `/student` redirects directly to their active session without re-entering credentials.
    - Display names: full name stored, first name + last initial displayed everywhere (derived by `src/lib/utils.ts`)
@@ -1418,7 +1385,7 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 | Phase | What | Depends on | Key risk mitigated |
 |-------|------|------------|-------------------|
 | 1 | Spec alignment + schema updates | Pipeline complete | Schema gaps, unresolved design decisions |
-| 2 | Project scaffolding + database | Phase 1 | Prisma schema correctness, import pipeline, BetterAuth setup |
+| 2 | Project scaffolding + database | Phase 1 | Prisma schema correctness, import pipeline, auth setup |
 | 3a | Core interaction (Phase 1 — landscape) | Phase 2 | Foundational UI: transcript, sentence selection, annotation CRUD |
 | 3b | Scaffolds + portrait/tablet mode | Phase 3a | Responsive layout isolated from core; tablet interactions verified |
 | *(spot-check)* | *Operator verifies portrait mode, touch targets* | *Phase 3b* | *Layout issues caught before Phase 2 builds on top* |
@@ -1438,9 +1405,9 @@ Report each criterion as PASS or ISSUE. End with READY TO PROCEED or NEEDS REVIS
 
 Decisions resolved during Phase 1 (spec alignment) and pipeline implementation:
 
-1. ~~**Authentication approach.**~~ **Decided.** Two-tier authentication using BetterAuth:
-   - **Teachers:** Seeded credentials (name + password) loaded by the researcher via a seed YAML file, hashed with bcrypt, authenticated via BetterAuth's email+password plugin (database-backed cookie sessions). This prevents students from accessing the teacher dashboard. Adapted from CrossCheck's `seed.yaml` → `seed-users.ts` pattern.
-   - **Students:** Session code + full student name (no password). Teacher pre-assigns student names to groups during session creation. Students enter the code + their full name to join (case-insensitive, whitespace-trimmed match). The app displays first name + last initial everywhere. Simple enough for 6th graders. Implemented as a custom BetterAuth plugin or Server Action.
+1. ~~**Authentication approach.**~~ **Decided.** Two-tier authentication using bcrypt + httpOnly cookie sessions:
+   - **Teachers:** Seeded credentials (name + password) loaded by the researcher via a seed YAML file, hashed with bcrypt, authenticated via `/api/auth/login` (bcrypt compare, httpOnly `teacher-session` cookie). This prevents students from accessing the teacher dashboard. Adapted from CrossCheck's `seed.yaml` → `seed-users.ts` pattern.
+   - **Students:** Session code + full student name (no password). Teacher pre-assigns student names to groups during session creation. Students enter the code + their full name to join (case-insensitive, whitespace-trimmed match). The app displays first name + last initial everywhere. Simple enough for 6th graders. On success, a `student-session` cookie is set.
    - **Researcher:** Same credentials mechanism as teacher, with `role: "researcher"`. The researcher seeds their own credentials alongside teacher credentials. For MVP, the researcher uses the teacher dashboard — no separate researcher routes.
 
 2. ~~**YAML import workflow.**~~ **Decided.** Teacher imports scenarios through the dashboard UI, as specified in `uiux-app.md > Teacher > Dashboard`. Primary mechanism: a dropdown listing unimported scenario directories from `REGISTRY_PATH` on the server. Fallback: file upload for scenarios not in the registry. Validation errors are shown inline. This keeps the workflow self-contained in the app. The `REGISTRY_PATH` and `REFERENCE_LIBRARIES_PATH` environment variables are configured in `.env.local`.

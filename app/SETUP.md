@@ -37,8 +37,6 @@ Edit `.env` with your local paths:
 
 ```
 DATABASE_URL="file:./perspectives.db"
-BETTER_AUTH_SECRET="<generate with: openssl rand -base64 32>"
-BETTER_AUTH_URL="http://localhost:3000"
 REFERENCE_LIBRARIES_PATH="/absolute/path/to/configs/reference"
 REGISTRY_PATH="/absolute/path/to/registry"
 ```
@@ -94,7 +92,7 @@ npx prisma db seed                # re-seed
 | `prisma/schema.prisma` | Database schema (all tables) |
 | `prisma/seed.ts` | Seed script (users, reference libs, scenarios, test session) |
 | `src/lib/db.ts` | Prisma client singleton |
-| `src/lib/auth.ts` | BetterAuth server config |
+| `src/app/api/auth/login/route.ts` | Login endpoint (bcrypt + cookie) |
 | `src/lib/import.ts` | YAML import logic (used by seed and future dashboard) |
 | `src/proxy.ts` | Route protection (Next.js 16 proxy, formerly middleware) |
 | `src/app/student/session/[id]/` | Student activity view (Phase 1 core interaction) |

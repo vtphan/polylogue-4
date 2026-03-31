@@ -5,10 +5,8 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Teacher/researcher routes require auth cookie
-  if (pathname.startsWith("/teacher")) {
-    const sessionCookie =
-      request.cookies.get("better-auth.session_token") ??
-      request.cookies.get("__Secure-better-auth.session_token");
+  if (pathname.startsWith("/teacher") || pathname.startsWith("/researcher")) {
+    const sessionCookie = request.cookies.get("teacher-session");
 
     if (!sessionCookie) {
       const loginUrl = new URL("/auth/login", request.url);
@@ -32,5 +30,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/teacher/:path*", "/student/session/:path*"],
+  matcher: ["/teacher/:path*", "/researcher/:path*", "/student/session/:path*"],
 };

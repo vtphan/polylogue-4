@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { generateSessionCode, deriveUsername } from "@/lib/utils";
+import { generateSessionCode } from "@/lib/utils";
 
 export async function endSession(sessionId: string) {
   await prisma.classSession.update({
@@ -68,19 +68,27 @@ export async function createSession(
     narrowedHintCap: number;
     guidedFirstDetection: boolean;
   },
-  groups: { name: string; students: string[] }[]
+  groups: { name: string; studentIds: string[] }[],
+  classId?: string
 ) {
+  // If classId provided, verify ownership
+  if (classId) {
+    const cls = await prisma.class.findFirst({
+      where: { id: classId, teacherId },
+    });
+    if (!cls) throw new Error("Class not found.");
+  }
+
   // Generate unique session code
   let sessionCode = generateSessionCode();
   while (await prisma.classSession.findUnique({ where: { sessionCode } })) {
     sessionCode = generateSessionCode();
   }
 
-  // Validate no duplicate student names across session
-  const allNames = groups.flatMap((g) => g.students.map((s) => s.trim().toLowerCase()));
-  const uniqueNames = new Set(allNames);
-  if (uniqueNames.size !== allNames.length) {
-    throw new Error("Duplicate student names found. Each name must be unique within the session.");
+  // Validate no duplicate students across groups
+  const allIds = groups.flatMap((g) => g.studentIds);
+  if (new Set(allIds).size !== allIds.length) {
+    throw new Error("A student appears in multiple groups.");
   }
 
   // Create session
@@ -88,12 +96,13 @@ export async function createSession(
     data: {
       scenarioId,
       teacherId,
+      classId: classId ?? null,
       sessionCode,
       ...config,
     },
   });
 
-  // Create students, groups, and memberships
+  // Create groups and memberships
   for (const group of groups) {
     const dbGroup = await prisma.group.create({
       data: {
@@ -102,42 +111,19 @@ export async function createSession(
       },
     });
 
-    for (const studentName of group.students) {
-      const trimmed = studentName.trim();
-      if (!trimmed) continue;
-
-      const username = deriveUsername(trimmed);
-
-      // Upsert student user
-      const student = await prisma.user.upsert({
-        where: { username },
-        update: {},
-        create: {
-          displayName: trimmed,
-          username,
-          role: "student",
-        },
-      });
-
-      // Create group membership
+    for (const studentId of group.studentIds) {
       await prisma.groupMember.create({
-        data: {
-          userId: student.id,
-          groupId: dbGroup.groupId,
-        },
+        data: { userId: studentId, groupId: dbGroup.groupId },
       });
 
-      // Create student activity record
       await prisma.studentActivity.create({
-        data: {
-          userId: student.id,
-          sessionId: session.sessionId,
-        },
+        data: { userId: studentId, sessionId: session.sessionId },
       });
     }
   }
 
   revalidatePath("/teacher");
+  revalidatePath(`/teacher/classes/${classId}`);
   return session;
 }
 
