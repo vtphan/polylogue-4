@@ -234,6 +234,48 @@ The teacher also uses the AI's analysis as facilitation material:
 
 The formal vocabulary from the thinking behavior library lives in the **teacher's facilitation guide** and the **AI's explanations** — both reference the same rich library, giving the teacher the terminology and context needed to guide discussion.
 
+## Pipeline Reuse from v4
+
+Most of the v4 pipeline carries over to v5. The pipeline's core job is unchanged: design a scenario → write a discussion script → evaluate it.
+
+### Reusable As-Is
+
+| Component | Why it carries over |
+|---|---|
+| **Scenario planning** (`create_scenario`) | Topic selection, persona design, flaw targeting, context generation — the process is the same. The 4 flaw categories absorb the 19 patterns, but planning logic is unchanged. |
+| **Persona design** | Personas still need strengths, weaknesses, realistic motivations, and designed flaw combinations. No structural change. |
+| **Schema-driven pipeline** | YAML artifacts, validation scripts, handoffs between commands — all reusable. Schemas need field updates, not structural changes. |
+| **Review/evaluation structure** | The two-pass process (script review, then evaluation) still applies. |
+
+### Needs Modification
+
+| Component | What changes |
+|---|---|
+| **Flaw pattern library** | Reorganize 19 patterns under 4 categories instead of 5 detection acts. Patterns are retained as sub-types for pipeline authoring. |
+| **Thinking behavior library** | Expand from 8 behaviors to a richer inventory drawing from cognitive biases, CBT distortions, and social dynamics. No longer constrained by student usability. |
+| **Dialog writer agent** (`create_script`) | Prompt updated to emphasize precise flaw locatability at the sentence level. In v4, flaws could be diffuse since students were searching. In v5, every flaw needs a clear, highlightable passage because the system highlights them for students. |
+| **Evaluator agent** (`evaluate_script`) | Major update. Must produce three student-facing AI explanations per flaw (see below). |
+| **Facilitation guide** | Restructured for 3 phases with 3 modes each (work → discuss → reflect), instead of 4 phases with different mechanics. |
+| **Difficulty ratings** | The existing ratings (most_will_catch, harder_to_spot, easy_to_miss) were calibrated for the detection task. With flaws pre-highlighted, difficulty shifts to classification and explanation. May need recalibration. |
+
+### New: Student-Facing AI Content
+
+The evaluator must produce three distinct AI outputs per flaw, revealed progressively across phases:
+
+| Phase | AI output | Purpose | Tone |
+|---|---|---|---|
+| 1. Recognize | Flaw explanation | "Why is this a flaw?" | Student-accessible, plain language |
+| 2. Classify | Classification with reasoning | "What category and why?" | Uses the 4 formal category names |
+| 3. Explain | Thinking behavior analysis | "What cognitive pattern caused this?" | Introduces formal terminology (confirmation bias, groupthink, etc.) in context |
+
+The current evaluation has `argument_flaw.explanation` and `thinking_behavior.explanation`, but these were written for the teacher's facilitation guide. v5 needs student-facing versions calibrated for 6th-grade reading level.
+
+### Removed: Pedagogical Reviewer
+
+The learning scientist agent (pedagogical reviewer) in `create_scenario` is removed from the initial v5 pipeline. With a simpler taxonomy (4 categories instead of 5 × 19), there is less to get wrong in scenario design. The reviewer added a round-trip that slowed iteration without proportionate benefit.
+
+The approach for v5 is: generate scripts, test with real students, and add the reviewer back if a pattern of problematic scenarios emerges. Validate through use, not through AI reviewing AI.
+
 ## Summary of Changes from v4
 
 | Aspect | v4 | v5 |
@@ -247,6 +289,10 @@ The formal vocabulary from the thinking behavior library lives in the **teacher'
 | Student names biases? | Phase 2 (picks from list) | Never (reads AI's analysis) |
 | AI role | Phase 4 reveal | Scaffolding throughout |
 | Cognitive load | High (detect + classify simultaneously) | Progressive (notice → categorize → explain) |
+| Pedagogical reviewer | Required in pipeline | Removed; validate through testing |
+| Dialog writer focus | Flaws can be diffuse | Flaws must be precisely highlightable |
+| Evaluator output | Teacher-facing explanations | Teacher-facing + 3 student-facing explanations per flaw |
+| Pipeline reuse | — | ~70% reusable; main changes in evaluator and dialog writer |
 
 ## Open Questions
 
