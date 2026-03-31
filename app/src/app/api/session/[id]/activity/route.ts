@@ -67,6 +67,15 @@ export async function GET(
     }));
   }
 
+  // Load hint usage per student
+  const hintUsages = await prisma.studentHintUsage.findMany({
+    where: { sessionId },
+  });
+  const hintCountByUser = new Map<string, number>();
+  for (const hu of hintUsages) {
+    hintCountByUser.set(hu.userId, (hintCountByUser.get(hu.userId) || 0) + 1);
+  }
+
   // Get facilitation guide timing for "may need help" threshold
   let phaseMinutes: Record<string, number> = {};
   if (teacherEval) {
@@ -111,6 +120,13 @@ export async function GET(
         }
       }
 
+      // Lifeline exhaustion check
+      const hintsUsed = hintCountByUser.get(m.userId) ?? 0;
+      const hintsExhausted =
+        session.lifelineBudget > 0 &&
+        hintsUsed >= session.lifelineBudget &&
+        annotationCount <= 1;
+
       return {
         userId: m.userId,
         displayName: m.user.displayName,
@@ -118,6 +134,7 @@ export async function GET(
         annotationCount,
         submitted: allSubmitted,
         firstOpened: firstOpened?.toISOString() ?? null,
+        hintsExhausted,
       };
     });
 

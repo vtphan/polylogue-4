@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { generateSessionCode, deriveUsername } from "@/lib/utils";
 
 export async function endSession(sessionId: string) {
   await prisma.classSession.update({
@@ -54,6 +55,90 @@ export async function getTeacherSessions(teacherId: string) {
     studentCount: s._count.activities,
     createdAt: s.createdAt.toISOString(),
   }));
+}
+
+export async function createSession(
+  teacherId: string,
+  scenarioId: string,
+  config: {
+    lifelineBudget: number;
+    locationHintCap: number;
+    characterHintCap: number;
+    perspectiveHintCap: number;
+    narrowedHintCap: number;
+    guidedFirstDetection: boolean;
+  },
+  groups: { name: string; students: string[] }[]
+) {
+  // Generate unique session code
+  let sessionCode = generateSessionCode();
+  while (await prisma.classSession.findUnique({ where: { sessionCode } })) {
+    sessionCode = generateSessionCode();
+  }
+
+  // Validate no duplicate student names across session
+  const allNames = groups.flatMap((g) => g.students.map((s) => s.trim().toLowerCase()));
+  const uniqueNames = new Set(allNames);
+  if (uniqueNames.size !== allNames.length) {
+    throw new Error("Duplicate student names found. Each name must be unique within the session.");
+  }
+
+  // Create session
+  const session = await prisma.classSession.create({
+    data: {
+      scenarioId,
+      teacherId,
+      sessionCode,
+      ...config,
+    },
+  });
+
+  // Create students, groups, and memberships
+  for (const group of groups) {
+    const dbGroup = await prisma.group.create({
+      data: {
+        groupId: `${session.sessionId}-${group.name}`,
+        sessionId: session.sessionId,
+      },
+    });
+
+    for (const studentName of group.students) {
+      const trimmed = studentName.trim();
+      if (!trimmed) continue;
+
+      const username = deriveUsername(trimmed);
+
+      // Upsert student user
+      const student = await prisma.user.upsert({
+        where: { username },
+        update: {},
+        create: {
+          displayName: trimmed,
+          username,
+          role: "student",
+        },
+      });
+
+      // Create group membership
+      await prisma.groupMember.create({
+        data: {
+          userId: student.id,
+          groupId: dbGroup.groupId,
+        },
+      });
+
+      // Create student activity record
+      await prisma.studentActivity.create({
+        data: {
+          userId: student.id,
+          sessionId: session.sessionId,
+        },
+      });
+    }
+  }
+
+  revalidatePath("/teacher");
+  return session;
 }
 
 export async function getAvailableScenarios() {

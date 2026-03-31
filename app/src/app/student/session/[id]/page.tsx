@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import StudentSessionClient from "./client";
 import { getHintState, getGuidedDetectionData } from "@/actions/hints";
 import { getPeerComparisonData } from "@/actions/comparison";
@@ -40,11 +41,20 @@ export default async function StudentSessionPage({
     orderBy: { behaviorId: "asc" },
   });
 
-  // Load test student (for dev — will be replaced with auth)
-  const testStudent = await prisma.user.findFirst({
-    where: { username: "test.student" },
-  });
-  if (!testStudent) notFound();
+  // Get student from cookie (set during join) or fall back to test student for dev
+  const cookieStore = await cookies();
+  const studentCookie = cookieStore.get("student-session")?.value;
+
+  let student;
+  if (studentCookie && studentCookie !== "test") {
+    student = await prisma.user.findUnique({ where: { id: studentCookie } });
+  }
+  if (!student) {
+    // Fall back to test student for dev
+    student = await prisma.user.findFirst({ where: { username: "test.student" } });
+  }
+  if (!student) notFound();
+  const testStudent = student;
 
   // Load annotations
   const annotations = await prisma.annotation.findMany({

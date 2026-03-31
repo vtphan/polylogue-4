@@ -27,6 +27,13 @@ export default async function TeacherDashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-[18px] font-bold text-gray-900">Perspectives — Teacher</h1>
+          <Link
+            href="/teacher/session/new"
+            className="px-4 py-1.5 text-sm bg-indigo-500 text-white rounded-lg
+              hover:bg-indigo-600 transition-colors font-medium"
+          >
+            Create New Session
+          </Link>
         </div>
 
         {/* Active Sessions */}

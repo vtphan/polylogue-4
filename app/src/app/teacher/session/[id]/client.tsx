@@ -14,6 +14,7 @@ interface GroupData {
     annotationCount: number;
     submitted: boolean;
     firstOpened: string | null;
+    hintsExhausted: boolean;
   }[];
   flawsFound: number;
   totalFlaws: number;
@@ -84,6 +85,24 @@ export default function TeacherSessionClient({
   const [showEndDialog, setShowEndDialog] = useState(false);
   const [advancing, setAdvancing] = useState(false);
 
+  // Detail panel state
+  const [detailView, setDetailView] = useState<
+    | { type: "default" }
+    | { type: "student"; userId: string; displayName: string }
+    | { type: "group"; groupId: string }
+  >({ type: "default" });
+  const [studentAnnotations, setStudentAnnotations] = useState<
+    Array<{
+      id: number;
+      location: string;
+      detectionAct: string | null;
+      description: string | null;
+      thinkingBehavior: string | null;
+      behaviorSource: string | null;
+      behaviorOwnWords: string | null;
+    }>
+  >([]);
+
   // Poll activity every 10 seconds
   useEffect(() => {
     async function poll() {
@@ -124,6 +143,21 @@ export default function TeacherSessionClient({
     await activateReflection(sessionId);
     setReflectionActive(true);
   }, [sessionId]);
+
+  const handleSelectStudent = useCallback(async (userId: string, displayName: string) => {
+    setDetailView({ type: "student", userId, displayName });
+    try {
+      const res = await fetch(`/api/session/${sessionId}/annotations?userId=${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStudentAnnotations(data.annotations);
+      }
+    } catch {}
+  }, [sessionId]);
+
+  const handleSelectGroup = useCallback((groupId: string) => {
+    setDetailView({ type: "group", groupId });
+  }, []);
 
   const summary = activityData?.summary;
   const groups = activityData?.groups ?? [];
@@ -225,7 +259,10 @@ export default function TeacherSessionClient({
               {groups.map((group) => (
                 <div key={group.groupId} className="bg-white border border-gray-200 rounded-lg">
                   {/* Group header */}
-                  <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+                  <button
+                    onClick={() => handleSelectGroup(group.groupId)}
+                    className="w-full px-3 py-2 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+                  >
                     <span className="text-xs font-medium text-gray-600">
                       {group.groupId}
                     </span>
@@ -237,7 +274,7 @@ export default function TeacherSessionClient({
                       ))}
                       {" "}({group.flawsFound}/{group.totalFlaws})
                     </span>
-                  </div>
+                  </button>
 
                   {/* Members */}
                   <div className="divide-y divide-gray-50">
@@ -245,13 +282,17 @@ export default function TeacherSessionClient({
                       const st = STATUS_ICONS[m.status] ?? STATUS_ICONS.not_started;
                       return (
                         <div key={m.userId} className="px-3 py-2 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleSelectStudent(m.userId, m.displayName)}
+                            className="flex items-center gap-2 hover:text-indigo-600 transition-colors"
+                          >
                             <span className={`text-sm ${st.color}`}>{st.icon}</span>
                             <span className="text-sm text-gray-800">{m.displayName}</span>
-                          </div>
+                          </button>
                           <div className="flex items-center gap-3 text-xs text-gray-400">
                             <span>Annot: {m.annotationCount}</span>
                             {m.submitted && <span className="text-blue-500 font-medium">Sub.</span>}
+                            {m.hintsExhausted && <span className="text-red-500 font-medium" title="Hints exhausted, few annotations">🎯</span>}
                           </div>
                         </div>
                       );
@@ -263,23 +304,91 @@ export default function TeacherSessionClient({
           )}
         </div>
 
-        {/* Right: Detail Panel — cheat sheet summary */}
+        {/* Right: Detail Panel */}
         <div className="w-[400px] flex-shrink-0">
-          <h2 className="text-[14px] font-semibold text-gray-700 mb-3">What to Expect</h2>
-          <div className="space-y-3">
-            {whatToExpect.map((w) => (
-              <div key={w.flaw} className="bg-white border border-gray-200 rounded-lg px-3 py-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-800">{w.flawName}</span>
-                  <span className={`text-xs font-medium ${DIFFICULTY_COLORS[w.difficulty] ?? "text-gray-400"}`}>
-                    {w.difficulty.replace(/_/g, " ")}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500 mt-1">{w.turns}</div>
-                <div className="text-xs text-gray-400 mt-0.5 line-clamp-2">{w.signal}</div>
+          {detailView.type === "student" ? (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[14px] font-semibold text-gray-700">
+                  {detailView.displayName}&apos;s Annotations
+                </h2>
+                <button
+                  onClick={() => setDetailView({ type: "default" })}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  ✕ Close
+                </button>
               </div>
-            ))}
-          </div>
+              {studentAnnotations.length === 0 ? (
+                <p className="text-sm text-gray-400">No annotations yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {studentAnnotations.map((ann) => {
+                    const loc = JSON.parse(ann.location);
+                    const sentences = (loc.sentences as string[]) ?? [];
+                    const turnIds = [...new Set(sentences.map((s: string) => s.split(".")[0]))];
+                    const locationText = turnIds
+                      .map((t) => `Turn ${parseInt(t.replace("turn_", ""))}`)
+                      .join(", ");
+
+                    return (
+                      <div key={ann.id} className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+                        <div className="text-xs text-gray-500">{locationText}</div>
+                        <div className="text-sm font-medium text-gray-800 mt-0.5">
+                          {ann.detectionAct ?? "—"}
+                        </div>
+                        {ann.description && (
+                          <div className="text-xs text-gray-600 mt-0.5 italic line-clamp-2">
+                            &ldquo;{ann.description}&rdquo;
+                          </div>
+                        )}
+                        {ann.thinkingBehavior && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            Behavior: {ann.behaviorSource === "own_words" ? `"${ann.behaviorOwnWords}"` : ann.thinkingBehavior}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          ) : detailView.type === "group" ? (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[14px] font-semibold text-gray-700">
+                  Group: {detailView.groupId}
+                </h2>
+                <button
+                  onClick={() => setDetailView({ type: "default" })}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  ✕ Close
+                </button>
+              </div>
+              <p className="text-sm text-gray-500">
+                Group comparison view is available in Phase 3+. Click individual students to see their work.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-[14px] font-semibold text-gray-700 mb-3">What to Expect</h2>
+              <div className="space-y-3">
+                {whatToExpect.map((w) => (
+                  <div key={w.flaw} className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-800">{w.flawName}</span>
+                      <span className={`text-xs font-medium ${DIFFICULTY_COLORS[w.difficulty] ?? "text-gray-400"}`}>
+                        {w.difficulty.replace(/_/g, " ")}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">{w.turns}</div>
+                    <div className="text-xs text-gray-400 mt-0.5 line-clamp-2">{w.signal}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
